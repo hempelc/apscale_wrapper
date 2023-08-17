@@ -130,6 +130,13 @@ parser.add_argument(
     required=True,
 )
 parser.add_argument(
+    "-f",
+    "--graph_format",
+    help="Format for processing report graphs, either png or svg.",
+    required=True,
+    choices=["png", "svg"],
+)
+parser.add_argument(
     "-M",
     "--max_length",
     type=int,
@@ -166,22 +173,27 @@ forward_primer = args.forward_primer
 reverse_primer = args.reverse_primer
 min_length = args.min_length
 max_length = args.max_length
+graph_format = args.graph_format
 otu_perc = args.otu_perc
 maxEE = args.maxEE
 cores = args.cores
 
 ### Start of pipeline
+time_print("Starting apscale wrapper.")
 
 # Create an apscale directory using bash
+time_print("Creating apscale directory...")
 subprocess.run(["apscale", "--create_project", project_name])
 
 # Generate symlinks to demultiplexed reads
+time_print("Generating symlinks to demultiplexed reads...")
 subprocess.run(
     f"ln -s $(realpath {sequence_dir})/* {project_name}_apscale/2_demultiplexing/data",
     shell=True,
 )
 
 # Generate a Settings.xlsx file with given parameters
+time_print("Generating apscale settings file...")
 generateSettings(
     project_name=project_name,
     forward_primer=forward_primer,
@@ -194,6 +206,20 @@ generateSettings(
 )
 
 # Run apscale
+time_print("Starting apscale...")
 subprocess.run(["apscale", "--run_apscale", f"{project_name}_apscale"])
+time_print("Apscale done...")
+
 
 # Generate processing graphs using separate script
+time_print("Generating apscale processing graphs...")
+subprocess.run(
+    [
+        "apscale_processing_graphs.py",
+        "--project_name" f"{project_name}",
+        "--graph_format",
+        f"{graph_format}",
+    ]
+)
+
+time_print("Apscale wrapper done.")

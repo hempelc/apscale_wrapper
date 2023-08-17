@@ -38,33 +38,11 @@ parser.add_argument(
     required=True,
     choices=["png", "svg"],
 )
-parser.add_argument(
-    "-w",
-    "--graph_width",
-    help="Graph width (default=2500).",
-    default=2500,
-    type=int,
-)
-parser.add_argument(
-    "-t",
-    "--ticklabel_size",
-    help="Tick label font size (default=7).",
-    default=7,
-    type=int,
-)
 args = parser.parse_args()
 
 # Set arguments
 project_name = args.project_name
-graph_width = args.graph_width
-ticksize = args.ticklabel_size
 graph_format = args.graph_format
-
-# os.chdir("/Users/christopherhempel/Desktop/apscale_wrapper")
-# project_name = "test"
-# graph_width = 2500
-# ticksize = 7
-# graph_format = "png"
 
 
 # Import files
