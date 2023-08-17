@@ -173,7 +173,7 @@ parser.add_argument(
     choices=["png", "svg"],
 )
 parser.add_argument(
-    "-s",
+    "-S",
     "--scaling_factor",
     help="Scaling factor for graph width. Manual trial and error in 0.2 increments might be required (default: 1).",
     default=1,
