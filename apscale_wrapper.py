@@ -114,21 +114,21 @@ parser.add_argument(
 parser.add_argument(
     "-f",
     "--forward_primer",
-    metavar="NNNNNNNNN",
+    metavar="PRIMER_SEQUENCE",
     help="Forward primer sequence to trim.",
     required=True,
 )
 parser.add_argument(
     "-r",
     "--reverse_primer",
-    metavar="NNNNNNNNN",
+    metavar="PRIMER_SEQUENCE",
     help="Reverse primer sequence to trim.",
     required=True,
 )
 parser.add_argument(
     "-m",
     "--min_length",
-    metavar="N",
+    metavar="NNN",
     type=int,
     help="Minimum limit of expected amplicon length (used for length filtering).",
     required=True,
@@ -136,7 +136,7 @@ parser.add_argument(
 parser.add_argument(
     "-M",
     "--max_length",
-    metavar="N",
+    metavar="NNN",
     type=int,
     help="Maximum limit of expected amplicon length (used for length filtering).",
     required=True,
@@ -144,7 +144,7 @@ parser.add_argument(
 parser.add_argument(
     "-o",
     "--otu_perc",
-    metavar="N",
+    metavar="NN",
     default=97,
     type=int,
     help="OTU identify treshold for clustering (default=97).",
