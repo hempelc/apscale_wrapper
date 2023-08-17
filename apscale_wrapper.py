@@ -130,7 +130,7 @@ parser.add_argument(
     required=True,
 )
 parser.add_argument(
-    "-f",
+    "-g",
     "--graph_format",
     help="Format for processing report graphs, either png or svg.",
     required=True,
