@@ -100,6 +100,7 @@ parser = argparse.ArgumentParser(
 parser.add_argument(
     "-s",
     "--sequence_dir",
+    metavar="PATH/TO/SEQUENCE_DIR",
     help="""Path to directory containing demultiplexed forward and reverse sequences in .fastq.gz format.
     Note: file names must end with R1 and R2 to identify read pairs.""",
     required=True,
@@ -113,32 +114,29 @@ parser.add_argument(
 parser.add_argument(
     "-f",
     "--forward_primer",
+    metavar="NNNNNNNNN",
     help="Forward primer sequence to trim.",
     required=True,
 )
 parser.add_argument(
     "-r",
     "--reverse_primer",
+    metavar="NNNNNNNNN",
     help="Reverse primer sequence to trim.",
     required=True,
 )
 parser.add_argument(
     "-m",
     "--min_length",
+    metavar="N",
     type=int,
     help="Minimum limit of expected amplicon length (used for length filtering).",
     required=True,
 )
 parser.add_argument(
-    "-g",
-    "--graph_format",
-    help="Format for processing report graphs, either png or svg.",
-    required=True,
-    choices=["png", "svg"],
-)
-parser.add_argument(
     "-M",
     "--max_length",
+    metavar="N",
     type=int,
     help="Maximum limit of expected amplicon length (used for length filtering).",
     required=True,
@@ -146,6 +144,7 @@ parser.add_argument(
 parser.add_argument(
     "-o",
     "--otu_perc",
+    metavar="N",
     default=97,
     type=int,
     help="OTU identify treshold for clustering (default=97).",
@@ -153,6 +152,7 @@ parser.add_argument(
 parser.add_argument(
     "-e",
     "--maxEE",
+    metavar="N",
     default=2,
     type=int,
     help="maxEE (maximum estimated error) value used for quality filtering (default=2).",
@@ -160,9 +160,17 @@ parser.add_argument(
 parser.add_argument(
     "-n",
     "--cores",
+    metavar="N",
     default=2,
     type=int,
     help="Number of cores to use (default=2).",
+)
+parser.add_argument(
+    "-g",
+    "--graph_format",
+    help="Format for processing report graphs, either png or svg.",
+    required=True,
+    choices=["png", "svg"],
 )
 args = parser.parse_args()
 
