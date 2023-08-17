@@ -38,11 +38,19 @@ parser.add_argument(
     required=True,
     choices=["png", "svg"],
 )
+parser.add_argument(
+    "-s",
+    "--scaling_factor",
+    help="Scaling factor for graph width. Manual trial and error in 0.2 increments might be required (default: 1).",
+    default=1,
+    type=int,
+)
 args = parser.parse_args()
 
 # Set arguments
 project_name = args.project_name
 graph_format = args.graph_format
+scaling_factor = args.scaling_factor
 
 
 # Import files
@@ -118,8 +126,8 @@ otu_prelulu_sums.index = (
 )
 
 # Graphs
-# Set graph width based on njumber of samples (each bar should be 20 wide)
-graph_width = len(report_sheet_dict["3_PE merging"]) * 20
+# Set graph width based on number of samples (note: doesn't work consistently)
+graph_width = 400 + len(report_sheet_dict["3_PE merging"]) * 25 * scaling_factor
 
 # PE merging
 perc_kept_pe = pd.Series(

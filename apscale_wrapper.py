@@ -172,6 +172,13 @@ parser.add_argument(
     required=True,
     choices=["png", "svg"],
 )
+parser.add_argument(
+    "-s",
+    "--scaling_factor",
+    help="Scaling factor for graph width. Manual trial and error in 0.2 increments might be required (default: 1).",
+    default=1,
+    type=int,
+)
 args = parser.parse_args()
 
 # Set arguments
@@ -185,6 +192,7 @@ graph_format = args.graph_format
 otu_perc = args.otu_perc
 maxEE = args.maxEE
 cores = args.cores
+scaling_factor = args.scaling_factor
 
 ### Start of pipeline
 time_print("Starting apscale wrapper.")
@@ -216,7 +224,7 @@ generateSettings(
 # Run apscale
 time_print("Starting apscale...")
 subprocess.run(["apscale", "--run_apscale", f"{project_name}_apscale"])
-time_print("Apscale done...")
+time_print("Apscale done.")
 
 
 # Generate processing graphs using separate script
@@ -224,9 +232,12 @@ time_print("Generating apscale processing graphs...")
 subprocess.run(
     [
         "apscale_processing_graphs.py",
-        "--project_name" f"{project_name}",
+        "--project_name",
+        f"{project_name}",
         "--graph_format",
         f"{graph_format}",
+        "--scaling_factor",
+        f"{scaling_factor}",
     ]
 )
 
