@@ -177,7 +177,7 @@ parser.add_argument(
     "--scaling_factor",
     help="Scaling factor for graph width. Manual trial and error in 0.2 increments might be required (default: 1).",
     default=1,
-    type=int,
+    type=float,
 )
 args = parser.parse_args()
 
