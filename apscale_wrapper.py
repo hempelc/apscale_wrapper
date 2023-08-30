@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 
 """
-A wrapper to run apscale on forward and reverse reads, generate processing QC graphs, and assign taxonomy to generated taxonomic units.
+A wrapper to run apscale on forward and reverse reads and to generate 
+processing QC graphs.
 
-Requires the submodules settings_generator.py and XXX in path.
+Requires the submodule apscale_processing_graphs.py in PATH.
 
 By Chris Hempel (christopher.hempel@kaust.edu.sa) on 15 Aug 2023
 """
@@ -94,8 +95,9 @@ def generateSettings(**kwargs):
 
 # Define arguments
 parser = argparse.ArgumentParser(
-    description="""A wrapper to run apscale on forward and reverse reads, generate processing QC graphs,
-    and assign taxonomy to generated taxonomic units.""",
+    description="""A wrapper to run apscale on forward and reverse 
+	reads and to generate processing QC graphs.
+	Requires the submodule apscale_processing_graphs.py in PATH.""",
 )
 parser.add_argument(
     "-s",

@@ -109,4 +109,3 @@ dependencies:
       - tqdm==4.65.0
       - tzdata==2023.3
       - xopen==1.7.0
-prefix: /Users/christopherhempel/anaconda3/envs/apscale
