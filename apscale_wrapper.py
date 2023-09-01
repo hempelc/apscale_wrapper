@@ -203,6 +203,16 @@ time_print("Starting apscale wrapper.")
 time_print("Creating apscale directory...")
 subprocess.run(["apscale", "--create_project", project_name])
 
+# Create an empty Project_report.xlsx file
+## Create an ExcelWriter object using the openpyxl engine
+excel_writer = pd.ExcelWriter(
+    f"{project_name}_apscale/Project_report.xlsx", engine="openpyxl"
+)
+## Write an empty DataFrame to the Excel file
+pd.DataFrame().to_excel(excel_writer, sheet_name="Sheet1", index=False)
+# Save the Excel file
+excel_writer.book.save(f"{project_name}_apscale/Project_report.xlsx")
+
 # Generate symlinks to demultiplexed reads
 time_print("Generating symlinks to demultiplexed reads...")
 subprocess.run(
