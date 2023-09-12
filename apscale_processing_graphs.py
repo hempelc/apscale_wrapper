@@ -13,6 +13,7 @@ By Chris Hempel (christopher.hempel@kaust.edu.sa) on Jun 7 2023
 """
 
 import os
+import datetime
 import pandas as pd
 import plotly.express as px
 import argparse
