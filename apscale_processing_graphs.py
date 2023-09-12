@@ -68,7 +68,7 @@ esv_postlulu_file = os.path.join(
     project_dir,
     "9_lulu_filtering",
     "denoising",
-    f"{project_dir}_apscale_ESV_table_filtered.xlsx",
+    f"{project_dir}_ESV_table_filtered.xlsx",
 )
 esv_prelulu_file = os.path.join(
     project_dir, "8_denoising", f"{project_name}_ESV_table.xlsx"
