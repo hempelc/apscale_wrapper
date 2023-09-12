@@ -84,7 +84,7 @@ otu_prelulu_file = os.path.join(
     "7_otu_clustering",
     f"{project_name}_OTU_table.parquet.snappy",
 )
-report_sheet_dict = pd.read_parquet(report_file, sheet_name=None)
+report_sheet_dict = pd.read_excel(report_file, sheet_name=None)
 esv_postlulu_df = pd.read_parquet(esv_postlulu_file, "ESV table")
 time_print("1/4 files imported...")
 esv_prelulu_df = pd.read_parquet(esv_prelulu_file, "ESV table")
