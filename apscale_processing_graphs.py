@@ -21,14 +21,21 @@ import warnings
 # Define that warnings are not printed to console
 warnings.filterwarnings("ignore")
 
+
+# Funtion to print datetime and text
+def time_print(text):
+    datetime_now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    print(f"{datetime_now}  ---  " + text)
+
+
 # Define arguments
 parser = argparse.ArgumentParser(
     description="""A script to generate processing graphs for apscale runs.""",
 )
 parser.add_argument(
     "-p",
-    "--project_name",
-    help="Name of the apscale project to generate reports for (without the _apscale suffix).",
+    "--project_dir",
+    help="Directory containing apscale results to generate reports for.",
     required=True,
 )
 parser.add_argument(
@@ -48,39 +55,40 @@ parser.add_argument(
 args = parser.parse_args()
 
 # Set arguments
-project_name = args.project_name
+project_dir = args.project_dir
 graph_format = args.graph_format
 scaling_factor = args.scaling_factor
-
+project_name = os.path.basename(project_dir)
 
 # Import files
-report_file = os.path.join(f"{project_name}_apscale", "Project_report.xlsx")
+time_print("Importing files...")
+report_file = os.path.join(project_dir, "Project_report.xlsx")
 esv_postlulu_file = os.path.join(
-    f"{project_name}_apscale",
+    project_dir,
     "9_lulu_filtering",
     "denoising",
-    f"{project_name}_apscale_ESV_table_filtered.xlsx",
+    f"{project_dir}_apscale_ESV_table_filtered.xlsx",
 )
 esv_prelulu_file = os.path.join(
-    f"{project_name}_apscale", "8_denoising", f"{project_name}_apscale_ESV_table.xlsx"
+    project_dir, "8_denoising", f"{project_name}_ESV_table.xlsx"
 )
 otu_postlulu_file = os.path.join(
-    f"{project_name}_apscale",
+    project_dir,
     "9_lulu_filtering",
     "otu_clustering",
-    f"{project_name}_apscale_OTU_table_filtered.xlsx",
+    f"{project_name}_OTU_table_filtered.xlsx",
 )
 otu_prelulu_file = os.path.join(
-    f"{project_name}_apscale",
+    project_dir,
     "7_otu_clustering",
-    f"{project_name}_apscale_OTU_table.xlsx",
+    f"{project_name}_OTU_table.xlsx",
 )
 report_sheet_dict = pd.read_excel(report_file, sheet_name=None)
 esv_postlulu_df = pd.read_excel(esv_postlulu_file, "ESV table")
 esv_prelulu_df = pd.read_excel(esv_prelulu_file, "ESV table")
 otu_postlulu_df = pd.read_excel(otu_postlulu_file, "OTU table")
 otu_prelulu_df = pd.read_excel(otu_prelulu_file, "OTU table")
-
+time_print("Import done. Generating graphs...")
 
 # ESV table processing
 esv_postlulu_df = esv_postlulu_df.drop("Seq", axis=1).set_index("ID")
@@ -359,8 +367,8 @@ reads_otus_graph = px.scatter(
 
 
 # Save graphs
-## Make outdir for project_name if it doesn't already exist
-outdir = os.path.join(f"{project_name}_apscale", "processing_graphs")
+## Make outdir for project_dir if it doesn't already exist
+outdir = os.path.join(project_dir, "processing_graphs")
 os.makedirs(outdir, exist_ok=True)
 
 pe_graph.write_image(

@@ -244,8 +244,8 @@ time_print("Generating apscale processing graphs...")
 subprocess.run(
     [
         "apscale_processing_graphs.py",
-        "--project_name",
-        f"{project_name}",
+        "--project_dir",
+        f"{project_name}_apscale",
         "--graph_format",
         f"{graph_format}",
         "--scaling_factor",
