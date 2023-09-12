@@ -68,27 +68,27 @@ esv_postlulu_file = os.path.join(
     project_dir,
     "9_lulu_filtering",
     "denoising",
-    f"{project_dir}_ESV_table_filtered.xlsx",
+    f"{project_dir}_ESV_table_filtered.parquet.snappy",
 )
 esv_prelulu_file = os.path.join(
-    project_dir, "8_denoising", f"{project_name}_ESV_table.xlsx"
+    project_dir, "8_denoising", f"{project_name}_ESV_table.parquet.snappy"
 )
 otu_postlulu_file = os.path.join(
     project_dir,
     "9_lulu_filtering",
     "otu_clustering",
-    f"{project_name}_OTU_table_filtered.xlsx",
+    f"{project_name}_OTU_table_filtered.parquet.snappy",
 )
 otu_prelulu_file = os.path.join(
     project_dir,
     "7_otu_clustering",
-    f"{project_name}_OTU_table.xlsx",
+    f"{project_name}_OTU_table.parquet.snappy",
 )
-report_sheet_dict = pd.read_excel(report_file, sheet_name=None)
-esv_postlulu_df = pd.read_excel(esv_postlulu_file, "ESV table")
-esv_prelulu_df = pd.read_excel(esv_prelulu_file, "ESV table")
-otu_postlulu_df = pd.read_excel(otu_postlulu_file, "OTU table")
-otu_prelulu_df = pd.read_excel(otu_prelulu_file, "OTU table")
+report_sheet_dict = pd.read_parquet(report_file, sheet_name=None)
+esv_postlulu_df = pd.read_parquet(esv_postlulu_file, "ESV table")
+esv_prelulu_df = pd.read_parquet(esv_prelulu_file, "ESV table")
+otu_postlulu_df = pd.read_parquet(otu_postlulu_file, "OTU table")
+otu_prelulu_df = pd.read_parquet(otu_prelulu_file, "OTU table")
 time_print("Import done. Generating graphs...")
 
 # ESV table processing
