@@ -85,13 +85,13 @@ otu_prelulu_file = os.path.join(
     f"{project_name}_OTU_table.parquet.snappy",
 )
 report_sheet_dict = pd.read_excel(report_file, sheet_name=None)
-esv_postlulu_df = pd.read_parquet(esv_postlulu_file, "ESV table")
+esv_postlulu_df = pd.read_parquet(esv_postlulu_file, engine="fastparquet")
 time_print("1/4 files imported...")
-esv_prelulu_df = pd.read_parquet(esv_prelulu_file, "ESV table")
+esv_prelulu_df = pd.read_parquet(esv_prelulu_file, engine="fastparquet")
 time_print("2/4 files imported...")
-otu_postlulu_df = pd.read_parquet(otu_postlulu_file, "OTU table")
+otu_postlulu_df = pd.read_parquet(otu_postlulu_file, engine="fastparquet")
 time_print("3/4 files imported...")
-otu_prelulu_df = pd.read_parquet(otu_prelulu_file, "OTU table")
+otu_prelulu_df = pd.read_parquet(otu_prelulu_file, engine="fastparquet")
 time_print("Import done. Generating graphs...")
 
 # ESV table processing
