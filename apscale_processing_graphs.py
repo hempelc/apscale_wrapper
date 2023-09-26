@@ -229,6 +229,13 @@ pe_graph.add_hline(
 )
 pe_graph.update_layout(showlegend=False)
 pe_graph.update_xaxes(tickangle=55)
+## Save
+pe_graph.write_image(
+    os.path.join(
+        outdir,
+        f"{project_name}_1_pe_merging.{graph_format}",
+    )
+)
 
 # Primer trimming
 perc_kept_trim = pd.Series(
@@ -257,6 +264,13 @@ trim_graph.add_hline(
 )
 trim_graph.update_layout(showlegend=False)
 trim_graph.update_xaxes(tickangle=55)
+# Save
+trim_graph.write_image(
+    os.path.join(
+        outdir,
+        f"{project_name}_2_trimming.{graph_format}",
+    )
+)
 
 # Quality filtering
 perc_kept_qf = (
@@ -286,6 +300,13 @@ qf_graph.add_hline(
 )
 qf_graph.update_layout(showlegend=False)
 qf_graph.update_xaxes(tickangle=55)
+# Save
+qf_graph.write_image(
+    os.path.join(
+        outdir,
+        f"{project_name}_3_qualityFiltering.{graph_format}",
+    )
+)
 
 # Dereplication
 perc_kept_derep = (
@@ -316,6 +337,13 @@ derep_graph.add_hline(
 )
 derep_graph.update_layout(showlegend=False)
 derep_graph.update_xaxes(tickangle=55)
+# Save
+derep_graph.write_image(
+    os.path.join(
+        outdir,
+        f"{project_name}_4_dereplication.{graph_format}",
+    )
+)
 
 # Raw number of reads
 num_reads_raw = report_sheet_dict["3_PE merging"]["processed reads"]
@@ -337,6 +365,13 @@ rawreads_graph.add_hline(
 )
 rawreads_graph.update_layout(showlegend=False)
 rawreads_graph.update_xaxes(tickangle=55)
+# Save
+rawreads_graph.write_image(
+    os.path.join(
+        outdir,
+        f"{project_name}_5_numberRawreads.{graph_format}",
+    )
+)
 
 # Number of reads after PE merging and quality filtering
 num_reads_filtered = report_sheet_dict["5_quality_filtering"]["passed reads"]
@@ -361,6 +396,13 @@ filteredreads_graph.add_hline(
 )
 filteredreads_graph.update_layout(showlegend=False)
 filteredreads_graph.update_xaxes(tickangle=55)
+# Save
+filteredreads_graph.write_image(
+    os.path.join(
+        outdir,
+        f"{project_name}_6_numberFilteredreads.{graph_format}",
+    )
+)
 
 # Number of ESVs per sample before LULU
 ymax_esvs = esv_prelulu_sums.max()
@@ -378,6 +420,13 @@ prelulu_graph_esvs.add_hline(
 )
 prelulu_graph_esvs.update_layout(showlegend=False)
 prelulu_graph_esvs.update_xaxes(tickangle=55)
+# Save
+prelulu_graph_esvs.write_image(
+    os.path.join(
+        outdir,
+        f"{project_name}_7_prelulu_esvs.{graph_format}",
+    )
+)
 
 # Number of ESVs per sample after LULU
 postlulu_graph_esvs = px.bar(
@@ -394,6 +443,13 @@ postlulu_graph_esvs.add_hline(
 )
 postlulu_graph_esvs.update_layout(showlegend=False)
 postlulu_graph_esvs.update_xaxes(tickangle=55)
+# Save
+postlulu_graph_esvs.write_image(
+    os.path.join(
+        outdir,
+        f"{project_name}_8_postlulu_esvs.{graph_format}",
+    )
+)
 
 # Number of OTUs per sample before LULU
 ymax_otus = otu_prelulu_sums.max()
@@ -411,6 +467,13 @@ prelulu_graph_otus.add_hline(
 )
 prelulu_graph_otus.update_layout(showlegend=False)
 prelulu_graph_otus.update_xaxes(tickangle=55)
+# Save
+prelulu_graph_otus.write_image(
+    os.path.join(
+        outdir,
+        f"{project_name}_9_prelulu_otus.{graph_format}",
+    )
+)
 
 # Number of OTUs per sample after LULU
 postlulu_graph_otus = px.bar(
@@ -427,6 +490,13 @@ postlulu_graph_otus.add_hline(
 )
 postlulu_graph_otus.update_layout(showlegend=False)
 postlulu_graph_otus.update_xaxes(tickangle=55)
+# Save
+postlulu_graph_otus.write_image(
+    os.path.join(
+        outdir,
+        f"{project_name}_10_postlulu_otus.{graph_format}",
+    )
+)
 
 # LULU pre post overview
 ESVs = len(esv_prelulu_df)
@@ -442,6 +512,13 @@ lulu_pre_post_graph.add_trace(go.Bar(x=x_values, y=y_values, text=text))
 lulu_pre_post_graph.update_layout(width=1000, height=800, title="LULU filtering")
 lulu_pre_post_graph.update_traces(textposition="outside")
 lulu_pre_post_graph.update_yaxes(title="OTUs/ESVs")
+# Save
+lulu_pre_post_graph.write_image(
+    os.path.join(
+        outdir,
+        f"{project_name}_11_lulu_filtering_stats.{graph_format}",
+    )
+)
 
 # Number of reads vs number of ESVs
 reads_esvs_graph = px.scatter(
@@ -457,6 +534,12 @@ reads_esvs_graph = px.scatter(
         "ESVs postlulu": "Number of ESVs after LULU",
         "passed reads": "Number of filtered reads",
     },
+)
+reads_esvs_graph.write_image(
+    os.path.join(
+        outdir,
+        f"{project_name}_12_reads_vs_esvs.{graph_format}",
+    )
 )
 
 # Number of reads vs number of OTUs
@@ -474,33 +557,21 @@ reads_otus_graph = px.scatter(
         "passed reads": "Number of filtered reads",
     },
 )
-
-# Lineplot OTUs
-otu_linegraph = go.Figure()
-for sample in samples:
-    y_values = df_stats.loc[sample].values.tolist()[:-1]
-    x_values = df_stats.columns.tolist()[:-1]
-    otu_linegraph.add_trace(
-        go.Scatter(x=x_values, marker_color="navy", y=y_values, name=sample)
+reads_otus_graph.write_image(
+    os.path.join(
+        outdir,
+        f"{project_name}_13_reads_vs_otus.{graph_format}",
     )
-otu_linegraph.update_layout(
-    template="simple_white",
-    width=1000,
-    height=800,
-    title="Reads per sample for each module",
 )
-otu_linegraph.update_yaxes(title="Reads")
 
-# Lineplot OTUs
+# Lineplot ESVs
 esv_linegraph = go.Figure()
 for sample in samples:
     y_values = df_stats.loc[sample].values.tolist()[:-2] + [
         df_stats.loc[sample].values.tolist()[-1]
     ]
     x_values = df_stats.columns.tolist()[:-2] + [df_stats.columns.tolist()[-1]]
-    esv_linegraph.add_trace(
-        go.Scatter(x=x_values, marker_color="navy", y=y_values, name=sample)
-    )
+    esv_linegraph.add_trace(go.Scatter(x=x_values, y=y_values, name=sample))
 esv_linegraph.update_layout(
     template="simple_white",
     width=1000,
@@ -508,163 +579,6 @@ esv_linegraph.update_layout(
     title="Reads per sample for each module",
 )
 esv_linegraph.update_yaxes(title="Reads")
-
-# Boxplot
-boxplot = go.Figure()
-for category in df_stats.columns.tolist():
-    y_values = df_stats.loc[samples][category].values.tolist()
-    boxplot.add_trace(go.Box(y=y_values, name=category, marker_color="navy"))
-boxplot.update_layout(
-    template="simple_white",
-    width=1000,
-    height=800,
-    title="Reads per module",
-    showlegend=False,
-)
-boxplot.update_yaxes(title="Reads")
-
-# OTU heatmap
-## Format
-ID_list_otu = otu_postlulu_df["ID"].values.tolist()
-otu_postlulu_samples_df = otu_postlulu_df.drop(columns=["ID", "Seq"])
-sample_list = otu_postlulu_samples_df.columns.tolist()
-## Take log
-otu_postlulu_samples_log_df = np.where(
-    otu_postlulu_samples_df != 0, np.log(otu_postlulu_samples_df), 0
-)
-## Define height
-otu_heatmap_height = min(len(ID_list_otu) * 15, 3000)
-## Create heatmap
-otu_heatmap = px.imshow(
-    otu_postlulu_samples_log_df,
-    y=ID_list_otu,
-    x=sample_list,
-    aspect="auto",
-    height=otu_heatmap_height,
-    width=1500,
-)
-otu_heatmap.update_layout(
-    template="simple_white",
-    title="log(OTU)",
-    coloraxis_showscale=False,
-)
-if otu_heatmap_height >= 3000:
-    otu_heatmap.update_yaxes(showticklabels=False, title="OTUs")
-else:
-    otu_heatmap.update_yaxes(tickmode="linear")
-    otu_heatmap.update_xaxes(tickmode="linear")
-
-# ESV heatmap
-## Format
-ID_list_esv = esv_postlulu_df["ID"].values.tolist()
-esv_postlulu_samples_df = esv_postlulu_df.drop(columns=["ID", "Seq"])
-sample_list = esv_postlulu_samples_df.columns.tolist()
-## Take log
-esv_postlulu_samples_log_df = np.where(
-    esv_postlulu_samples_df != 0, np.log(esv_postlulu_samples_df), 0
-)
-## Define height
-esv_heatmap_height = min(len(ID_list_esv) * 15, 3000)
-## Create heatmap
-esv_heatmap = px.imshow(
-    esv_postlulu_samples_log_df,
-    y=ID_list_esv,
-    x=sample_list,
-    aspect="auto",
-    height=esv_heatmap_height,
-    width=1500,
-)
-esv_heatmap.update_layout(
-    template="simple_white",
-    title="log(ESV)",
-    coloraxis_showscale=False,
-)
-if esv_heatmap_height >= 3000:
-    esv_heatmap.update_yaxes(showticklabels=False, title="ESVs")
-else:
-    esv_heatmap.update_yaxes(tickmode="linear")
-    esv_heatmap.update_xaxes(tickmode="linear")
-
-
-# Save graphs
-pe_graph.write_image(
-    os.path.join(
-        outdir,
-        f"{project_name}_1_pe_merging.{graph_format}",
-    )
-)
-trim_graph.write_image(
-    os.path.join(
-        outdir,
-        f"{project_name}_2_trimming.{graph_format}",
-    )
-)
-qf_graph.write_image(
-    os.path.join(
-        outdir,
-        f"{project_name}_3_qualityFiltering.{graph_format}",
-    )
-)
-derep_graph.write_image(
-    os.path.join(
-        outdir,
-        f"{project_name}_4_dereplication.{graph_format}",
-    )
-)
-rawreads_graph.write_image(
-    os.path.join(
-        outdir,
-        f"{project_name}_5_numberRawreads.{graph_format}",
-    )
-)
-filteredreads_graph.write_image(
-    os.path.join(
-        outdir,
-        f"{project_name}_6_numberFilteredreads.{graph_format}",
-    )
-)
-prelulu_graph_esvs.write_image(
-    os.path.join(
-        outdir,
-        f"{project_name}_7_prelulu_esvs.{graph_format}",
-    )
-)
-postlulu_graph_esvs.write_image(
-    os.path.join(
-        outdir,
-        f"{project_name}_8_postlulu_esvs.{graph_format}",
-    )
-)
-prelulu_graph_otus.write_image(
-    os.path.join(
-        outdir,
-        f"{project_name}_9_prelulu_otus.{graph_format}",
-    )
-)
-postlulu_graph_otus.write_image(
-    os.path.join(
-        outdir,
-        f"{project_name}_10_postlulu_otus.{graph_format}",
-    )
-)
-lulu_pre_post_graph.write_image(
-    os.path.join(
-        outdir,
-        f"{project_name}_11_lulu_filtering_stats.{graph_format}",
-    )
-)
-reads_esvs_graph.write_image(
-    os.path.join(
-        outdir,
-        f"{project_name}_12_reads_vs_esvs.{graph_format}",
-    )
-)
-reads_otus_graph.write_image(
-    os.path.join(
-        outdir,
-        f"{project_name}_13_reads_vs_otus.{graph_format}",
-    )
-)
 esv_linegraph.write_html(
     os.path.join(
         outdir,
@@ -678,6 +592,20 @@ esv_linegraph.write_image(
         f"{project_name}_14_linegraph_esvs.{graph_format}",
     )
 )
+
+# Lineplot OTUs
+otu_linegraph = go.Figure()
+for sample in samples:
+    y_values = df_stats.loc[sample].values.tolist()[:-1]
+    x_values = df_stats.columns.tolist()[:-1]
+    otu_linegraph.add_trace(go.Scatter(x=x_values, y=y_values, name=sample))
+otu_linegraph.update_layout(
+    template="simple_white",
+    width=1000,
+    height=800,
+    title="Reads per sample for each module",
+)
+otu_linegraph.update_yaxes(title="Reads")
 otu_linegraph.write_html(
     os.path.join(
         outdir,
@@ -691,21 +619,100 @@ otu_linegraph.write_image(
         f"{project_name}_15_linegraph_otus.{graph_format}",
     )
 )
+
+# Boxplot
+boxplot = go.Figure()
+for category in df_stats.columns.tolist():
+    y_values = df_stats.loc[samples][category].values.tolist()
+    boxplot.add_trace(go.Box(y=y_values, name=category))
+boxplot.update_layout(
+    width=1000,
+    height=800,
+    title="Reads per module",
+    showlegend=False,
+)
+boxplot.update_yaxes(title="Reads")
 boxplot.write_image(
     os.path.join(
         outdir,
         f"{project_name}_16_boxplot_summary.{graph_format}",
     )
 )
-esv_heatmap.write_image(
-    os.path.join(
-        outdir,
-        f"{project_name}_17_esv_heatmap.{graph_format}",
+
+# ESV heatmap
+## Skip if too many ESVs, visualization doesn't make sense
+if len(esv_postlulu_df) < 160000:
+    ## Format
+    ID_list_esv = esv_postlulu_df["ID"].values.tolist()
+    esv_postlulu_samples_df = esv_postlulu_df.drop(columns=["ID", "Seq"])
+    sample_list = esv_postlulu_samples_df.columns.tolist()
+    ## Take log
+    esv_postlulu_samples_log_df = np.where(
+        esv_postlulu_samples_df != 0, np.log(esv_postlulu_samples_df), 0
     )
-)
-otu_heatmap.write_image(
-    os.path.join(
-        outdir,
-        f"{project_name}_18_otu_heatmap.{graph_format}",
+    ## Define height
+    esv_heatmap_height = min(len(ID_list_esv) * 15, 3000)
+    ## Create heatmap
+    esv_heatmap = px.imshow(
+        esv_postlulu_samples_log_df,
+        y=ID_list_esv,
+        x=sample_list,
+        aspect="auto",
+        height=esv_heatmap_height,
+        width=1500,
     )
-)
+    esv_heatmap.update_layout(
+        template="simple_white",
+        title="log(ESV)",
+        coloraxis_showscale=False,
+    )
+    if esv_heatmap_height >= 3000:
+        esv_heatmap.update_yaxes(showticklabels=False, title="ESVs")
+    else:
+        esv_heatmap.update_yaxes(tickmode="linear")
+        esv_heatmap.update_xaxes(tickmode="linear")
+    esv_heatmap.write_image(
+        os.path.join(
+            outdir,
+            f"{project_name}_17_esv_heatmap.{graph_format}",
+        )
+    )
+
+# OTU heatmap
+## Skip if too many OTUs, visualization doesn't make sense
+if len(otu_postlulu_df) < 160000:
+    ## Format
+    ID_list_otu = otu_postlulu_df["ID"].values.tolist()
+    otu_postlulu_samples_df = otu_postlulu_df.drop(columns=["ID", "Seq"])
+    sample_list = otu_postlulu_samples_df.columns.tolist()
+    ## Take log
+    otu_postlulu_samples_log_df = np.where(
+        otu_postlulu_samples_df != 0, np.log(otu_postlulu_samples_df), 0
+    )
+    ## Define height
+    otu_heatmap_height = min(len(ID_list_otu) * 15, 3000)
+    ## Create heatmap
+    otu_heatmap = px.imshow(
+        otu_postlulu_samples_log_df,
+        y=ID_list_otu,
+        x=sample_list,
+        aspect="auto",
+        height=otu_heatmap_height,
+        width=1500,
+    )
+    otu_heatmap.update_layout(
+        template="simple_white",
+        title="log(OTU)",
+        coloraxis_showscale=False,
+    )
+    if otu_heatmap_height >= 3000:
+        otu_heatmap.update_yaxes(showticklabels=False, title="OTUs")
+    else:
+        otu_heatmap.update_yaxes(tickmode="linear")
+        otu_heatmap.update_xaxes(tickmode="linear")
+    otu_heatmap.write_image(
+        os.path.join(
+            outdir,
+            f"{project_name}_18_otu_heatmap.{graph_format}",
+        )
+    )
