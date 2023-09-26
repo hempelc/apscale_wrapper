@@ -663,8 +663,9 @@ if len(esv_postlulu_df) < 160000:
     esv_postlulu_samples_log_df = np.where(
         esv_postlulu_samples_df != 0, np.log(esv_postlulu_samples_df), 0
     )
-    ## Define height
+    ## Define size
     esv_heatmap_height = min(len(ID_list_esv) * 15, 3000)
+    esv_heatmap_width = min(len(sample_list) * 15, 3000)
     ## Create heatmap
     esv_heatmap = px.imshow(
         esv_postlulu_samples_log_df,
@@ -672,7 +673,7 @@ if len(esv_postlulu_df) < 160000:
         x=sample_list,
         aspect="auto",
         height=esv_heatmap_height,
-        width=1500,
+        width=esv_heatmap_width,
     )
     esv_heatmap.update_layout(
         template="simple_white",
@@ -705,8 +706,9 @@ if len(otu_postlulu_df) < 160000:
     otu_postlulu_samples_log_df = np.where(
         otu_postlulu_samples_df != 0, np.log(otu_postlulu_samples_df), 0
     )
-    ## Define height
+    ## Define size
     otu_heatmap_height = min(len(ID_list_otu) * 15, 3000)
+    otu_heatmap_width = min(len(sample_list) * 15, 3000)
     ## Create heatmap
     otu_heatmap = px.imshow(
         otu_postlulu_samples_log_df,
@@ -714,7 +716,7 @@ if len(otu_postlulu_df) < 160000:
         x=sample_list,
         aspect="auto",
         height=otu_heatmap_height,
-        width=1500,
+        width=otu_heatmap_width,
     )
     otu_heatmap.update_layout(
         template="simple_white",
