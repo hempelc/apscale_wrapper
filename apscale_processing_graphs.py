@@ -22,9 +22,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import argparse
 import warnings
-from statistics import mean
-from statistics import median
-from statistics import stdev
+from statistics import mean, median, stdev
 
 
 # Define that warnings are not printed to console
@@ -33,19 +31,19 @@ warnings.filterwarnings("ignore")
 
 # Funtion to print datetime and text
 def time_print(text):
-    datetime_now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    print(f"{datetime_now}  ---  " + text)
+    print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "---", text)
 
 
 # Function for statistics calculation
 def calculate_read_stats(lst):
-    minimum = min(lst)
-    maximum = max(lst)
-    average = round(mean(lst), 2)
-    med = round(median(lst), 2)
-    deviation = round(stdev(lst), 2)
-
-    return [minimum, maximum, average, med, deviation]
+    stats = [
+        min(lst),
+        max(lst),
+        round(mean(lst), 2),
+        round(median(lst), 2),
+        round(stdev(lst), 2),
+    ]
+    return stats
 
 
 # Define arguments
@@ -236,6 +234,7 @@ pe_graph.write_image(
         f"{project_name}_1_pe_merging.{graph_format}",
     )
 )
+time_print("PE graph generated.")
 
 # Primer trimming
 perc_kept_trim = pd.Series(
@@ -271,6 +270,7 @@ trim_graph.write_image(
         f"{project_name}_2_trimming.{graph_format}",
     )
 )
+time_print("Trimming graph generated.")
 
 # Quality filtering
 perc_kept_qf = (
@@ -307,6 +307,7 @@ qf_graph.write_image(
         f"{project_name}_3_qualityFiltering.{graph_format}",
     )
 )
+time_print("Quality filtering graph generated.")
 
 # Dereplication
 perc_kept_derep = (
@@ -344,6 +345,7 @@ derep_graph.write_image(
         f"{project_name}_4_dereplication.{graph_format}",
     )
 )
+time_print("Dereplication graph generated.")
 
 # Raw number of reads
 num_reads_raw = report_sheet_dict["3_PE merging"]["processed reads"]
@@ -372,6 +374,7 @@ rawreads_graph.write_image(
         f"{project_name}_5_numberRawreads.{graph_format}",
     )
 )
+time_print("Raw reads graph generated.")
 
 # Number of reads after PE merging and quality filtering
 num_reads_filtered = report_sheet_dict["5_quality_filtering"]["passed reads"]
@@ -403,6 +406,7 @@ filteredreads_graph.write_image(
         f"{project_name}_6_numberFilteredreads.{graph_format}",
     )
 )
+time_print("Filtered reads graph generated.")
 
 # Number of ESVs per sample before LULU
 ymax_esvs = esv_prelulu_sums.max()
@@ -427,6 +431,7 @@ prelulu_graph_esvs.write_image(
         f"{project_name}_7_prelulu_esvs.{graph_format}",
     )
 )
+time_print("Number of ESVs before LULU graph generated.")
 
 # Number of ESVs per sample after LULU
 postlulu_graph_esvs = px.bar(
@@ -450,6 +455,7 @@ postlulu_graph_esvs.write_image(
         f"{project_name}_8_postlulu_esvs.{graph_format}",
     )
 )
+time_print("Number of ESVs after LULU graph generated.")
 
 # Number of OTUs per sample before LULU
 ymax_otus = otu_prelulu_sums.max()
@@ -474,6 +480,7 @@ prelulu_graph_otus.write_image(
         f"{project_name}_9_prelulu_otus.{graph_format}",
     )
 )
+time_print("Number of OTUs before LULU graph generated.")
 
 # Number of OTUs per sample after LULU
 postlulu_graph_otus = px.bar(
@@ -497,13 +504,13 @@ postlulu_graph_otus.write_image(
         f"{project_name}_10_postlulu_otus.{graph_format}",
     )
 )
+time_print("Number of OTUs after LULU graph generated.")
 
 # LULU pre post overview
 ESVs = len(esv_prelulu_df)
 ESVs_filtered = len(esv_postlulu_df)
 OTUs = len(otu_prelulu_df)
 OTUs_filtered = len(otu_postlulu_df)
-
 lulu_pre_post_graph = go.Figure()
 x_values = ["ESVs", "ESVs LULU filtered", "OTUs", "OTUs LULU filtered"]
 y_values = [ESVs, ESVs_filtered, OTUs, OTUs_filtered]
@@ -519,6 +526,7 @@ lulu_pre_post_graph.write_image(
         f"{project_name}_11_lulu_filtering_stats.{graph_format}",
     )
 )
+time_print("Pre- vs. post-LULU comparison graph generated.")
 
 # Number of reads vs number of ESVs
 reads_esvs_graph = px.scatter(
@@ -541,6 +549,7 @@ reads_esvs_graph.write_image(
         f"{project_name}_12_reads_vs_esvs.{graph_format}",
     )
 )
+time_print("Number of reads vs. ESVs graph generated.")
 
 # Number of reads vs number of OTUs
 reads_otus_graph = px.scatter(
@@ -563,6 +572,7 @@ reads_otus_graph.write_image(
         f"{project_name}_13_reads_vs_otus.{graph_format}",
     )
 )
+time_print("Number of reads vs. OTUs graph generated.")
 
 # Lineplot ESVs
 esv_linegraph = go.Figure()
@@ -592,6 +602,7 @@ esv_linegraph.write_image(
         f"{project_name}_14_linegraph_esvs.{graph_format}",
     )
 )
+time_print("Lineplot ESVs graph generated.")
 
 # Lineplot OTUs
 otu_linegraph = go.Figure()
@@ -619,6 +630,7 @@ otu_linegraph.write_image(
         f"{project_name}_15_linegraph_otus.{graph_format}",
     )
 )
+time_print("Lineplot OTUs graph generated.")
 
 # Boxplot
 boxplot = go.Figure()
@@ -638,6 +650,7 @@ boxplot.write_image(
         f"{project_name}_16_boxplot_summary.{graph_format}",
     )
 )
+time_print("Boxplot generated.")
 
 # ESV heatmap
 ## Skip if too many ESVs, visualization doesn't make sense
@@ -677,6 +690,9 @@ if len(esv_postlulu_df) < 160000:
             f"{project_name}_17_esv_heatmap.{graph_format}",
         )
     )
+    time_print("Heatmap ESVs generated.")
+else:
+    time_print("Heatmap ESVs skipped: too many ESVs (>160,000).")
 
 # OTU heatmap
 ## Skip if too many OTUs, visualization doesn't make sense
@@ -716,3 +732,6 @@ if len(otu_postlulu_df) < 160000:
             f"{project_name}_18_otu_heatmap.{graph_format}",
         )
     )
+    time_print("Heatmap OTUs generated.")
+else:
+    time_print("Heatmap OTUs skipped: too many OTUs (>160,000).")
