@@ -70,7 +70,9 @@ def generateSettings(**kwargs):
         df_6.to_excel(writer, sheet_name="6_dereplication_pooling", index=False)
 
         ## write the 7_otu_clustering sheet
-        df_7 = pd.DataFrame([[otu_perc, "True"]], columns=["pct id", "to excel"])
+        df_7 = pd.DataFrame(
+            [[otu_perc, coi, "True"]], columns=["pct id", "coi", "to excel"]
+        )
 
         df_7.to_excel(writer, sheet_name="7_otu_clustering", index=False)
 
@@ -152,6 +154,14 @@ parser.add_argument(
     help="OTU identify treshold for clustering (default=97).",
 )
 parser.add_argument(
+    "-c",
+    "--coi",
+    choices=["False", "True"],
+    default="False",
+    help="""Are you processing COI data? If yes, the fact that COI is a coding gene can be used to
+    improve processing (default=False).""",
+)
+parser.add_argument(
     "-e",
     "--maxEE",
     metavar="N",
@@ -190,6 +200,7 @@ forward_primer = args.forward_primer
 reverse_primer = args.reverse_primer
 min_length = args.min_length
 max_length = args.max_length
+coi = args.coi
 graph_format = args.graph_format
 otu_perc = args.otu_perc
 maxEE = args.maxEE
@@ -231,6 +242,7 @@ generateSettings(
     otu_perc=otu_perc,
     maxEE=maxEE,
     cores=cores,
+    coi=coi,
 )
 
 # Run apscale
