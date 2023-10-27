@@ -161,7 +161,7 @@ parser.add_argument(
     metavar="NN",
     default=97,
     type=int,
-    help="OTU identify treshold for clustering (default=97).",
+    help="OTU identify treshold for clustering with vsearch. Only used when --clusteringtool=vsearch (default=97).",
 )
 parser.add_argument(
     "-c",
@@ -177,7 +177,7 @@ parser.add_argument(
     default=1,
     metavar="N",
     type=int,
-    help="Distance used for swarm. Overwritten to 13 if coi=True (default=1)",
+    help="Distance used for swarm. Overwritten to 13 if --coi=True. Only used when --clusteringtool=swarm (default=1).",
 )
 parser.add_argument(
     "-t",
@@ -212,15 +212,16 @@ parser.add_argument(
 parser.add_argument(
     "-g",
     "--graph_format",
-    help="Format for processing report graphs, either png or svg.",
-    required=True,
+    help="Format for processing report graphs (default=png).",
+    default="png",
     choices=["png", "svg"],
 )
 parser.add_argument(
     "-S",
     "--scaling_factor",
-    help="Scaling factor for graph width. Manual trial and error in 0.2 increments might be required (default: 1).",
-    default=1,
+    help="Scaling factor for graph width. Manual trial and error in 0.2 increments might be required (default: 1.0).",
+    default=1.0,
+    metavar="N.N",
     type=float,
 )
 args = parser.parse_args()
