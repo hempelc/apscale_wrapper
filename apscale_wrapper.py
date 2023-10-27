@@ -71,17 +71,27 @@ def generateSettings(**kwargs):
 
         ## write the 7_otu_clustering sheet
         df_7 = pd.DataFrame(
-            [[otu_perc, coi, "True"]], columns=["pct id", "coi", "to excel"]
+            [[clusteringtool, 97, swarm_distance, prior_denoising, coi, "True"]],
+            columns=[
+                "clustering tool",
+                "vsearch pct id",
+                "swarm distance",
+                "prior denoise",
+                "coi",
+                "to excel",
+            ],
         )
 
         df_7.to_excel(writer, sheet_name="7_otu_clustering", index=False)
 
         ## write the 8_denoising sheet
-        df_8 = pd.DataFrame([[2, 8, "True"]], columns=["alpha", "minsize", "to excel"])
+        df_8 = pd.DataFrame(
+            [[2, 8, coi, "True"]], columns=["alpha", "minsize", "coi", "to excel"]
+        )
 
         df_8.to_excel(writer, sheet_name="8_denoising", index=False)
 
-        ## write the 8_denoising sheet
+        ## write the 9_lulu_filtering sheet
         df_9 = pd.DataFrame(
             [[84, 95, 1, "True"]],
             columns=[
@@ -159,7 +169,29 @@ parser.add_argument(
     choices=["False", "True"],
     default="False",
     help="""Are you processing COI data? If yes, the fact that COI is a coding gene can be used to
-    improve processing (default=False).""",
+    improve denoising (default=False).""",
+)
+parser.add_argument(
+    "-d",
+    "--swarm_distance",
+    default=1,
+    metavar="N",
+    type=int,
+    help="Distance used for swarm. Overwritten to 13 if coi=True (default=1)",
+)
+parser.add_argument(
+    "-t",
+    "--clusteringtool",
+    default="vsearch",
+    choices=["vsearch", "swarm"],
+    help="Tool used for OTU clustering (default=vsearch).",
+)
+parser.add_argument(
+    "-D",
+    "--prior_denoising",
+    choices=["False", "True"],
+    default="False",
+    help="Set to True if you want to denoise reads prior to OTU clustering (default=False).",
 )
 parser.add_argument(
     "-e",
@@ -206,6 +238,9 @@ otu_perc = args.otu_perc
 maxEE = args.maxEE
 cores = args.cores
 scaling_factor = args.scaling_factor
+clusteringtool = args.clusteringtool
+swarm_distance = args.swarm_distance
+prior_denoising = args.prior_denoising
 
 ### Start of pipeline
 time_print("Starting apscale wrapper.")
@@ -243,6 +278,9 @@ generateSettings(
     maxEE=maxEE,
     cores=cores,
     coi=coi,
+    clusteringtool=clusteringtool,
+    swarm_distance=swarm_distance,
+    prior_denoising=prior_denoising,
 )
 
 # Run apscale
