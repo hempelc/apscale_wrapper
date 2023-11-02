@@ -36,14 +36,13 @@ def time_print(text):
 
 # Function for statistics calculation
 def calculate_read_stats(lst):
-    stats = [
+    return [
         min(lst),
         max(lst),
         round(mean(lst), 2),
         round(median(lst), 2),
         round(stdev(lst), 2),
     ]
-    return stats
 
 
 # Define arguments
@@ -89,7 +88,7 @@ esv_postlulu_file = os.path.join(
     project_dir,
     "9_lulu_filtering",
     "denoising",
-    f"{project_dir}_ESV_table_filtered.parquet.snappy",
+    f"{project_name}_ESV_table_filtered.parquet.snappy",
 )
 esv_prelulu_file = os.path.join(
     project_dir, "8_denoising", f"{project_name}_ESV_table.parquet.snappy"
