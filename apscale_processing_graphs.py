@@ -22,6 +22,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import argparse
 import warnings
+import dash_bio
 from statistics import mean, median, stdev
 
 
@@ -31,7 +32,7 @@ warnings.filterwarnings("ignore")
 
 # Funtion to print datetime and text
 def time_print(text):
-    print(datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), "---", text)
+    print(datetime.datetime.now().strftime("%H:%M:%S"), "---", text)
 
 
 # Function for statistics calculation
@@ -58,8 +59,8 @@ parser.add_argument(
 parser.add_argument(
     "-f",
     "--graph_format",
-    help="Graph format, either png or svg.",
-    required=True,
+    help="Graph format, either png or svg (default=png).",
+    default="png",
     choices=["png", "svg"],
 )
 parser.add_argument(
@@ -282,7 +283,7 @@ perc_kept_qf.index = (
     .str.replace("_PE", "")
     .str.replace("_trimmed", "")
     .str.replace("_filtered", "")
-    .str.replace(".fastq.gz", "")
+    .str.replace(".fasta.gz", "")
 )  # type: ignore
 perc_kept_qf = perc_kept_qf.fillna(0)
 qf_graph = px.bar(
@@ -327,7 +328,7 @@ derep_graph = px.bar(
     perc_kept_derep.sort_values(),
     range_y=[0, 100],
     labels={"value": "Unique reads [%]", "File": "Samples"},
-    title="Number of unique reads",
+    title="Number of unique reads per sample",
     width=graph_width,
 )
 derep_graph.add_hline(
@@ -357,7 +358,7 @@ ymax_reads = max(num_reads_raw)
 rawreads_graph = px.bar(
     num_reads_raw.sort_values(),
     labels={"value": "Number of reads", "File": "Samples"},
-    title="Raw number of reads",
+    title="Number of reads before PE merging, trimming and quality filtering",
     range_y=[0, ymax_reads],
     width=graph_width,
 )
@@ -412,7 +413,7 @@ ymax_esvs = esv_prelulu_sums.max()
 prelulu_graph_esvs = px.bar(
     esv_prelulu_sums.sort_values(),
     labels={"value": "Number of ESVs", "index": "Samples"},
-    title="Number of ESVs per sample before LULU",
+    title="Number of ESVs per sample before LULU filtering",
     range_y=[0, ymax_esvs],
     width=graph_width,
 )
@@ -436,7 +437,7 @@ time_print("Number of ESVs before LULU graph generated.")
 postlulu_graph_esvs = px.bar(
     esv_postlulu_sums.sort_values(),
     labels={"value": "Number of ESVs", "index": "Samples"},
-    title="Number of ESVs per sample after LULU",
+    title="Number of ESVs per sample after LULU filtering",
     range_y=[0, ymax_esvs],
     width=graph_width,
 )
@@ -461,7 +462,7 @@ ymax_otus = otu_prelulu_sums.max()
 prelulu_graph_otus = px.bar(
     otu_prelulu_sums.sort_values(),
     labels={"value": "Number of OTUs", "index": "Samples"},
-    title="Number of OTUs per sample before LULU",
+    title="Number of OTUs per sample before LULU filtering",
     range_y=[0, ymax_otus],
     width=graph_width,
 )
@@ -485,7 +486,7 @@ time_print("Number of OTUs before LULU graph generated.")
 postlulu_graph_otus = px.bar(
     otu_postlulu_sums.sort_values(),
     labels={"value": "Number of OTUs", "index": "Samples"},
-    title="Number of OTUs per sample after LULU",
+    title="Number of OTUs per sample after LULU filtering",
     range_y=[0, ymax_otus],
     width=graph_width,
 )
@@ -511,11 +512,15 @@ ESVs_filtered = len(esv_postlulu_df)
 OTUs = len(otu_prelulu_df)
 OTUs_filtered = len(otu_postlulu_df)
 lulu_pre_post_graph = go.Figure()
-x_values = ["ESVs", "ESVs LULU filtered", "OTUs", "OTUs LULU filtered"]
+x_values = ["ESVs", "ESVs LULU-filtered", "OTUs", "OTUs LULU-filtered"]
 y_values = [ESVs, ESVs_filtered, OTUs, OTUs_filtered]
 text = [ESVs, ESVs_filtered, OTUs, OTUs_filtered]
 lulu_pre_post_graph.add_trace(go.Bar(x=x_values, y=y_values, text=text))
-lulu_pre_post_graph.update_layout(width=1000, height=800, title="LULU filtering")
+lulu_pre_post_graph.update_layout(
+    width=1000,
+    height=800,
+    title="Total number of ESVs and OTUs before and after LULU filtering",
+)
 lulu_pre_post_graph.update_traces(textposition="outside")
 lulu_pre_post_graph.update_yaxes(title="OTUs/ESVs")
 # Save
@@ -535,10 +540,10 @@ reads_esvs_graph = px.scatter(
     trendline="ols",
     trendline_color_override="black",
     hover_name="index",
-    title=project_name,
+    title="Filtered reads vs. ESVs after LULU filtering",
     width=480,
     labels={
-        "ESVs postlulu": "Number of ESVs after LULU",
+        "ESVs postlulu": "Number of ESVs after LULU filtering",
         "passed reads": "Number of filtered reads",
     },
 )
@@ -558,10 +563,10 @@ reads_otus_graph = px.scatter(
     trendline="ols",
     trendline_color_override="black",
     hover_name="index",
-    title=project_name,
+    title="Number of filtered reads vs. number of OTUs after LULU filtering",
     width=480,
     labels={
-        "OTUs postlulu": "Number of OTUs after LULU",
+        "OTUs postlulu": "Number of OTUs after LULU filtering",
         "passed reads": "Number of filtered reads",
     },
 )
@@ -585,7 +590,7 @@ esv_linegraph.update_layout(
     template="simple_white",
     width=1000,
     height=800,
-    title="Reads per sample for each module",
+    title="ESVs - Reads per sample for each processing step",
 )
 esv_linegraph.update_yaxes(title="Reads")
 esv_linegraph.write_html(
@@ -613,7 +618,7 @@ otu_linegraph.update_layout(
     template="simple_white",
     width=1000,
     height=800,
-    title="Reads per sample for each module",
+    title="OTUs - Reads per sample for each processing step",
 )
 otu_linegraph.update_yaxes(title="Reads")
 otu_linegraph.write_html(
@@ -639,7 +644,7 @@ for category in df_stats.columns.tolist():
 boxplot.update_layout(
     width=1000,
     height=800,
-    title="Reads per module",
+    title="Read overview for each processing step",
     showlegend=False,
 )
 boxplot.update_yaxes(title="Reads")
@@ -651,88 +656,83 @@ boxplot.write_image(
 )
 time_print("Boxplot generated.")
 
-# ESV heatmap
-## Skip if too many ESVs, visualization doesn't make sense
-if len(esv_postlulu_df) < 160000:
-    ## Format
-    ID_list_esv = esv_postlulu_df["ID"].values.tolist()
-    esv_postlulu_samples_df = esv_postlulu_df.drop(columns=["ID", "Seq"])
-    sample_list = esv_postlulu_samples_df.columns.tolist()
-    ## Take log
-    esv_postlulu_samples_log_df = np.where(
-        esv_postlulu_samples_df != 0, np.log(esv_postlulu_samples_df), 0
+# ESV clustergram
+## Format
+ID_list_esv = esv_postlulu_df["ID"].values.tolist()
+esv_postlulu_samples_df = esv_postlulu_df.drop(columns=["ID", "Seq"])
+sample_list = esv_postlulu_samples_df.columns.tolist()
+## Take log
+esv_postlulu_samples_log_df = np.where(
+    esv_postlulu_samples_df != 0, np.log(esv_postlulu_samples_df), 0
+)
+## Define colours
+colors = px.colors.sample_colorscale("plasma", [n / 5 for n in range(5)])
+## Create clustergram
+time_print("Generating clustergram for ESVs. This can take a while...")
+esv_clustergram = dash_bio.Clustergram(
+    data=esv_postlulu_samples_log_df,
+    column_labels=list(esv_postlulu_samples_df.columns.values),
+    row_labels=list(esv_postlulu_samples_df.index),
+    height=500,
+    width=min(len(sample_list) * 40, 3000),
+    hidden_labels="row",
+    color_map=[
+        [0.0, colors[0]],
+        [0.25, colors[1]],
+        [0.5, colors[2]],
+        [0.75, colors[3]],
+        [1.0, colors[4]],
+    ],
+    paper_bg_color="white",
+)
+esv_clustergram.update_layout(
+    title="Clustergram with log-transformed ESV abundances",
+    coloraxis_showscale=False,
+)
+esv_clustergram.write_image(
+    os.path.join(
+        outdir,
+        f"{project_name}_17_esv_clustergram.{graph_format}",
     )
-    ## Define size
-    esv_heatmap_height = min(len(ID_list_esv) * 15, 3000)
-    esv_heatmap_width = min(len(sample_list) * 15, 3000)
-    ## Create heatmap
-    esv_heatmap = px.imshow(
-        esv_postlulu_samples_log_df,
-        y=ID_list_esv,
-        x=sample_list,
-        aspect="auto",
-        height=esv_heatmap_height,
-        width=esv_heatmap_width,
-    )
-    esv_heatmap.update_layout(
-        template="simple_white",
-        title="log(ESV)",
-        coloraxis_showscale=False,
-    )
-    if esv_heatmap_height >= 3000:
-        esv_heatmap.update_yaxes(showticklabels=False, title="ESVs")
-    else:
-        esv_heatmap.update_yaxes(tickmode="linear")
-        esv_heatmap.update_xaxes(tickmode="linear")
-    esv_heatmap.write_image(
-        os.path.join(
-            outdir,
-            f"{project_name}_17_esv_heatmap.{graph_format}",
-        )
-    )
-    time_print("Heatmap ESVs generated.")
-else:
-    time_print("Heatmap ESVs skipped: too many ESVs (>160,000).")
+)
+time_print("Clustergram generated for ESVs.")
 
-# OTU heatmap
-## Skip if too many OTUs, visualization doesn't make sense
-if len(otu_postlulu_df) < 160000:
-    ## Format
-    ID_list_otu = otu_postlulu_df["ID"].values.tolist()
-    otu_postlulu_samples_df = otu_postlulu_df.drop(columns=["ID", "Seq"])
-    sample_list = otu_postlulu_samples_df.columns.tolist()
-    ## Take log
-    otu_postlulu_samples_log_df = np.where(
-        otu_postlulu_samples_df != 0, np.log(otu_postlulu_samples_df), 0
+# OTU clustergram
+## Format
+ID_list_otu = otu_postlulu_df["ID"].values.tolist()
+otu_postlulu_samples_df = otu_postlulu_df.drop(columns=["ID", "Seq"])
+sample_list = otu_postlulu_samples_df.columns.tolist()
+## Take log
+otu_postlulu_samples_log_df = np.where(
+    otu_postlulu_samples_df != 0, np.log(otu_postlulu_samples_df), 0
+)
+## Define colours
+colors = px.colors.sample_colorscale("plasma", [n / 5 for n in range(5)])
+## Create clustergram
+time_print("Generating clustergram for OTUs. This can take a while...")
+otu_clustergram = dash_bio.Clustergram(
+    data=otu_postlulu_samples_log_df,
+    column_labels=list(otu_postlulu_samples_df.columns.values),
+    row_labels=list(otu_postlulu_samples_df.index),
+    height=500,
+    width=min(len(sample_list) * 40, 3000),
+    hidden_labels="row",
+    color_map=[
+        [0.0, colors[0]],
+        [0.25, colors[1]],
+        [0.5, colors[2]],
+        [0.75, colors[3]],
+        [1.0, colors[4]],
+    ],
+    paper_bg_color="white",
+)
+otu_clustergram.update_layout(
+    title="Clustergram with log-transformed OTU abundances",
+)
+otu_clustergram.write_image(
+    os.path.join(
+        outdir,
+        f"{project_name}_18_otu_clustergram.{graph_format}",
     )
-    ## Define size
-    otu_heatmap_height = min(len(ID_list_otu) * 15, 3000)
-    otu_heatmap_width = min(len(sample_list) * 15, 3000)
-    ## Create heatmap
-    otu_heatmap = px.imshow(
-        otu_postlulu_samples_log_df,
-        y=ID_list_otu,
-        x=sample_list,
-        aspect="auto",
-        height=otu_heatmap_height,
-        width=otu_heatmap_width,
-    )
-    otu_heatmap.update_layout(
-        template="simple_white",
-        title="log(OTU)",
-        coloraxis_showscale=False,
-    )
-    if otu_heatmap_height >= 3000:
-        otu_heatmap.update_yaxes(showticklabels=False, title="OTUs")
-    else:
-        otu_heatmap.update_yaxes(tickmode="linear")
-        otu_heatmap.update_xaxes(tickmode="linear")
-    otu_heatmap.write_image(
-        os.path.join(
-            outdir,
-            f"{project_name}_18_otu_heatmap.{graph_format}",
-        )
-    )
-    time_print("Heatmap OTUs generated.")
-else:
-    time_print("Heatmap OTUs skipped: too many OTUs (>160,000).")
+)
+time_print("Clustergram generated for OTUs.")
