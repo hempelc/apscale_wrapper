@@ -563,7 +563,7 @@ reads_otus_graph = px.scatter(
     trendline="ols",
     trendline_color_override="black",
     hover_name="index",
-    title="Number of filtered reads vs. number of OTUs after LULU filtering",
+    title="Filtered reads vs. OTUs after LULU filtering",
     width=480,
     labels={
         "OTUs postlulu": "Number of OTUs after LULU filtering",
@@ -644,7 +644,7 @@ for category in df_stats.columns.tolist():
 boxplot.update_layout(
     width=1000,
     height=800,
-    title="Read overview for each processing step",
+    title="Read number overview for each processing step",
     showlegend=False,
 )
 boxplot.update_yaxes(title="Reads")
