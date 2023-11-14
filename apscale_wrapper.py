@@ -4,7 +4,7 @@
 A wrapper to run apscale on forward and reverse reads and to generate 
 processing QC graphs.
 
-Requires the submodule apscale_processing_graphs.py in PATH.
+Requires the submodules apscale_processing_graphs.py and apscale_subtract_negatives.py in PATH.
 
 By Chris Hempel (christopher.hempel@kaust.edu.sa) on 15 Aug 2023
 """
@@ -22,20 +22,19 @@ warnings.filterwarnings("ignore")
 
 # Funtion to print datetime and text
 def time_print(text):
-    datetime_now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    print(f"{datetime_now}  ---  " + text)
+    print(datetime.datetime.now().strftime("%H:%M:%S"), "---", text)
 
 
 # Function to generate an apscale Settings.xlsx file
 def generateSettings(**kwargs):
     with pd.ExcelWriter(
-        Path(f"{project_name}_apscale").joinpath("Settings.xlsx"),
+        Path(f"{args.project_name}_apscale").joinpath("Settings.xlsx"),
         mode="w",
         engine="openpyxl",
     ) as writer:
         # ## write the 0_general_settings sheet
         df_0 = pd.DataFrame(
-            [[cores, 9]],
+            [[args.cores, 9]],
             columns=["cores to use", "compression level"],
         )
 
@@ -50,7 +49,7 @@ def generateSettings(**kwargs):
 
         ## write the 4_primer_trimming sheet
         df_4 = pd.DataFrame(
-            [[forward_primer, reverse_primer, "False"]],
+            [[args.forward_primer, args.reverse_primer, "False"]],
             columns=["P5 Primer (5' - 3')", "P7 Primer (5' - 3')", "anchoring"],
         )
 
@@ -58,7 +57,7 @@ def generateSettings(**kwargs):
 
         ## write the 5_quality_filtering sheet
         df_5 = pd.DataFrame(
-            [[maxEE, min_length, max_length]],
+            [[args.maxEE, args.min_length, args.max_length]],
             columns=["maxEE", "min length", "max length"],
         )
 
@@ -71,7 +70,16 @@ def generateSettings(**kwargs):
 
         ## write the 7_otu_clustering sheet
         df_7 = pd.DataFrame(
-            [[clusteringtool, 97, swarm_distance, prior_denoising, coi, "True"]],
+            [
+                [
+                    args.clusteringtool,
+                    args.otu_perc,
+                    args.swarm_distance,
+                    args.prior_denoising,
+                    args.coi,
+                    "True",
+                ]
+            ],
             columns=[
                 "clustering tool",
                 "vsearch pct id",
@@ -86,7 +94,7 @@ def generateSettings(**kwargs):
 
         ## write the 8_denoising sheet
         df_8 = pd.DataFrame(
-            [[2, 8, coi, "True"]], columns=["alpha", "minsize", "coi", "to excel"]
+            [[2, 8, args.coi, "True"]], columns=["alpha", "minsize", "coi", "to excel"]
         )
 
         df_8.to_excel(writer, sheet_name="8_denoising", index=False)
@@ -177,7 +185,7 @@ parser.add_argument(
     default=1,
     metavar="N",
     type=int,
-    help="Distance used for swarm. Overwritten to 13 if --coi=True. Only used when --clusteringtool=swarm (default=1).",
+    help="Distance used for swarm. Overwritten to 13 if --coi=True. Only used when --clusteringtool=swarm (default: 1).",
 )
 parser.add_argument(
     "-t",
@@ -191,7 +199,7 @@ parser.add_argument(
     "--prior_denoising",
     choices=["False", "True"],
     default="False",
-    help="Set to True if you want to denoise reads prior to OTU clustering (default=False).",
+    help="Set to True if you want to denoise reads prior to OTU clustering (default: False).",
 )
 parser.add_argument(
     "-e",
@@ -199,7 +207,7 @@ parser.add_argument(
     metavar="N",
     default=2,
     type=int,
-    help="maxEE (maximum estimated error) value used for quality filtering (default=2).",
+    help="maxEE (maximum estimated error) value used for quality filtering (default: 2).",
 )
 parser.add_argument(
     "-n",
@@ -207,14 +215,28 @@ parser.add_argument(
     metavar="N",
     default=2,
     type=int,
-    help="Number of cores to use (default=2).",
+    help="Number of cores to use (default: 2).",
 )
 parser.add_argument(
     "-g",
     "--graph_format",
-    help="Format for processing report graphs (default=png).",
-    default="png",
-    choices=["png", "svg"],
+    help="Graph format, either HTML, png, svg. HTML is recommended because it creates interactive plots (default: html).",
+    default="html",
+    choices=["png", "svg", "html"],
+)
+parser.add_argument(
+    "-R",
+    "--remove_negatives",
+    help="Do you want to remove reads in negative controls from the samples using the R package microDecon? (default: False)",
+    default="False",
+    choices=["True", "False"],
+)
+parser.add_argument(
+    "-N",
+    "--negatives",
+    help="Required if --removes_negatives=True. List the names of all negative controls (without _R1/2.fq.gz), separated by commas without spaces.",
+    metavar="control1,control2,control3",
+    type=str,
 )
 parser.add_argument(
     "-S",
@@ -224,71 +246,79 @@ parser.add_argument(
     metavar="N.N",
     type=float,
 )
+
+
+# Define a custom validation function to enforce the requirement for --remove_negatives
+def validate_args(args):
+    if args.remove_negatives == "True" and not args.negatives:
+        parser.error("--negatives is required when --remove_negatives=True.")
+
+
+# Register the custom validation function to be called after parsing arguments
+parser.set_defaults(func=validate_args)
+
+# Parse arguments
 args = parser.parse_args()
 
-# Set arguments
-sequence_dir = args.sequence_dir
-project_name = args.project_name
-forward_primer = args.forward_primer
-reverse_primer = args.reverse_primer
-min_length = args.min_length
-max_length = args.max_length
-coi = args.coi
-graph_format = args.graph_format
-otu_perc = args.otu_perc
-maxEE = args.maxEE
-cores = args.cores
-scaling_factor = args.scaling_factor
-clusteringtool = args.clusteringtool
-swarm_distance = args.swarm_distance
-prior_denoising = args.prior_denoising
+# Call the custom validation function to check the requirements
+args.func(args)
 
 ### Start of pipeline
 time_print("Starting apscale wrapper.")
 
 # Create an apscale directory using bash
 time_print("Creating apscale directory...")
-subprocess.run(["apscale", "--create_project", project_name])
+subprocess.run(["apscale", "--create_project", args.project_name])
 
 # Create an empty Project_report.xlsx file
 ## Create an ExcelWriter object using the openpyxl engine
 excel_writer = pd.ExcelWriter(
-    f"{project_name}_apscale/Project_report.xlsx", engine="openpyxl"
+    f"{args.project_name}_apscale/Project_report.xlsx", engine="openpyxl"
 )
 ## Write an empty DataFrame to the Excel file
 pd.DataFrame().to_excel(excel_writer, sheet_name="Sheet1", index=False)
 # Save the Excel file
-excel_writer.book.save(f"{project_name}_apscale/Project_report.xlsx")
+excel_writer.book.save(f"{args.project_name}_apscale/Project_report.xlsx")
 
 # Generate symlinks to demultiplexed reads
 time_print("Generating symlinks to demultiplexed reads...")
 subprocess.run(
-    f"ln -s $(realpath {sequence_dir})/* {project_name}_apscale/2_demultiplexing/data",
+    f'ln -s "$(realpath "{args.sequence_dir}")"/* {args.project_name}_apscale/2_demultiplexing/data',
     shell=True,
 )
 
 # Generate a Settings.xlsx file with given parameters
 time_print("Generating apscale settings file...")
 generateSettings(
-    project_name=project_name,
-    forward_primer=forward_primer,
-    reverse_primer=reverse_primer,
-    min_length=min_length,
-    max_length=max_length,
-    otu_perc=otu_perc,
-    maxEE=maxEE,
-    cores=cores,
-    coi=coi,
-    clusteringtool=clusteringtool,
-    swarm_distance=swarm_distance,
-    prior_denoising=prior_denoising,
+    project_name=args.project_name,
+    forward_primer=args.forward_primer,
+    reverse_primer=args.reverse_primer,
+    min_length=args.min_length,
+    max_length=args.max_length,
+    otu_perc=args.otu_perc,
+    maxEE=args.maxEE,
+    cores=args.cores,
+    coi=args.coi,
+    clusteringtool=args.clusteringtool,
+    swarm_distance=args.swarm_distance,
+    prior_denoising=args.prior_denoising,
 )
 
 # Run apscale
 time_print("Starting apscale...")
-subprocess.run(["apscale", "--run_apscale", f"{project_name}_apscale"])
+subprocess.run(["apscale", "--run_apscale", f"{args.project_name}_apscale"])
 time_print("Apscale done.")
 
+if args.remove_negatives == "True":
+    subprocess.run(
+        [
+            "apscale_subtract_negatives.py",
+            "--project_dir",
+            f"{args.project_name}_apscale",
+            "--negatives",
+            f"{args.negatives}",
+        ]
+    )
 
 # Generate processing graphs using separate script
 time_print("Generating apscale processing graphs...")
@@ -296,11 +326,11 @@ subprocess.run(
     [
         "apscale_processing_graphs.py",
         "--project_dir",
-        f"{project_name}_apscale",
+        f"{args.project_name}_apscale",
         "--graph_format",
-        f"{graph_format}",
+        f"{args.graph_format}",
         "--scaling_factor",
-        f"{scaling_factor}",
+        f"{args.scaling_factor}",
     ]
 )
 
