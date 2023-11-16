@@ -20,27 +20,29 @@ from rpy2.robjects import pandas2ri
 warnings.filterwarnings("ignore")
 
 
-# Function to print datetime and text
+# Funtion to print datetime and text
 def time_print(text):
-    datetime_now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    print(f"{datetime_now}  ---  " + text)
+    print(datetime.datetime.now().strftime("%H:%M:%S"), "---", text)
+
+
+# Define a custom argument type for a list of strings
+def list_of_strings(arg):
+    return arg.split(",")
 
 
 # Define arguments
 parser = argparse.ArgumentParser(
     description="""A submodule for the apscale wrapper to filter reads in negative controls from
-samples with microDecon once apscale is done.""",
+    samples with microDecon once apscale is done.""",
 )
 parser.add_argument(
-    "-N",
-    "--negatives",
+    "--negative_controls",
     help="List the names of all negative controls (without _R1/2.fq.gz), separated by commas without spaces.",
     metavar="control1,control2,control3",
     required=True,
-    type=str,
+    type=list_of_strings,
 )
 parser.add_argument(
-    "-p",
     "--project_dir",
     help="Directory containing apscale results.",
     required=True,
@@ -49,8 +51,7 @@ parser.add_argument(
 # Parse argument
 args = parser.parse_args()
 
-# Set argument
-neg_controls = args.negatives.split(",")
+# Set project_name argument
 project_name = os.path.basename(args.project_dir)
 
 ### Start of pipeline
@@ -74,8 +75,6 @@ esv_postlulu_file = os.path.join(
 
 esv_postlulu_df = pd.read_parquet(esv_postlulu_file, engine="fastparquet")
 otu_postlulu_df = pd.read_parquet(otu_postlulu_file, engine="fastparquet")
-
-# neg_controls = ["OL-PCR-NEG", "OL-EXC-1"]
 
 # Test if microdecon is installed:
 if not rpackages.isinstalled("microDecon"):
@@ -106,10 +105,10 @@ pandas2ri.activate()
 
 
 # Define function to process dfs
-def remove_negs_from_df(df, unit, neg_controls):
+def remove_negs_from_df(df, unit, negative_controls):
     # Identify samples and neg controls
-    true_samples = list(df.columns.difference(neg_controls + ["ID", "Seq"]))
-    samples = neg_controls + true_samples
+    true_samples = list(df.columns.difference(negative_controls + ["ID", "Seq"]))
+    samples = negative_controls + true_samples
 
     # Generate sample df and format for microDecon
     df_samples = df[["ID"] + samples]
@@ -120,7 +119,7 @@ def remove_negs_from_df(df, unit, neg_controls):
     # Remove negatives
     decon_results = microDecon(
         df_samples,
-        numb_blanks=len(neg_controls),
+        numb_blanks=len(negative_controls),
         numb_ind=robjects.IntVector([len(true_samples)]),
         taxa=False,
     )
@@ -143,10 +142,10 @@ def remove_negs_from_df(df, unit, neg_controls):
 
 # Process dfs
 otu_postlulu_df_microdeconFiltered = remove_negs_from_df(
-    otu_postlulu_df, "OTU", neg_controls
+    otu_postlulu_df, "OTU", args.negative_controls
 )
 esv_postlulu_df_microdeconFiltered = remove_negs_from_df(
-    esv_postlulu_df, "ESV", neg_controls
+    esv_postlulu_df, "ESV", args.negative_controls
 )
 
 # Export dfs

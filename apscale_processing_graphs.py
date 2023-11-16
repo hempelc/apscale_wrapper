@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 
 """
-A script to generate processing graphs for apscale runs. Must be started from the
-parent directory of an apscale project directory.
+A script to generate processing graphs for apscale runs.
 
 Requirements: apscale project directory that contains a Project_report.xlsx file
 with sheets named 3_PE merging, 4_primer_trimming, and 5_quality_filtering,
@@ -49,23 +48,20 @@ def calculate_read_stats(lst):
 
 # Define arguments
 parser = argparse.ArgumentParser(
-    description="""A script to generate processing graphs for apscale runs.""",
+    description="A script to generate processing graphs for apscale runs.",
 )
 parser.add_argument(
-    "-p",
     "--project_dir",
     help="Directory containing apscale results to generate reports for.",
     required=True,
 )
 parser.add_argument(
-    "-f",
     "--graph_format",
     help="Graph format, either HTML, png, svg. HTML is recommended because it creates interactive plots (default: html).",
     default="html",
     choices=["png", "svg", "html"],
 )
 parser.add_argument(
-    "-S",
     "--scaling_factor",
     help="Scaling factor for graph width. Manual trial and error in 0.2 increments might be required (default: 1).",
     default=1,
