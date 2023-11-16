@@ -44,8 +44,7 @@ def list_of_integers(arg):
 # Function to add suffix to filename despite format
 def add_suffix(filename, suffix="_no_cutoff"):
     root, extension = os.path.splitext(filename)
-    new_filename = f"{root}{suffix}{extension}"
-    return new_filename
+    return f"{root}{suffix}{extension}"
 
 
 # Define function to process tax dfs
@@ -83,8 +82,7 @@ def post_processing(df):
 # Function to determine the cutoff rank of the processed taxonomy df
 def determine_cutoff_rank(id_value):
     if id_value == "No match":
-        tax = "No match"
-        return tax
+        return "No match"
     tax = "phylum"
     if id_value >= 75:
         tax = "class"
@@ -140,7 +138,7 @@ parser.add_argument(
         strict:
         Performs 3 steps:
         (1) bitscore filtering - keeps all hits with a bitscore >= --bitscore_treshold, an alignment length >= --length, and within --bitscore_percentage of the best bitscore per sequence.
-        (2) similarity cutoff - only keeps the taxonomy of hits up to a certain rank, depending on the hits' blast percentage identity and cutoff values given in argument --cutoffs.
+        (2) similarity cutoff - only keeps the taxonomy of hits up to a certain rank, depending on the hits' blast percentage identity and cutoff values given in argument --cutoff_pidents.
         (3) LCA approach - assigns the taxonomy to each sequence based on all taxonomic ranks that are identical in the remaining hits of each sequence.
         """,
     default="strict",
@@ -156,7 +154,7 @@ parser.add_argument(
     ),
 )
 parser.add_argument(
-    "--length",
+    "--alignment_length",
     metavar="NNN",
     default=100,
     type=int,
@@ -176,30 +174,20 @@ parser.add_argument(
     ),
 )
 parser.add_argument(
-    "--cutoffs",
+    "--cutoff_pidents",
     metavar="N,N,N,N,N,N",
     default=[98, 95, 90, 85, 80, 75],
     type=list_of_integers,
     help=(
         """Similarity cutoff per hit based on BLAST pident values when choosing
-        filter_mode option "strict". pident cutoffs have to be divided by commas
+        filter_mode option "strict". cutoff pident values have to be divided by commas
         without spaces, in the order species, genus, family, order,
         class, phylum. Domain is always retained. Taxonomy is only kept for a rank if the BLAST hit's
         pident is >= the respective cutoff (default=98,95,90,85,80,75)."""
     ),
 )
 parser.add_argument(
-    "--keep_pident",
-    choices=["yes", "no"],
-    default="no",
-    help=(
-        "Flag to keep percentage identity information for filtered taxa. "
-        "If yes, percentage identify is kept (for OTUs with identical taxa "
-        " matches, the max percentage identity value is kept) (default=no)."
-    ),
-)
-parser.add_argument(
-    "--out",
+    "--outfile",
     required=True,
     metavar="outfile.csv",
     help="Name of output file in .csv format.",
@@ -236,7 +224,7 @@ subprocess.run(
 )
 
 # Load in and format BLAST output
-time_print(f"Formatting BLAST output...")
+time_print("Formatting BLAST output...")
 df = pd.read_table(
     "blast_output.tsv",
     header=None,
@@ -272,7 +260,9 @@ if args.filter_mode == "soft":
 elif args.filter_mode == "strict":
     time_print("Filtering hits based on bitscore and length...")
     df.loc[
-        (df["length"] < args.length) & (df["bitscore"] < args.bitscore_threshold), ranks
+        (df["length"] < args.alignment_length)
+        & (df["bitscore"] < args.bitscore_threshold),
+        ranks,
     ] = "NA"
 
     time_print(
@@ -291,12 +281,14 @@ elif args.filter_mode == "strict":
 
     time_print("Applying similarity cutoffs...")
     # Process the original df
-    df.loc[df["pident"] < args.cutoffs[0], "species"] = "NA"
-    df.loc[df["pident"] < args.cutoffs[1], "genus"] = "NA"
-    df.loc[df["pident"] < args.cutoffs[2], "family"] = "NA"
-    df.loc[df["pident"] < args.cutoffs[3], ["order", "suborder", "infraorder"]] = "NA"
-    df.loc[df["pident"] < args.cutoffs[4], ["class", "subclass"]] = "NA"
-    df.loc[df["pident"] < args.cutoffs[5], ["phylum", "subphylum"]] = "NA"
+    df.loc[df["pident"] < args.cutoff_pidents[0], "species"] = "NA"
+    df.loc[df["pident"] < args.cutoff_pidents[1], "genus"] = "NA"
+    df.loc[df["pident"] < args.cutoff_pidents[2], "family"] = "NA"
+    df.loc[
+        df["pident"] < args.cutoff_pidents[3], ["order", "suborder", "infraorder"]
+    ] = "NA"
+    df.loc[df["pident"] < args.cutoff_pidents[4], ["class", "subclass"]] = "NA"
+    df.loc[df["pident"] < args.cutoff_pidents[5], ["phylum", "subphylum"]] = "NA"
 
     # Process the copied df so that a column for cutoff ranks is used instead of the actual cutoff
     df_no_cutoffs = post_processing(df_no_cutoffs)
@@ -309,5 +301,5 @@ elif args.filter_mode == "strict":
 # Process and save df
 df = post_processing(df)
 df = df.drop("percentage_similarity", axis=1)
-df.to_csv(args.out, index=False)
+df.to_csv(args.outfile, index=False)
 time_print("Filtering done.")
