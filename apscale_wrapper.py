@@ -4,7 +4,7 @@
 A wrapper to run apscale on forward and reverse reads and to generate 
 processing QC graphs.
 
-Requires the submodules apscale_processing_graphs.py and apscale_subtract_negatives.py in PATH.
+Requires the submodules apscale_processing_graphs.py, apscale_blast.py, and apscale_remove_negatives.py in PATH.
 
 By Chris Hempel (christopher.hempel@kaust.edu.sa) on 15 Aug 2023
 """
@@ -15,6 +15,7 @@ import argparse
 import warnings
 import subprocess
 from pathlib import Path
+import os
 
 # Define that warnings are not printed to console
 warnings.filterwarnings("ignore")
@@ -23,6 +24,28 @@ warnings.filterwarnings("ignore")
 # Funtion to print datetime and text
 def time_print(text):
     print(datetime.datetime.now().strftime("%H:%M:%S"), "---", text)
+
+
+# Define a custom argument type for a list of strings
+def list_of_strings(arg):
+    return arg.split(",")
+
+
+# Define a custom argument type for a list of integers
+def list_of_integers(arg):
+    return [int(value) for value in arg.split(",")]
+
+
+# Define a custom validation function to enforce the requirement for --remove_negative_controls and --run_blast
+def validate_args(args):
+    if args.remove_negative_controls == "True" and not args.negative_controls:
+        parser.error(
+            "--negative_controls is required when --remove_negative_controls=True."
+        )
+    if args.run_blast == "True" and (not args.database or not args.database_format):
+        parser.error(
+            "--database and --database_format are required when --run_blast=True."
+        )
 
 
 # Function to generate an apscale Settings.xlsx file
@@ -113,14 +136,45 @@ def generateSettings(**kwargs):
         df_9.to_excel(writer, sheet_name="9_lulu_filtering", index=False)
 
 
+# Function to BLAST FASTA files using the apscale blast submodule
+def blasting(fastafile, outfile, **kwargs):
+    subprocess.run(
+        [
+            "apscale_blast.py",
+            "--fastafile",
+            fastafile,
+            "--database",
+            database,
+            "--database_format",
+            database_format,
+            "--evalue",
+            evalue,
+            "--filter_mode",
+            filter_mode,
+            "--bitscore_percentage",
+            bitscore_percentage,
+            "--alignment_length",
+            alignment_length,
+            "--bitscore_threshold",
+            bitscore_threshold,
+            "--cutoff_pidents",
+            cutoff_pidents,
+            "--outfile",
+            outfile,
+            "--cores",
+            cores,
+        ]
+    )
+
+
 # Define arguments
 parser = argparse.ArgumentParser(
     description="""A wrapper to run apscale on forward and reverse 
-	reads and to generate processing QC graphs.
-	Requires the submodule apscale_processing_graphs.py in PATH.""",
+	reads, filter Negative control reads, BLAST generated sequences, and generate processing QC graphs.
+	Requires the submodules apscale_processing_graphs.py, apscale_blast.py, and apscale_remove_negatives.py
+    in PATH.""",
 )
 parser.add_argument(
-    "-s",
     "--sequence_dir",
     metavar="PATH/TO/SEQUENCE_DIR",
     help="""Path to directory containing demultiplexed forward and reverse sequences in .fastq.gz format.
@@ -128,27 +182,23 @@ parser.add_argument(
     required=True,
 )
 parser.add_argument(
-    "-p",
     "--project_name",
     help="Name of the apscale project to be generated.",
     required=True,
 )
 parser.add_argument(
-    "-f",
     "--forward_primer",
     metavar="PRIMER_SEQUENCE",
     help="Forward primer sequence to trim.",
     required=True,
 )
 parser.add_argument(
-    "-r",
     "--reverse_primer",
     metavar="PRIMER_SEQUENCE",
     help="Reverse primer sequence to trim.",
     required=True,
 )
 parser.add_argument(
-    "-m",
     "--min_length",
     metavar="NNN",
     type=int,
@@ -156,7 +206,6 @@ parser.add_argument(
     required=True,
 )
 parser.add_argument(
-    "-M",
     "--max_length",
     metavar="NNN",
     type=int,
@@ -164,7 +213,6 @@ parser.add_argument(
     required=True,
 )
 parser.add_argument(
-    "-o",
     "--otu_perc",
     metavar="NN",
     default=97,
@@ -172,7 +220,6 @@ parser.add_argument(
     help="OTU identify treshold for clustering with vsearch. Only used when --clusteringtool=vsearch (default=97).",
 )
 parser.add_argument(
-    "-c",
     "--coi",
     choices=["False", "True"],
     default="False",
@@ -180,7 +227,6 @@ parser.add_argument(
     improve denoising (default=False).""",
 )
 parser.add_argument(
-    "-d",
     "--swarm_distance",
     default=1,
     metavar="N",
@@ -188,21 +234,18 @@ parser.add_argument(
     help="Distance used for swarm. Overwritten to 13 if --coi=True. Only used when --clusteringtool=swarm (default: 1).",
 )
 parser.add_argument(
-    "-t",
     "--clusteringtool",
     default="vsearch",
     choices=["vsearch", "swarm"],
     help="Tool used for OTU clustering (default=vsearch).",
 )
 parser.add_argument(
-    "-D",
     "--prior_denoising",
     choices=["False", "True"],
     default="False",
     help="Set to True if you want to denoise reads prior to OTU clustering (default: False).",
 )
 parser.add_argument(
-    "-e",
     "--maxEE",
     metavar="N",
     default=2,
@@ -210,49 +253,118 @@ parser.add_argument(
     help="maxEE (maximum estimated error) value used for quality filtering (default: 2).",
 )
 parser.add_argument(
-    "-n",
-    "--cores",
-    metavar="N",
-    default=2,
-    type=int,
-    help="Number of cores to use (default: 2).",
-)
-parser.add_argument(
-    "-g",
     "--graph_format",
     help="Graph format, either HTML, png, svg. HTML is recommended because it creates interactive plots (default: html).",
     default="html",
     choices=["png", "svg", "html"],
 )
 parser.add_argument(
-    "-R",
-    "--remove_negatives",
-    help="Do you want to remove reads in negative controls from the samples using the R package microDecon? (default: False)",
-    default="False",
-    choices=["True", "False"],
-)
-parser.add_argument(
-    "-N",
-    "--negatives",
-    help="Required if --removes_negatives=True. List the names of all negative controls (without _R1/2.fq.gz), separated by commas without spaces.",
-    metavar="control1,control2,control3",
-    type=str,
-)
-parser.add_argument(
-    "-S",
     "--scaling_factor",
     help="Scaling factor for graph width. Manual trial and error in 0.2 increments might be required (default: 1.0).",
     default=1.0,
     metavar="N.N",
     type=float,
 )
+parser.add_argument(
+    "--remove_negative_controls",
+    help="Do you want to remove reads in negative controls from the samples using the R package microDecon? (default: False)",
+    default="False",
+    choices=["True", "False"],
+)
+parser.add_argument(
+    "--negative_controls",
+    help="Required if --remove_negative_controls=True. List the names of all negative controls (without _R1/2.fq.gz), separated by commas without spaces.",
+    metavar="control1,control2,control3",
+    type=list_of_strings,
+)
+parser.add_argument(
+    "--run_blast",
+    help="Do you want to run BLAST on the generated ESVs and OTUs? (default: False)",
+    default="False",
+    choices=["True", "False"],
+)
+parser.add_argument(
+    "--database",
+    help="Required if --run_blast=True. BLAST database.",
+    metavar="/PATH/TO/DATABASE",
+)
+parser.add_argument(
+    "--database_format",
+    help="Required if --run_blast=True. Format of the database. Currently available formats are: midori2.",
+    choices=["midori2"],
+)
+parser.add_argument(
+    "--evalue",
+    help="Used if --run_blast=True. E-value for BLAST (default: 1e-05).",
+    metavar="1e[exponent]",
+    default="1e-05",
+)
+parser.add_argument(
+    "--filter_mode",
+    choices=["soft", "strict"],
+    help="""Used if --run_blast=True. Filter mode.
 
+        soft:
+        Keeps the best hit (highest bitscore) for each sequence. If multiple hits have the same highest bitscore, an LCA approach is applied (assigns the taxonomy to each sequence based on all taxonomic ranks that are identical in the remaining hits of each sequence).
 
-# Define a custom validation function to enforce the requirement for --remove_negatives
-def validate_args(args):
-    if args.remove_negatives == "True" and not args.negatives:
-        parser.error("--negatives is required when --remove_negatives=True.")
-
+        strict:
+        Performs 3 steps:
+        (1) bitscore filtering - keeps all hits with a bitscore >= --bitscore_treshold, an alignment length >= --length, and within --bitscore_percentage of the best bitscore per sequence.
+        (2) similarity cutoff - only keeps the taxonomy of hits up to a certain rank, depending on the hits' blast percentage identity and cutoff values given in argument --cutoff_pidents.
+        (3) LCA approach - assigns the taxonomy to each sequence based on all taxonomic ranks that are identical in the remaining hits of each sequence.
+        """,
+    default="strict",
+)
+parser.add_argument(
+    "--bitscore_percentage",
+    metavar="%",
+    default=2.0,
+    type=float,
+    help=(
+        """Used if --run_blast=True. Percentage threshold (in %%) for bitscore filter when choosing
+        filter_mode option "strict" (default=2.0)."""
+    ),
+)
+parser.add_argument(
+    "--alignment_length",
+    metavar="NNN",
+    default=100,
+    type=int,
+    help=(
+        "Used if --run_blast=True. Alignment length threshold to perform bitscore filtering on when "
+        'choosing filter_mode option "strict" (default=100).'
+    ),
+)
+parser.add_argument(
+    "--bitscore_threshold",
+    metavar="NNN",
+    default=150,
+    type=int,
+    help=(
+        """Used if --run_blast=True. Bitscore threshold to perform bitscore filtering on when choosing
+        filter_mode option "strict" (default=150)."""
+    ),
+)
+parser.add_argument(
+    "--cutoff_pidents",
+    metavar="N,N,N,N,N,N",
+    default=[98, 95, 90, 85, 80, 75],
+    type=list_of_integers,
+    help=(
+        """Used if --run_blast=True. Similarity cutoff per hit based on BLAST pident values when choosing
+        filter_mode option "strict". cutoff pident values have to be divided by commas
+        without spaces, in the order species, genus, family, order,
+        class, phylum. Domain is always retained. Taxonomy is only kept for a rank if the BLAST hit's
+        pident is >= the respective cutoff (default=98,95,90,85,80,75)."""
+    ),
+)
+parser.add_argument(
+    "--cores",
+    metavar="N",
+    default=2,
+    type=int,
+    help="Number of cores to use (default: 2).",
+)
 
 # Register the custom validation function to be called after parsing arguments
 parser.set_defaults(func=validate_args)
@@ -309,19 +421,21 @@ time_print("Starting apscale...")
 subprocess.run(["apscale", "--run_apscale", f"{args.project_name}_apscale"])
 time_print("Apscale done.")
 
-if args.remove_negatives == "True":
+if args.remove_negative_controls == "True":
+    microdecon_suffix = "_microdecon-filtered"
     subprocess.run(
         [
-            "apscale_subtract_negatives.py",
+            "apscale_remove_negatives.py",
             "--project_dir",
             f"{args.project_name}_apscale",
-            "--negatives",
-            f"{args.negatives}",
+            "--negative_controls",
+            f"{args.negative_controls}",
         ]
     )
+else:
+    microdecon_suffix = ""
 
 # Generate processing graphs using separate script
-time_print("Generating apscale processing graphs...")
 subprocess.run(
     [
         "apscale_processing_graphs.py",
@@ -333,5 +447,111 @@ subprocess.run(
         f"{args.scaling_factor}",
     ]
 )
+
+if args.run_blast == "True":
+    # Define file names
+    fastafile_otus = os.path.join(
+        args.project_name,
+        "9_lulu_filtering",
+        "otu_clustering",
+        f"{args.project_name}_OTUs_filtered{microdecon_suffix}.fasta",
+    )
+    fastafile_esvs = os.path.join(
+        args.project_name,
+        "9_lulu_filtering",
+        "denoising",
+        f"{args.project_name}_ESVs_filtered{microdecon_suffix}.fasta",
+    )
+    blastoutFile_otus = os.path.join(
+        args.project_name,
+        "9_lulu_filtering",
+        "otu_clustering",
+        f"{args.project_name}_OTUs{microdecon_suffix}_blasted.csv",
+    )
+    blastoutFile_esvs = os.path.join(
+        args.project_name,
+        "9_lulu_filtering",
+        "denoising",
+        f"{args.project_name}_ESVs{microdecon_suffix}blasted.csv",
+    )
+    otu_table_file = os.path.join(
+        args.project_name,
+        "9_lulu_filtering",
+        "otu_clustering",
+        f"{args.project_name}_OTU_table_filtered{microdecon_suffix}.csv",
+    )
+    esv_table_file = os.path.join(
+        args.project_name,
+        "9_lulu_filtering",
+        "denoising",
+        f"{args.project_name}_ESV_table_filtered{microdecon_suffix}.csv",
+    )
+    esv_outfile = os.path.join(
+        args.project_name,
+        "9_lulu_filtering",
+        "otu_clustering",
+        f"{args.project_name}_ESV_table_filtered{microdecon_suffix}_with_taxonomy.csv",
+    )
+    otu_outfile = os.path.join(
+        args.project_name,
+        "9_lulu_filtering",
+        "denoising",
+        f"{args.project_name}_OTU_table_filtered{microdecon_suffix}_with_taxonomy.csv",
+    )
+
+    blasting(
+        fastafile=fastafile_otus,
+        outfile=blastoutFile_otus,
+        database=args.database,
+        database_format=args.database_format,
+        evalue=args.evalue,
+        filter_mode=args.filter_mode,
+        bitscore_percentage=args.bitscore_percentage,
+        alignment_length=args.alignment_length,
+        bitscore_threshold=args.bitscore_threshold,
+        cutoff_pidents=args.cutoff_pidents,
+        cores=args.cores,
+    )
+    blasting(
+        fastafile=fastafile_esvs,
+        outfile=blastoutFile_esvs,
+        database=args.database,
+        database_format=args.database_format,
+        evalue=args.evalue,
+        filter_mode=args.filter_mode,
+        bitscore_percentage=args.bitscore_percentage,
+        alignment_length=args.alignment_length,
+        bitscore_threshold=args.bitscore_threshold,
+        cutoff_pidents=args.cutoff_pidents,
+        cores=args.cores,
+    )
+
+    time_print("OTUs and ESVs BLASTed. Merging taxonomy with OTU/ESV tables...")
+    # Read in OTU and ESV tables
+    if args.remove_negative_controls == "True":
+        otu_table = pd.read_csv(otu_table_file)
+        esv_table = pd.read_csv(esv_table_file)
+    else:
+        otu_table = pd.read_parquet(otu_table_file, engine="fastparquet")
+        esv_table = pd.read_parquet(esv_table_file, engine="fastparquet")
+    # Read in BLAST results
+    blastout_otus = pd.read_csv(blastoutFile_otus)
+    blastout_esvs = pd.read_csv(blastoutFile_esvs)
+    # Merge tables
+    otu_table_with_tax = pd.merge(
+        otu_table,
+        blastout_otus,
+        on="ID",
+        how="outer",
+    ).fillna("No match")
+    esv_table_with_tax = pd.merge(
+        esv_table,
+        blastout_esvs,
+        on="ID",
+        how="outer",
+    ).fillna("No match")
+    # Save
+    otu_table_with_tax.to_csv(otu_outfile)
+    esv_table_with_tax.to_csv(esv_outfile)
 
 time_print("Apscale wrapper done.")
