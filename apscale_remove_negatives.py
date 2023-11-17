@@ -30,6 +30,14 @@ def list_of_strings(arg):
     return arg.split(",")
 
 
+# Export cleaned sequences as FASTA file
+# Function to write FASTA file
+def write_fasta(df, filename):
+    with open(filename, "w") as file:
+        for index, row in df.iterrows():
+            file.write(f'>{row["ID"]}\n{row["Seq"]}\n')
+
+
 # Define arguments
 parser = argparse.ArgumentParser(
     description="""A submodule for the apscale wrapper to filter reads in negative controls from
@@ -158,15 +166,6 @@ esv_postlulu_df_microdeconFiltered.to_csv(
     index=False,
 )
 
-
-# Export cleaned sequences as FASTA file
-# Function to write FASTA file
-def write_fasta(df, filename):
-    with open(filename, "w") as file:
-        for index, row in df.iterrows():
-            file.write(f'>{row["ID"]}\n{row["Seq"]}\n')
-
-
 # Provide the desired filenames for the FASTA files
 fasta_filename_otus = os.path.join(
     args.project_dir,
@@ -177,10 +176,12 @@ fasta_filename_otus = os.path.join(
 fasta_filename_esvs = os.path.join(
     args.project_dir,
     "9_lulu_filtering",
-    "otu_clustering",
+    "denoising",
     f"{project_name}_ESVs_filtered-microdecon-filtered.fasta",
 )
 
 # Write the FASTA files
 write_fasta(otu_postlulu_df_microdeconFiltered, fasta_filename_otus)
 write_fasta(esv_postlulu_df_microdeconFiltered, fasta_filename_esvs)
+
+time_print("Negative control reads removed.")
