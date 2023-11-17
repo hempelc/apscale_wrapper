@@ -75,6 +75,9 @@ graph_format = args.graph_format
 scaling_factor = args.scaling_factor
 project_name = os.path.basename(project_dir)
 
+# Start of pipeline
+time_print("Generating apscale processing graphs...")
+
 # Make outdir for project_dir if it doesn't already exist
 outdir = os.path.join(project_dir, "0_statistics_and_graphs")
 os.makedirs(outdir, exist_ok=True)
@@ -952,3 +955,4 @@ else:
         )
     )
 time_print("Clustergram generated for OTUs.")
+time_print("Finished graph generation.")
