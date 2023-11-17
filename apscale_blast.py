@@ -74,8 +74,11 @@ def post_processing(df):
     df_processed = df_processed[idx_pident]
     df_processed = df_processed.rename(columns={"pident": "percentage_similarity"})
 
-    # Change column name and save two versions of df
-    df_processed = df_processed.rename(columns={"qseqid": "sequence_name"})
+    # Change column name, fill NaNs, replace _ in species names, and save the df
+    df_processed = df_processed.rename(columns={"qseqid": "ID"}).fillna(
+        "Taxonomy unreliable"
+    )
+    df_processed["species"] = df_processed["species"].str.replace("_", " ")
     return df_processed
 
 
@@ -203,8 +206,10 @@ parser.add_argument(
 args = parser.parse_args()
 bitscore_percentage = args.bitscore_percentage / 100
 
-# Run BLAST on FASTA file
+# Start of pipeline
 time_print(f"Running BLAST on {args.fastafile} with database {args.database}...")
+
+# Run BLAST on FASTA file
 subprocess.run(
     [
         "blastn",
@@ -302,4 +307,5 @@ elif args.filter_mode == "strict":
 df = post_processing(df)
 df = df.drop("percentage_similarity", axis=1)
 df.to_csv(args.outfile, index=False)
-time_print("Filtering done.")
+
+time_print("BLAST filtering done.")
