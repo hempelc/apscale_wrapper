@@ -32,7 +32,7 @@ warnings.filterwarnings("ignore")
 
 # Funtion to print datetime and text
 def time_print(text):
-    print(datetime.datetime.now().strftime("%H:%M:%S"), "---", text)
+    print(datetime.datetime.now().strftime("%H:%M:%S"), ": ", text, sep="")
 
 
 # Function for statistics calculation

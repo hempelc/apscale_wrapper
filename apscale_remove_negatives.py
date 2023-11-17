@@ -22,7 +22,7 @@ warnings.filterwarnings("ignore")
 
 # Funtion to print datetime and text
 def time_print(text):
-    print(datetime.datetime.now().strftime("%H:%M:%S"), "---", text)
+    print(datetime.datetime.now().strftime("%H:%M:%S"), ": ", text, sep="")
 
 
 # Define a custom argument type for a list of strings
@@ -36,6 +36,42 @@ def write_fasta(df, filename):
     with open(filename, "w") as file:
         for index, row in df.iterrows():
             file.write(f'>{row["ID"]}\n{row["Seq"]}\n')
+
+
+# Define function to process dfs
+def remove_negs_from_df(df, unit, negative_controls):
+    # Identify samples and neg controls
+    true_samples = list(df.columns.difference(negative_controls + ["ID", "Seq"]))
+    samples = negative_controls + true_samples
+
+    # Generate sample df and format for microDecon
+    df_samples = df[["ID"] + samples]
+
+    # Separating other information
+    df_other = df.drop(columns=samples)
+
+    # Remove negatives
+    decon_results = microDecon(
+        df_samples,
+        numb_blanks=len(negative_controls),
+        numb_ind=robjects.IntVector([len(true_samples)]),
+        taxa=False,
+    )
+
+    # Convert the result to a Python object and save filtered df
+    df_samples_decon = robjects.conversion.rpy2py(decon_results.rx2("decon.table"))
+
+    # Merge reads and other data
+    df_decon = df_samples_decon.merge(df_other, on="ID")
+
+    # Restore row order
+    df_decon["NumericValues"] = df_decon["ID"].str.replace(f"{unit}_", "").astype(int)
+    df_decon = df_decon.sort_values(by="NumericValues")
+    df_decon = df_decon.drop(columns=["NumericValues"])
+
+    # Delete negative control column
+    df_decon = df_decon.drop(df_decon.columns[1], axis=1)
+    return df_decon
 
 
 # Define arguments
@@ -111,43 +147,6 @@ microDecon = robjects.r["decon"]
 # Activate that pandas can be converted to R
 pandas2ri.activate()
 
-
-# Define function to process dfs
-def remove_negs_from_df(df, unit, negative_controls):
-    # Identify samples and neg controls
-    true_samples = list(df.columns.difference(negative_controls + ["ID", "Seq"]))
-    samples = negative_controls + true_samples
-
-    # Generate sample df and format for microDecon
-    df_samples = df[["ID"] + samples]
-
-    # Separating other information
-    df_other = df.drop(columns=samples)
-
-    # Remove negatives
-    decon_results = microDecon(
-        df_samples,
-        numb_blanks=len(negative_controls),
-        numb_ind=robjects.IntVector([len(true_samples)]),
-        taxa=False,
-    )
-
-    # Convert the result to a Python object and save filtered df
-    df_samples_decon = robjects.conversion.rpy2py(decon_results.rx2("decon.table"))
-
-    # Merge reads and other data
-    df_decon = df_samples_decon.merge(df_other, on="ID")
-
-    # Restore row order
-    df_decon["NumericValues"] = df_decon["ID"].str.replace(f"{unit}_", "").astype(int)
-    df_decon = df_decon.sort_values(by="NumericValues")
-    df_decon = df_decon.drop(columns=["NumericValues"])
-
-    # Delete negative control column
-    df_decon = df_decon.drop(df_decon.columns[1], axis=1)
-    return df_decon
-
-
 # Process dfs
 otu_postlulu_df_microdeconFiltered = remove_negs_from_df(
     otu_postlulu_df, "OTU", args.negative_controls
@@ -177,7 +176,7 @@ fasta_filename_esvs = os.path.join(
     args.project_dir,
     "9_lulu_filtering",
     "denoising",
-    f"{project_name}_ESVs_filtered-microdecon-filtered.fasta",
+    f"{project_name}_ESVs_filtered_microdecon-filtered.fasta",
 )
 
 # Write the FASTA files

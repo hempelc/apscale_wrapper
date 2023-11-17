@@ -22,7 +22,7 @@ warnings.filterwarnings("ignore")
 
 # Funtion to print datetime and text
 def time_print(text):
-    print(datetime.datetime.now().strftime("%H:%M:%S"), "---", text)
+    print(datetime.datetime.now().strftime("%H:%M:%S"), ": ", text, sep="")
 
 
 # Function to filter bitscores
@@ -53,7 +53,6 @@ def post_processing(df):
     df_tmp = df[["qseqid"] + ranks]
 
     ## Make a df mask: group dfs, check if ranks have more than one taxon, and if yes, True, else False
-    time_print("Performing LCA filter...")
     lca_mask = df_tmp.groupby(["qseqid"]).transform(lambda x: len(set(x)) != 1)
 
     ## Replace ranks in df with "NA" based on mask
@@ -218,7 +217,7 @@ subprocess.run(
         "-db",
         args.database,
         "-out",
-        "blast_output.tsv",
+        "apscale_wrapper_blast_output.tsv",
         "-outfmt",
         "6 qseqid sseqid pident length bitscore",
         "-evalue",
@@ -231,11 +230,13 @@ subprocess.run(
 # Load in and format BLAST output
 time_print("Formatting BLAST output...")
 df = pd.read_table(
-    "blast_output.tsv",
+    "apscale_wrapper_blast_output.tsv",
     header=None,
     names=["qseqid", "sseqid", "pident", "length", "bitscore"],
     dtype={"qseqid": str, "bitscore": float, "pident": float, "length": int},
 )
+# Clean up
+os.remove("apscale_wrapper_blast_output.tsv")
 ranks = ["domain", "phylum", "class", "order", "family", "genus", "species"]
 if args.database_format == "midori2":
     # Remove any of phylum, class, order, family, genus, and species followed by _ as well as _ followed by a number and everything up to the domain
@@ -284,7 +285,7 @@ elif args.filter_mode == "strict":
     # Copy df to keep version without cutoffs
     df_no_cutoffs = copy.deepcopy(df)
 
-    time_print("Applying similarity cutoffs...")
+    time_print("Applying similarity cutoffs and LCA filter...")
     # Process the original df
     df.loc[df["pident"] < args.cutoff_pidents[0], "species"] = "NA"
     df.loc[df["pident"] < args.cutoff_pidents[1], "genus"] = "NA"
@@ -301,7 +302,7 @@ elif args.filter_mode == "strict":
         determine_cutoff_rank
     )
     # Save copied df
-    df_no_cutoffs.to_csv(add_suffix(args.out), index=False)
+    df_no_cutoffs.to_csv(add_suffix(args.outfile), index=False)
 
 # Process and save df
 df = post_processing(df)

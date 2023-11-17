@@ -23,17 +23,7 @@ warnings.filterwarnings("ignore")
 
 # Funtion to print datetime and text
 def time_print(text):
-    print(datetime.datetime.now().strftime("%H:%M:%S"), "---", text)
-
-
-# Define a custom argument type for a list of strings
-def list_of_strings(arg):
-    return arg.split(",")
-
-
-# Define a custom argument type for a list of integers
-def list_of_integers(arg):
-    return [int(value) for value in arg.split(",")]
+    print(datetime.datetime.now().strftime("%H:%M:%S"), ": ", text, sep="")
 
 
 # Define a custom validation function to enforce the requirement for --remove_negative_controls and --run_blast
@@ -144,25 +134,25 @@ def blasting(fastafile, outfile, **kwargs):
             "--fastafile",
             fastafile,
             "--database",
-            database,
+            args.database,
             "--database_format",
-            database_format,
+            args.database_format,
             "--evalue",
-            evalue,
+            args.evalue,
             "--filter_mode",
-            filter_mode,
+            args.filter_mode,
             "--bitscore_percentage",
-            bitscore_percentage,
+            args.bitscore_percentage,
             "--alignment_length",
-            alignment_length,
+            args.alignment_length,
             "--bitscore_threshold",
-            bitscore_threshold,
+            args.bitscore_threshold,
             "--cutoff_pidents",
-            cutoff_pidents,
+            args.cutoff_pidents,
             "--outfile",
             outfile,
             "--cores",
-            cores,
+            args.cores,
         ]
     )
 
@@ -275,7 +265,6 @@ parser.add_argument(
     "--negative_controls",
     help="Required if --remove_negative_controls=True. List the names of all negative controls (without _R1/2.fq.gz), separated by commas without spaces.",
     metavar="control1,control2,control3",
-    type=list_of_strings,
 )
 parser.add_argument(
     "--run_blast",
@@ -318,8 +307,7 @@ parser.add_argument(
 parser.add_argument(
     "--bitscore_percentage",
     metavar="%",
-    default=2.0,
-    type=float,
+    default="2.0",
     help=(
         """Used if --run_blast=True. Percentage threshold (in %%) for bitscore filter when choosing
         filter_mode option "strict" (default=2.0)."""
@@ -328,8 +316,7 @@ parser.add_argument(
 parser.add_argument(
     "--alignment_length",
     metavar="NNN",
-    default=100,
-    type=int,
+    default="100",
     help=(
         "Used if --run_blast=True. Alignment length threshold to perform bitscore filtering on when "
         'choosing filter_mode option "strict" (default=100).'
@@ -338,8 +325,7 @@ parser.add_argument(
 parser.add_argument(
     "--bitscore_threshold",
     metavar="NNN",
-    default=150,
-    type=int,
+    default="150",
     help=(
         """Used if --run_blast=True. Bitscore threshold to perform bitscore filtering on when choosing
         filter_mode option "strict" (default=150)."""
@@ -348,8 +334,7 @@ parser.add_argument(
 parser.add_argument(
     "--cutoff_pidents",
     metavar="N,N,N,N,N,N",
-    default=[98, 95, 90, 85, 80, 75],
-    type=list_of_integers,
+    default="98,95,90,85,80,75",
     help=(
         """Used if --run_blast=True. Similarity cutoff per hit based on BLAST pident values when choosing
         filter_mode option "strict". cutoff pident values have to be divided by commas
@@ -361,8 +346,7 @@ parser.add_argument(
 parser.add_argument(
     "--cores",
     metavar="N",
-    default=2,
-    type=int,
+    default="2",
     help="Number of cores to use (default: 2).",
 )
 
@@ -385,17 +369,29 @@ subprocess.run(["apscale", "--create_project", args.project_name])
 # Create an empty Project_report.xlsx file
 ## Create an ExcelWriter object using the openpyxl engine
 excel_writer = pd.ExcelWriter(
-    f"{args.project_name}_apscale/Project_report.xlsx", engine="openpyxl"
+    os.path.join(f"{args.project_name}_apscale", "Project_report.xlsx"),
+    engine="openpyxl",
 )
 ## Write an empty DataFrame to the Excel file
 pd.DataFrame().to_excel(excel_writer, sheet_name="Sheet1", index=False)
 # Save the Excel file
-excel_writer.book.save(f"{args.project_name}_apscale/Project_report.xlsx")
+excel_writer.book.save(
+    os.path.join(f"{args.project_name}_apscale", "Project_report.xlsx")
+)
 
 # Generate symlinks to demultiplexed reads
 time_print("Generating symlinks to demultiplexed reads...")
+# sequence_files = os.path.join(os.path.realpath(args.sequence_dir), "*")
+target_directory = os.path.join(
+    f"{args.project_name}_apscale", "2_demultiplexing", "data"
+)
+# TO DO: involve os.path.join for sequence files to make it universal for systems
+# subprocess.run(
+#     ["ln", "-s", sequence_files, target_directory],
+#     shell=True,
+# )
 subprocess.run(
-    f'ln -s "$(realpath "{args.sequence_dir}")"/* {args.project_name}_apscale/2_demultiplexing/data',
+    f'ln -s "$(realpath "{args.sequence_dir}")"/* {target_directory}',
     shell=True,
 )
 
@@ -451,54 +447,80 @@ subprocess.run(
 if args.run_blast == "True":
     # Define file names
     fastafile_otus = os.path.join(
-        args.project_name,
+        f"{args.project_name}_apscale",
         "9_lulu_filtering",
         "otu_clustering",
-        f"{args.project_name}_OTUs_filtered{microdecon_suffix}.fasta",
+        f"{args.project_name}_apscale_OTUs_filtered{microdecon_suffix}.fasta",
     )
     fastafile_esvs = os.path.join(
-        args.project_name,
+        f"{args.project_name}_apscale",
         "9_lulu_filtering",
         "denoising",
-        f"{args.project_name}_ESVs_filtered{microdecon_suffix}.fasta",
+        f"{args.project_name}_apscale_ESVs_filtered{microdecon_suffix}.fasta",
     )
     blastoutFile_otus = os.path.join(
-        args.project_name,
+        f"{args.project_name}_apscale",
         "9_lulu_filtering",
         "otu_clustering",
-        f"{args.project_name}_OTUs{microdecon_suffix}_blasted.csv",
+        f"{args.project_name}_apscale_OTUs{microdecon_suffix}_blasted.csv",
     )
     blastoutFile_esvs = os.path.join(
-        args.project_name,
+        f"{args.project_name}_apscale",
         "9_lulu_filtering",
         "denoising",
-        f"{args.project_name}_ESVs{microdecon_suffix}blasted.csv",
+        f"{args.project_name}_apscale_ESVs{microdecon_suffix}_blasted.csv",
     )
     otu_table_file = os.path.join(
-        args.project_name,
+        f"{args.project_name}_apscale",
         "9_lulu_filtering",
         "otu_clustering",
-        f"{args.project_name}_OTU_table_filtered{microdecon_suffix}.csv",
+        f"{args.project_name}_apscale_OTU_table_filtered{microdecon_suffix}.csv",
     )
     esv_table_file = os.path.join(
-        args.project_name,
+        f"{args.project_name}_apscale",
         "9_lulu_filtering",
         "denoising",
-        f"{args.project_name}_ESV_table_filtered{microdecon_suffix}.csv",
-    )
-    esv_outfile = os.path.join(
-        args.project_name,
-        "9_lulu_filtering",
-        "otu_clustering",
-        f"{args.project_name}_ESV_table_filtered{microdecon_suffix}_with_taxonomy.csv",
+        f"{args.project_name}_apscale_ESV_table_filtered{microdecon_suffix}.csv",
     )
     otu_outfile = os.path.join(
-        args.project_name,
+        f"{args.project_name}_apscale",
+        "9_lulu_filtering",
+        "otu_clustering",
+        f"{args.project_name}_apscale_OTU_table_filtered{microdecon_suffix}_with_taxonomy.csv",
+    )
+    esv_outfile = os.path.join(
+        f"{args.project_name}_apscale",
         "9_lulu_filtering",
         "denoising",
-        f"{args.project_name}_OTU_table_filtered{microdecon_suffix}_with_taxonomy.csv",
+        f"{args.project_name}_apscale_ESV_table_filtered{microdecon_suffix}_with_taxonomy.csv",
     )
+    if args.filter_mode == "strict":
+        blastoutFile_otus_noCutoff = os.path.join(
+            f"{args.project_name}_apscale",
+            "9_lulu_filtering",
+            "otu_clustering",
+            f"{args.project_name}_apscale_OTUs{microdecon_suffix}_blasted_no_cutoff.csv",
+        )
+        blastoutFile_esvs_noCutoff = os.path.join(
+            f"{args.project_name}_apscale",
+            "9_lulu_filtering",
+            "denoising",
+            f"{args.project_name}_apscale_ESVs{microdecon_suffix}_blasted_no_cutoff.csv",
+        )
+        otu_outfile_noCutoff = os.path.join(
+            f"{args.project_name}_apscale",
+            "9_lulu_filtering",
+            "otu_clustering",
+            f"{args.project_name}_apscale_OTU_table_filtered{microdecon_suffix}_with_taxonomy_no_cutoff.csv",
+        )
+        esv_outfile_noCutoff = os.path.join(
+            f"{args.project_name}_apscale",
+            "9_lulu_filtering",
+            "denoising",
+            f"{args.project_name}_apscale_ESV_table_filtered{microdecon_suffix}_with_taxonomy_no_cutoff.csv",
+        )
 
+    # Run BLAST
     blasting(
         fastafile=fastafile_otus,
         outfile=blastoutFile_otus,
@@ -537,21 +559,48 @@ if args.run_blast == "True":
     # Read in BLAST results
     blastout_otus = pd.read_csv(blastoutFile_otus)
     blastout_esvs = pd.read_csv(blastoutFile_esvs)
+    # Clean up
+    os.remove(blastoutFile_otus)
+    os.remove(blastoutFile_esvs)
     # Merge tables
     otu_table_with_tax = pd.merge(
         otu_table,
         blastout_otus,
         on="ID",
         how="outer",
-    ).fillna("No match")
+    ).fillna("Unreliable taxonomy")
     esv_table_with_tax = pd.merge(
         esv_table,
         blastout_esvs,
         on="ID",
         how="outer",
-    ).fillna("No match")
+    ).fillna("Unreliable taxonomy")
     # Save
-    otu_table_with_tax.to_csv(otu_outfile)
-    esv_table_with_tax.to_csv(esv_outfile)
+    otu_table_with_tax.to_csv(otu_outfile, index=False)
+    esv_table_with_tax.to_csv(esv_outfile, index=False)
+    if args.filter_mode == "strict":
+        # Read in BLAST results with no cutoff
+        blastout_otus_noCutoff = pd.read_csv(blastoutFile_otus_noCutoff)
+        blastout_esvs_noCutoff = pd.read_csv(blastoutFile_esvs_noCutoff)
+        # Clean up
+        os.remove(blastoutFile_otus_noCutoff)
+        os.remove(blastoutFile_esvs_noCutoff)
+        # Merge tables
+        otu_table_with_tax_noCutoff = pd.merge(
+            otu_table,
+            blastout_otus_noCutoff,
+            on="ID",
+            how="outer",
+        ).fillna("Unreliable taxonomy")
+        esv_table_with_tax_noCutoff = pd.merge(
+            esv_table,
+            blastout_esvs_noCutoff,
+            on="ID",
+            how="outer",
+        ).fillna("Unreliable taxonomy")
+        # Save
+        otu_table_with_tax_noCutoff.to_csv(otu_outfile_noCutoff, index=False)
+        esv_table_with_tax_noCutoff.to_csv(esv_outfile_noCutoff, index=False)
+
 
 time_print("Apscale wrapper done.")
