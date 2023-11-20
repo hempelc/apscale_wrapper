@@ -279,8 +279,9 @@ parser.add_argument(
 )
 parser.add_argument(
     "--database_format",
-    help="Required if --run_blast=True. Format of the database. Currently available formats are: midori2.",
-    choices=["midori2"],
+    help="Required if --run_blast=True. Format of the database. Currently available formats are: midori2, pr2.",
+    choices=["midori2", "pr2"],
+    required=True,
 )
 parser.add_argument(
     "--evalue",
