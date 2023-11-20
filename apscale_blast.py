@@ -41,6 +41,14 @@ def list_of_integers(arg):
     return [int(value) for value in arg.split(",")]
 
 
+# Function to replace unknown taxonomy in the PR2 database
+def replace_pr2_tax(taxon):
+    if taxon.endswith("X") or taxon.endswith("sp."):
+        return "Unknown in PR2 database"
+    else:
+        return taxon
+
+
 # Function to add suffix to filename despite format
 def add_suffix(filename, suffix="_no_cutoff"):
     root, extension = os.path.splitext(filename)
@@ -119,8 +127,8 @@ parser.add_argument(
 )
 parser.add_argument(
     "--database_format",
-    help="Format of the database. Currently available formats are: midori2.",
-    choices=["midori2"],
+    help="Format of the database. Currently available formats are: midori2, pr2.",
+    choices=["midori2", "pr2"],
     required=True,
 )
 parser.add_argument(
@@ -237,9 +245,9 @@ df = pd.read_table(
 )
 # Clean up
 os.remove("apscale_wrapper_blast_output.tsv")
-ranks = ["domain", "phylum", "class", "order", "family", "genus", "species"]
 if args.database_format == "midori2":
-    # Remove any of phylum, class, order, family, genus, and species followed by _ as well as _ followed by a number and everything up to the domain
+    ranks = ["domain", "phylum", "class", "order", "family", "genus", "species"]
+    # Remove any of "phylum", "class", "order", "family", "genus", and "species" followed by _ as well as _ followed by a number and all the extra information before the domain
     df["taxonomy"] = (
         df["sseqid"]
         .str.replace(r"(phylum|class|order|family|genus|species)_", "", regex=True)
@@ -255,6 +263,29 @@ if args.database_format == "midori2":
 # elif args.database_format == "ncbi_nt":
 #     # Drop rows containing "Unknown" = taxid could not be translated
 #     df = df[~df[ranks].apply(lambda row: row.str.contains("Unknown")).any(axis=1)]
+
+elif args.database_format == "pr2":
+    ranks_all = [
+        "domain",
+        "supergroup",
+        "phylum",
+        "subdivision",
+        "class",
+        "order",
+        "family",
+        "genus",
+        "species",
+    ]
+    ranks = ["domain", "phylum", "class", "order", "family", "genus", "species"]
+
+    # Split the taxonomy column by semicolon and expand into new columns
+    df[ranks_all] = df["sseqid"].str.rstrip(";").str.split(";", expand=True)
+    # Only keep desired columns and ranks and fill missing values with "NA"
+    df = df.drop(["sseqid", "supergroup", "subdivision"], axis=1).fillna("NA")
+
+    # Replace unknown taxonomy in the PR2 database
+    df[ranks] = df[ranks].apply(replace_pr2_tax)
+
 
 if args.filter_mode == "soft":
     time_print(
