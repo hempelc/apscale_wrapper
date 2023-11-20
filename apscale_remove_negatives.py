@@ -40,20 +40,26 @@ def write_fasta(df, filename):
 
 # Define function to process dfs
 def remove_negs_from_df(df, unit, negative_controls):
-    # Identify samples and neg controls
+    # Identify negative controls that do and don't contain 0 reads (microDecon gives an error if used with negative controls with 0 reads)
+    negative_controls_keep = [neg for neg in negative_controls if df[neg].sum() > 0]
+    negative_controls_drop = [
+        neg for neg in negative_controls if neg not in negative_controls_keep
+    ]
+
+    # Identify true samples and all samples
     true_samples = list(df.columns.difference(negative_controls + ["ID", "Seq"]))
-    samples = negative_controls + true_samples
+    samples = negative_controls_keep + true_samples
 
     # Generate sample df and format for microDecon
     df_samples = df[["ID"] + samples]
 
-    # Separating other information
-    df_other = df.drop(columns=samples)
+    # Separating other information and dropping negative controls with 0 reads
+    df_other = df.drop(columns=samples + negative_controls_drop)
 
     # Remove negatives
     decon_results = microDecon(
         df_samples,
-        numb_blanks=len(negative_controls),
+        numb_blanks=len(negative_controls_keep),
         numb_ind=robjects.IntVector([len(true_samples)]),
         taxa=False,
     )
