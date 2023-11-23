@@ -128,8 +128,8 @@ parser.add_argument(
 )
 parser.add_argument(
     "--database_format",
-    help="Format of the database. Currently available formats are: midori2, pr2.",
-    choices=["midori2", "pr2"],
+    help="Format of the database. Currently available formats are: midori2, pr2, silva. Note: the SILVA database has to have a specific format.",
+    choices=["midori2", "pr2", "silva"],
     required=True,
 )
 parser.add_argument(
@@ -246,7 +246,14 @@ df = pd.read_table(
 )
 # Clean up
 os.remove("apscale_wrapper_blast_output.tsv")
-if args.database_format == "midori2":
+if args.database_format == "silva":
+    ranks = ["domain", "phylum", "class", "order", "family", "genus", "species"]
+    # Split the taxonomy column by semicolon and expand into new columns
+    df[ranks] = df["sseqid"].str.split(";", expand=True)
+    # Only keep desired columns and ranks and fill missing values with "NA"
+    df = df.drop(["sseqid"], axis=1).fillna("NA")
+
+elif args.database_format == "midori2":
     ranks = ["domain", "phylum", "class", "order", "family", "genus", "species"]
     # Remove any of "phylum", "class", "order", "family", "genus", and "species" followed by _ as well as _ followed by a number and all the extra information before the domain
     df["taxonomy"] = (
