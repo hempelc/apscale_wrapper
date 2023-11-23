@@ -42,11 +42,12 @@ def list_of_integers(arg):
 
 
 # Function to replace unknown taxonomy in the PR2 database
-def replace_pr2_tax(taxon):
-    if taxon.endswith("X") or taxon.endswith("sp."):
-        return "Unknown in PR2 database"
-    else:
-        return taxon
+def replace_pr2_tax(taxon_series):
+    return taxon_series.apply(
+        lambda taxon: "Unknown in PR2 database"
+        if taxon.endswith("X") or taxon.endswith("sp.") or taxon.endswith("_sp")
+        else taxon
+    )
 
 
 # Function to add suffix to filename despite format
@@ -94,17 +95,17 @@ def determine_cutoff_rank(id_value):
     if id_value == "No match":
         return "No match"
     tax = "phylum"
-    if id_value >= 75:
+    if id_value >= args.cutoff_pidents[5]:
         tax = "class"
-    if id_value >= 80:
+    if id_value >= args.cutoff_pidents[4]:
         tax = "order"
-    if id_value >= 85:
+    if id_value >= args.cutoff_pidents[3]:
         tax = "family"
-    if id_value >= 90:
+    if id_value >= args.cutoff_pidents[2]:
         tax = "genus"
-    if id_value >= 95:
+    if id_value >= args.cutoff_pidents[1]:
         tax = "species"
-    if id_value >= 98:
+    if id_value >= args.cutoff_pidents[0]:
         tax = "none"
     return tax
 
@@ -279,7 +280,16 @@ elif args.database_format == "pr2":
     ranks = ["domain", "phylum", "class", "order", "family", "genus", "species"]
 
     # Split the taxonomy column by semicolon and expand into new columns
-    df[ranks_all] = df["sseqid"].str.rstrip(";").str.split(";", expand=True)
+    df[ranks_all] = (
+        df["sseqid"]
+        .str.rstrip(";")
+        .str.replace(":nucl", "")
+        .str.replace(":plas", "")
+        .str.replace(":apic", "")
+        .str.replace(":chrom", "")
+        .str.replace(":mito", "")
+        .str.split(";", expand=True)
+    )
     # Only keep desired columns and ranks and fill missing values with "NA"
     df = df.drop(["sseqid", "supergroup", "subdivision"], axis=1).fillna("NA")
 
