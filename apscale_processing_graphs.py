@@ -21,10 +21,8 @@ import plotly.graph_objects as go
 import argparse
 import warnings
 import dash_bio
-import gzip
-from Bio import SeqIO
+import subprocess
 from statistics import mean, median, stdev
-from collections import defaultdict
 
 
 # Define that warnings are not printed to console
@@ -315,20 +313,39 @@ trimmed_seqs_dir = os.path.join(
     "4_primer_trimming",
     "data",
 )
+# Make list of all samples
+trimmed_seqs_files = [
+    os.path.join(trimmed_seqs_dir, sample) for sample in os.listdir(trimmed_seqs_dir)
+]
 
-# Make dict of all read lengths
-read_lengths = defaultdict(int)
-for sample in os.listdir(trimmed_seqs_dir):
-    sample_path = os.path.join(trimmed_seqs_dir, sample)
-    with gzip.open(sample_path, "rt") as file:
-        for record in SeqIO.parse(file, "fastq"):
-            read_length = len(record.seq)
-            read_lengths[read_length] += 1
+# Use the commandline to generate read length distribution file
+## Construct the command
+readlength_command = [
+    "zcat",
+    *trimmed_seqs_files,
+    "|",
+    "awk",
+    "'NR%4 == 2 {lengths[length($0)]++} END {for (l in lengths) {print l, lengths[l]}}'",
+]
+readlength_command = " ".join(readlength_command)
 
+# Run the command and capture the output
+readlength_result = subprocess.run(
+    readlength_command, shell=True, stdout=subprocess.PIPE, text=True
+)
+
+# Convert the stdout to a Pandas DataFrame
+readlength_result_lines = readlength_result.stdout.strip().split("\n")
+readlength_result_data = [line.split() for line in readlength_result_lines]
+readlength_df = pd.DataFrame(readlength_result_data, columns=["ReadLength", "Count"])
+readlength_df = readlength_df.astype(int)
+
+# Plot
 length_graph = px.bar(
-    x=list(read_lengths.keys()),
-    y=list(read_lengths.values()),
-    labels={"x": "Sequence length", "count": "Frequency"},
+    readlength_df,
+    x="ReadLength",
+    y="Count",
+    labels={"ReadLength": "Sequence length", "Count": "Frequency"},
     title="PE-merged read lengths before quality filtering",
 )
 
