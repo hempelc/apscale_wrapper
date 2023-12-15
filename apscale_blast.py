@@ -199,7 +199,7 @@ parser.add_argument(
 parser.add_argument(
     "--outfile",
     required=True,
-    metavar="outfile.csv",
+    metavar="OUTFILENAME.csv",
     help="Name of output file in .csv format.",
 )
 parser.add_argument(
