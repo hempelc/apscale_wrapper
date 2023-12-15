@@ -62,6 +62,8 @@ def remove_negs_from_df(df, unit, negative_controls):
         numb_blanks=len(negative_controls_keep),
         numb_ind=robjects.IntVector([len(true_samples)]),
         taxa=False,
+        thresh=1,  # Turns off to drop OTUs that show up in only 70% of samples
+        prop_thresh=0,  # Turns off to drop OTUs with a total abundance of < 0.005%
     )
 
     # Convert the result to a Python object and save filtered df
