@@ -13,7 +13,6 @@ import warnings
 import subprocess
 import copy
 import os
-import numpy as np
 
 
 # Define that warnings are not printed to console
