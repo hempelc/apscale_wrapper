@@ -568,13 +568,13 @@ if args.run_blast == "True":
         blastout_otus,
         on="ID",
         how="outer",
-    ).fillna("Unreliable taxonomy")
+    ).fillna("No match in database")
     esv_table_with_tax = pd.merge(
         esv_table,
         blastout_esvs,
         on="ID",
         how="outer",
-    ).fillna("Unreliable taxonomy")
+    ).fillna("No match in database")
     # Save
     otu_table_with_tax.to_csv(otu_outfile, index=False)
     esv_table_with_tax.to_csv(esv_outfile, index=False)
@@ -591,13 +591,13 @@ if args.run_blast == "True":
             blastout_otus_noCutoff,
             on="ID",
             how="outer",
-        ).fillna("Unreliable taxonomy")
+        ).fillna("No match in database")
         esv_table_with_tax_noCutoff = pd.merge(
             esv_table,
             blastout_esvs_noCutoff,
             on="ID",
             how="outer",
-        ).fillna("Unreliable taxonomy")
+        ).fillna("No match in database")
         # Save
         otu_table_with_tax_noCutoff.to_csv(otu_outfile_noCutoff, index=False)
         esv_table_with_tax_noCutoff.to_csv(esv_outfile_noCutoff, index=False)

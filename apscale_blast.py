@@ -81,9 +81,9 @@ def post_processing(df):
     df_processed = df_processed[idx_pident]
     df_processed = df_processed.rename(columns={"pident": "percentage_similarity"})
 
-    # Change column name, fill NaNs, replace _ in species names, and save the df
-    df_processed = df_processed.rename(columns={"qseqid": "ID"}).fillna(
-        "Taxonomy unreliable"
+    # Change column name, fill NA, replace _ in species names, and save the df
+    df_processed = df_processed.rename(columns={"qseqid": "ID"}).replace(
+        "NA", "Taxonomy unreliable"
     )
     df_processed["species"] = df_processed["species"].str.replace("_", " ")
     return df_processed
