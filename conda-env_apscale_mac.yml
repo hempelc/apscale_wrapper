@@ -1,0 +1,44 @@
+name: apscale
+channels:
+  - plotly
+  - bioconda
+  - conda-forge
+dependencies:
+  - biopython=1.81
+  - cairo=1.18.0
+  - cutadapt=4.4
+  - demultiplexer=1.1.2
+  - dnoise=1.4.0
+  - fastparquet=2023.8.0
+  - kaleido-core=0.2.1
+  - levenshtein=0.21.1
+  - numpy=1.25.2
+  - openpyxl=3.1.2
+  - pandas=2.0.3
+  - pigz=2.6
+  - plotly=5.16.1
+  - psutil=5.9.5
+  - pyarrow=13.0.0
+  - python=3.10.12
+  - python-dateutil=2.8.2
+  - python-igraph=0.11.2
+  - python-isal=1.2.0
+  - python-kaleido=0.2.1
+  - python-levenshtein=0.21.1
+  - python-tzdata=2023.3
+  - python_abi=3.10
+  - pytz=2023.3.post1
+  - r-base=4.3.1
+  - rapidfuzz=2.15.2
+  - rpy2=3.5.11
+  - scikit-learn=1.3.2
+  - scipy=1.11.2
+  - six=1.16.0
+  - snappy=1.1.10
+  - sqlite=3.43.0
+  - statsmodels=0.14.0
+  - swarm=3.1.4
+  - pip:
+      - apscale==1.6.3
+prefix: /home/chempel/programs/miniforge3/envs/apscale
+
