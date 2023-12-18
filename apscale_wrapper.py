@@ -560,8 +560,8 @@ if args.run_blast == "True":
     blastout_otus = pd.read_csv(blastoutFile_otus)
     blastout_esvs = pd.read_csv(blastoutFile_esvs)
     # Clean up
-    os.remove(blastoutFile_otus)
-    os.remove(blastoutFile_esvs)
+    # os.remove(blastoutFile_otus)
+    # os.remove(blastoutFile_esvs)
     # Merge tables
     otu_table_with_tax = pd.merge(
         otu_table,
