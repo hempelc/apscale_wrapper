@@ -62,8 +62,16 @@ def remove_negs_from_df(df, unit, negative_controls):
         (df_samples[negative_controls_keep] != 0).any(axis=1)
     ]
     if len(non_zero_rows) == 1:
+        # Get the row sum
         non_zero_rows_sum = df_samples[negative_controls_keep].sum(axis=1)
+
+        # SUbtract from samples
         df_samples_decon = df_samples[true_samples].sub(non_zero_rows_sum, axis=0)
+
+        # Add ID column
+        df_samples_decon = pd.DataFrame(
+            {"ID": df["ID"], **df_samples_decon.to_dict("list")}
+        )
 
     # Otherwise we use microDecon
     else:
