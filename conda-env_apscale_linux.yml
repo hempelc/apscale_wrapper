@@ -214,6 +214,7 @@ dependencies:
   - tzlocal=5.2
   - ucx=1.14.1
   - urllib3=2.0.4
+  - vsearch=2.20.0
   - werkzeug=3.0.1
   - wheel=0.41.2
   - xopen=1.7.0
