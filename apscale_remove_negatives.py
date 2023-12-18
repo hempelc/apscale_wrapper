@@ -65,8 +65,11 @@ def remove_negs_from_df(df, unit, negative_controls):
         # Get the row sum
         non_zero_rows_sum = df_samples[negative_controls_keep].sum(axis=1)
 
-        # SUbtract from samples
+        # Subtract from samples
         df_samples_decon = df_samples[true_samples].sub(non_zero_rows_sum, axis=0)
+
+        # Turn negative values to 0
+        df_samples_decon = df_samples_decon.applymap(lambda x: max(0, x))
 
         # Add ID column
         df_samples_decon = pd.DataFrame(
