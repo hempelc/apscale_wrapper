@@ -56,18 +56,32 @@ def remove_negs_from_df(df, unit, negative_controls):
     # Separating other information and dropping negative controls with 0 reads
     df_other = df.drop(columns=samples + negative_controls_drop)
 
-    # Remove negatives
-    decon_results = microDecon(
-        df_samples,
-        numb_blanks=len(negative_controls_keep),
-        numb_ind=robjects.IntVector([len(true_samples)]),
-        taxa=False,
-        thresh=1,  # Turns off to drop OTUs that show up in only 70% of samples
-        prop_thresh=0,  # Turns off to drop OTUs with a total abundance of < 0.005%
-    )
+    # If only 1 OTU/ESV in the blank(s) contains reads, microDecon will fail.
+    # In that case, we instead just subtract the summed reads from the 1 OTU/ESV from the samples.
+    non_zero_rows = df_samples[negative_controls_keep][
+        (df_samples[negative_controls_keep] != 0).any(axis=1)
+    ]
+    if len(non_zero_rows) == 1:
+        non_zero_rows_sum = df_samples[negative_controls_keep].sum(axis=1)
+        df_samples_decon = df_samples[true_samples].sub(non_zero_rows_sum, axis=0)
 
-    # Convert the result to a Python object and save filtered df
-    df_samples_decon = robjects.conversion.rpy2py(decon_results.rx2("decon.table"))
+    # Otherwise we use microDecon
+    else:
+        # Remove negatives
+        decon_results = microDecon(
+            df_samples,
+            numb_blanks=len(negative_controls_keep),
+            numb_ind=robjects.IntVector([len(true_samples)]),
+            taxa=False,
+            thresh=1,  # Turns off to drop OTUs that show up in only 70% of samples
+            prop_thresh=0,  # Turns off to drop OTUs with a total abundance of < 0.005%
+        )
+
+        # Convert the result to a Python object and save filtered df
+        df_samples_decon = robjects.conversion.rpy2py(decon_results.rx2("decon.table"))
+
+        # Delete negative control column
+        df_samples_decon = df_samples_decon.drop(df_samples_decon.columns[1], axis=1)
 
     # Merge reads and other data
     df_decon = df_samples_decon.merge(df_other, on="ID")
@@ -77,8 +91,6 @@ def remove_negs_from_df(df, unit, negative_controls):
     df_decon = df_decon.sort_values(by="NumericValues")
     df_decon = df_decon.drop(columns=["NumericValues"])
 
-    # Delete negative control column
-    df_decon = df_decon.drop(df_decon.columns[1], axis=1)
     return df_decon
 
 
