@@ -474,7 +474,7 @@ num_reads_raw["sample"] = (
     .str.replace("_PE.fastq.gz", "")
     .str.replace(".fastq.gz", "")
 )  # type: ignore
-ymax_reads = max(num_reads_raw)
+ymax_reads = max(num_reads_raw["value"])
 rawreads_graph = px.bar(
     num_reads_raw.sort_values("value"),
     labels={"value": "Number of reads", "sample": "Sample"},
