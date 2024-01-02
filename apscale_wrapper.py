@@ -470,18 +470,6 @@ if args.run_blast == "True":
         "denoising",
         f"{args.project_name}_apscale_ESVs{microdecon_suffix}_blasted.csv",
     )
-    otu_table_file = os.path.join(
-        f"{args.project_name}_apscale",
-        "9_lulu_filtering",
-        "otu_clustering",
-        f"{args.project_name}_apscale_OTU_table_filtered{microdecon_suffix}.csv",
-    )
-    esv_table_file = os.path.join(
-        f"{args.project_name}_apscale",
-        "9_lulu_filtering",
-        "denoising",
-        f"{args.project_name}_apscale_ESV_table_filtered{microdecon_suffix}.csv",
-    )
     otu_outfile = os.path.join(
         f"{args.project_name}_apscale",
         "9_lulu_filtering",
@@ -518,6 +506,32 @@ if args.run_blast == "True":
             "9_lulu_filtering",
             "denoising",
             f"{args.project_name}_apscale_ESV_table_filtered{microdecon_suffix}_with_taxonomy_no_cutoff.csv",
+        )
+    if args.remove_negative_controls == "True":
+        otu_table_file = os.path.join(
+            f"{args.project_name}_apscale",
+            "9_lulu_filtering",
+            "otu_clustering",
+            f"{args.project_name}_apscale_OTU_table_filtered{microdecon_suffix}.csv",
+        )
+        esv_table_file = os.path.join(
+            f"{args.project_name}_apscale",
+            "9_lulu_filtering",
+            "denoising",
+            f"{args.project_name}_apscale_ESV_table_filtered{microdecon_suffix}.csv",
+        )
+    else:
+        otu_table_file = os.path.join(
+            f"{args.project_name}_apscale",
+            "9_lulu_filtering",
+            "otu_clustering",
+            f"{args.project_name}_apscale_OTU_table_filtered{microdecon_suffix}.parquet.snappy",
+        )
+        esv_table_file = os.path.join(
+            f"{args.project_name}_apscale",
+            "9_lulu_filtering",
+            "denoising",
+            f"{args.project_name}_apscale_ESV_table_filtered{microdecon_suffix}.parquet.snappy",
         )
 
     # Run BLAST
