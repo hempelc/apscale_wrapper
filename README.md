@@ -1,2 +1,1 @@
-# apscale_wrapper
-A wrapper for apscale to automatize the generation of apscale projects and QC graphs
+A wrapper for the metabarcoding pipeline APSCALE to automatize the generation of apscale projects, quality control graphs, post-processing, and taxonomic annotation.
