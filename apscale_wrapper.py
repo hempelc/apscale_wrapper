@@ -214,7 +214,7 @@ parser.add_argument(
     choices=["False", "True"],
     default="False",
     help="""Are you processing COI data? If yes, the fact that COI is a coding gene can be used to
-    improve denoising (default=False).""",
+    improve clustering and denoising (default=False).""",
 )
 parser.add_argument(
     "--swarm_distance",
@@ -358,6 +358,10 @@ args = parser.parse_args()
 
 # Call the custom validation function to check the requirements
 args.func(args)
+
+# Overwrite the parameter for --swarm_distance if --coi==True
+if args.coi == True:
+    args.swarm_distance = 13
 
 ### Start of pipeline
 time_print("Starting apscale wrapper.")

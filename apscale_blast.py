@@ -43,9 +43,11 @@ def list_of_integers(arg):
 # Function to replace unknown taxonomy in the PR2 database
 def replace_pr2_tax(taxon_series):
     return taxon_series.apply(
-        lambda taxon: "Unknown in PR2 database"
-        if taxon.endswith("X") or taxon.endswith("sp.") or taxon.endswith("_sp")
-        else taxon
+        lambda taxon: (
+            "Unknown in PR2 database"
+            if taxon.endswith("X") or taxon.endswith("sp.") or taxon.endswith("_sp")
+            else taxon
+        )
     )
 
 
@@ -53,6 +55,23 @@ def replace_pr2_tax(taxon_series):
 def add_suffix(filename, suffix="_no_cutoff"):
     root, extension = os.path.splitext(filename)
     return f"{root}{suffix}{extension}"
+
+
+# Function to get lowest identified taxon and rank per row
+def lowest_taxon_and_rank(row):
+    exceptions = ["Taxonomy unreliable", "No match", "Unknown in PR2 database"]
+    lowest_taxon = "None"
+    lowest_rank = "None"
+
+    # Iterate over columns in reverse order
+    for col in reversed(df_ranks.columns):
+        value = row[col]
+        if pd.notna(value) and value not in exceptions:
+            lowest_taxon = value
+            lowest_rank = col
+            break  # Break on the first valid entry found
+
+    return pd.Series([lowest_taxon, lowest_rank], index=["lowest_taxon", "lowest_rank"])
 
 
 # Define function to process tax dfs
@@ -86,6 +105,12 @@ def post_processing(df):
         "NA", "Taxonomy unreliable"
     )
     df_processed["species"] = df_processed["species"].str.replace("_", " ")
+
+    # Add columns for lowest identified rank and taxon
+    df_ranks = df_processed[ranks]
+    lowest_columns = df_ranks.apply(lowest_taxon_and_rank, axis=1)
+    df_processed = pd.concat([df_processed, lowest_columns], axis=1)
+
     return df_processed
 
 
@@ -212,6 +237,7 @@ parser.add_argument(
 # Set arguments
 args = parser.parse_args()
 bitscore_percentage = args.bitscore_percentage / 100
+ranks = ["domain", "phylum", "class", "order", "family", "genus", "species"]
 
 # Start of pipeline
 time_print(f"Running BLAST on {args.fastafile} with database {args.database}...")
@@ -245,15 +271,15 @@ df = pd.read_table(
 )
 # Clean up
 os.remove("apscale_wrapper_blast_output.tsv")
+
+# Taxonomy formatting
 if args.database_format == "silva":
-    ranks = ["domain", "phylum", "class", "order", "family", "genus", "species"]
     # Split the taxonomy column by semicolon and expand into new columns
     df[ranks] = df["sseqid"].str.split(";", expand=True)
     # Only keep desired columns and ranks and fill missing values with "NA"
     df = df.drop(["sseqid"], axis=1).fillna("NA")
 
 elif args.database_format == "midori2":
-    ranks = ["domain", "phylum", "class", "order", "family", "genus", "species"]
     # Remove any of "phylum", "class", "order", "family", "genus", and "species" followed by _ as well as _ followed by a number and all the extra information before the domain
     df["taxonomy"] = (
         df["sseqid"]
@@ -272,7 +298,7 @@ elif args.database_format == "midori2":
 #     df = df[~df[ranks].apply(lambda row: row.str.contains("Unknown")).any(axis=1)]
 
 elif args.database_format == "pr2":
-    ranks_all = [
+    ranks_pr2 = [
         "domain",
         "supergroup",
         "phylum",
@@ -283,10 +309,9 @@ elif args.database_format == "pr2":
         "genus",
         "species",
     ]
-    ranks = ["domain", "phylum", "class", "order", "family", "genus", "species"]
 
     # Split the taxonomy column by semicolon and expand into new columns
-    df[ranks_all] = (
+    df[ranks_pr2] = (
         df["sseqid"]
         .str.rstrip(";")
         .str.replace(":nucl", "")
