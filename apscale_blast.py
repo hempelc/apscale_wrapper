@@ -64,7 +64,7 @@ def lowest_taxon_and_rank(row):
     lowest_rank = "None"
 
     # Iterate over columns in reverse order
-    for col in reversed(df_ranks.columns):
+    for col in reversed(ranks):
         value = row[col]
         if pd.notna(value) and value not in exceptions:
             lowest_taxon = value
