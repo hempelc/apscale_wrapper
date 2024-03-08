@@ -322,6 +322,7 @@ trimmed_seqs_files = [
 ## Construct the command
 readlength_command = [
     "zcat",
+    "<",
     *trimmed_seqs_files,
     "|",
     "awk",
