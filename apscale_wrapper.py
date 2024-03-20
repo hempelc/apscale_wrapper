@@ -359,8 +359,8 @@ args = parser.parse_args()
 # Call the custom validation function to check the requirements
 args.func(args)
 
-# Overwrite the parameter for --swarm_distance if --coi==True
-if args.coi == True:
+# Overwrite the parameter for --swarm_distance if --coi=="True"
+if args.coi == "True":
     args.swarm_distance = 13
 
 ### Start of pipeline
