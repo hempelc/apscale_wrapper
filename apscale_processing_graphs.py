@@ -321,7 +321,8 @@ trimmed_seqs_files = [
 # Use the commandline to generate read length distribution file
 ## Construct the command
 readlength_command = [
-    "gzcat",
+    "gunzip",
+    "-c",
     *trimmed_seqs_files,
     "|",
     "awk",
