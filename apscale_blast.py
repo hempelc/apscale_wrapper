@@ -13,6 +13,7 @@ import warnings
 import subprocess
 import copy
 import os
+import gzip
 
 
 # Define that warnings are not printed to console
@@ -269,7 +270,9 @@ df = pd.read_table(
     names=["qseqid", "sseqid", "pident", "length", "bitscore"],
     dtype={"qseqid": str, "bitscore": float, "pident": float, "length": int},
 )
-# Clean up
+# Save space
+with gzip.open('apscale_wrapper_blast_output.tsv.gz', 'wb', compresslevel=9) as f:
+        f.write("apscale_wrapper_blast_output.tsv")
 os.remove("apscale_wrapper_blast_output.tsv")
 
 # Taxonomy formatting
