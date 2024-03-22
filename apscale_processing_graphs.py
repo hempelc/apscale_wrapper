@@ -44,6 +44,30 @@ def calculate_read_stats(lst):
         round(stdev(lst), 2),
     ]
 
+# Function to format a df for krona
+def krona_formatting(df):
+    ranks = ["domain", "phylum", "class", "order", "family", "genus", "species"]
+    # Sum samples    
+    sample_sums = df.drop(columns=["ID", "Seq", "lowest_taxon", "lowest_rank"] + ranks).sum(axis=1).rename('Sum')
+    krona_df = pd.concat([sample_sums, df[ranks]], axis=1)
+    # Fix taxonomy formatting
+    ## Turn all non-taxa names into NaN
+    krona_df = krona_df.replace("Taxonomy unreliable", np.nan).replace("Not available in database", np.nan).replace("No match in database", np.nan).replace("_", " ", regex=True)
+    ## If entire taxonomy is NaN, replace with "Unknown"
+    for index, row in krona_df.iterrows():
+        if pd.isna(row["domain"]):
+            krona_df.loc[index, "domain":] = 'Unknown'
+    ## Fill NaNs with last tax entry
+    krona_df = krona_df.fillna(method='ffill', axis=1)
+    # Aggregate taxa
+    krona_df_agg = krona_df.groupby(krona_df.columns[1:].tolist())["Sum"].sum().reset_index()
+    # Move the Sum column to the front
+    column_order = [krona_df_agg.columns.tolist()[-1]] + krona_df_agg.columns.tolist()[:-1]
+    krona_df_agg = krona_df_agg[column_order]
+    # Drop entries with Sum==0 (shouldn't be necessary but just in case)
+    krona_df_agg = krona_df_agg.loc[krona_df_agg["Sum"] != 0]
+    return krona_df_agg
+
 
 # Define arguments
 parser = argparse.ArgumentParser(
@@ -61,17 +85,24 @@ parser.add_argument(
     choices=["png", "svg", "html"],
 )
 parser.add_argument(
+    "--blast",
+    help="Has BLAST been run on the OTU and ESV tables? Information required for krona graphs.",
+    choices=["True", "False"],
+)
+parser.add_argument(
     "--scaling_factor",
     help="Scaling factor for graph width. Manual trial and error in 0.2 increments might be required (default: 1).",
     default=1,
     type=float,
 )
+
 args = parser.parse_args()
 
 # Set arguments
 project_dir = args.project_dir
 graph_format = args.graph_format
 scaling_factor = args.scaling_factor
+blast = args.blast
 project_name = os.path.basename(project_dir)
 
 # Start of pipeline
@@ -93,6 +124,12 @@ esv_postlulu_file = os.path.join(
 esv_prelulu_file = os.path.join(
     project_dir, "8_denoising", f"{project_name}_ESV_table.parquet.snappy"
 )
+esv_final_file = os.path.join(
+    project_dir,
+    "9_lulu_filtering",
+    "denoising",
+    f"{project_name}_ESV_table_filtered_microdecon-filtered_with_taxonomy.csv",
+)
 otu_postlulu_file = os.path.join(
     project_dir,
     "9_lulu_filtering",
@@ -104,15 +141,26 @@ otu_prelulu_file = os.path.join(
     "7_otu_clustering",
     f"{project_name}_OTU_table.parquet.snappy",
 )
+otu_final_file = os.path.join(
+    project_dir,
+    "9_lulu_filtering",
+    "otu_clustering",
+    f"{project_name}_OTU_table_filtered_microdecon-filtered_with_taxonomy.csv",
+)
+
 report_sheet_dict = pd.read_excel(report_file, sheet_name=None)
 esv_postlulu_df = pd.read_parquet(esv_postlulu_file, engine="fastparquet")
-time_print("1/4 files imported...")
+time_print("1/6 files imported...")
 esv_prelulu_df = pd.read_parquet(esv_prelulu_file, engine="fastparquet")
-time_print("2/4 files imported...")
+time_print("2/6 files imported...")
+esv_final_df = pd.read_csv(esv_final_file)
+time_print("3/6 files imported...")
 otu_postlulu_df = pd.read_parquet(otu_postlulu_file, engine="fastparquet")
-time_print("3/4 files imported...")
+time_print("4/6 files imported...")
 otu_prelulu_df = pd.read_parquet(otu_prelulu_file, engine="fastparquet")
-time_print("Import done. Generating graphs...")
+time_print("5/6 files imported...")
+otu_final_df = pd.read_csv(otu_final_file)
+time_print("6/6 files imported. Import done. Generating graphs...")
 
 # ESV table processing
 esv_postlulu_df_mod = esv_postlulu_df.drop("Seq", axis=1).set_index("ID")
@@ -788,6 +836,9 @@ else:
     )
 time_print("Number of reads vs. OTUs graph generated.")
 
+# Add Accumulation curves - ESVs, OTUs, ESVs species, OTUs species
+
+
 # Lineplot ESVs
 esv_linegraph = go.Figure()
 for sample in samples:
@@ -978,4 +1029,56 @@ else:
         )
     )
 time_print("Clustergram generated for OTUs.")
+
+# Kronagraphs
+if blast == "True": # Requirement as we need taxonomic information for Kronagraphs
+    time_print("Generating kronagraphs...")
+    # Format dfs for Krona
+    esv_krona_df = krona_formatting(esv_final_df)
+    otu_krona_df = krona_formatting(otu_final_df)
+    # Save so that krona can be run in command line
+    esv_krona_df.to_csv("/Users/simplexdna/Desktop/test.csv", header=False, index=False)
+    esv_krona_df.to_csv(os.path.join(
+            outdir,
+            f"{project_name}_ESVs_krona-formatted.csv",
+        ), header=False, index=False)
+    otu_krona_df.to_csv(os.path.join(
+            outdir,
+            f"{project_name}_OTUs_krona-formatted.csv",
+        ), header=False, index=False)
+    # Use the commandline to run krona on both
+    ## Construct the krona command for ESVs
+    krona_command_esvs = " ".join([
+        "ktImportText",
+        "-o",
+        os.path.join(
+            outdir,
+            f"{project_name}_20_esv_krona.html"),
+        os.path.join(
+            outdir,
+            f"{project_name}_ESVs_krona-formatted.csv")
+    ])
+    ## Run the command
+    subprocess.call(krona_command_esvs, shell=True)
+    ## Construct the krona command for OTUs
+    krona_command_otus = " ".join([
+        "ktImportText",
+        "-o",
+        os.path.join(
+            outdir,
+            f"{project_name}_20_otu_krona.html"),
+        os.path.join(
+            outdir,
+            f"{project_name}_OTUs_krona-formatted.csv")
+    ])
+    ## Run the command
+    subprocess.call(krona_command_otus, shell=True)
+    # Remove formatted files
+    os.remove(os.path.join(
+            outdir,
+            f"{project_name}_ESVs_krona-formatted.csv"))
+    os.remove(os.path.join(
+            outdir,
+            f"{project_name}_OTUs_krona-formatted.csv"))
+
 time_print("Finished graph generation.")
