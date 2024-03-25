@@ -441,7 +441,7 @@ generateSettings(
 # Run apscale
 time_print("Starting apscale...")
 proc=subprocess.run(["apscale", "--run_apscale", f"{args.project_name}_apscale"],
-                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1)
 for line in proc.stdout:
     sys.stdout.write(str(line))
     log.write(str(line))
