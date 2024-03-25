@@ -16,6 +16,8 @@ import warnings
 import subprocess
 from pathlib import Path
 import os
+import sys
+
 
 # Define that warnings are not printed to console
 warnings.filterwarnings("ignore")
@@ -23,7 +25,9 @@ warnings.filterwarnings("ignore")
 
 # Funtion to print datetime and text
 def time_print(text):
-    print(datetime.datetime.now().strftime("%H:%M:%S"), ": ", text, sep="")
+    timetext = datetime.datetime.now().strftime("%H:%M:%S") + ": " + text
+    log.write(timetext + '\n')  # Write to the log file
+    log.flush()  # Flush the buffer to ensure immediate writing to the file
 
 
 # Define a custom validation function to enforce the requirement for --remove_negative_controls and --run_blast
@@ -128,7 +132,7 @@ def generateSettings(**kwargs):
 
 # Function to BLAST FASTA files using the apscale blast submodule
 def blasting(fastafile, outfile, **kwargs):
-    subprocess.run(
+    proc=subprocess.run(
         [
             "apscale_blast.py",
             "--fastafile",
@@ -153,8 +157,12 @@ def blasting(fastafile, outfile, **kwargs):
             outfile,
             "--cores",
             args.cores,
-        ]
+        ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT
     )
+    for line in proc.stdout:
+        sys.stdout.write(line)
+        log.write(line)
+    proc.wait()
 
 
 # Define arguments
@@ -362,13 +370,24 @@ args.func(args)
 # Overwrite the parameter for --swarm_distance if --coi=="True"
 if args.coi == "True":
     args.swarm_distance = 13
+    
+# Log options
+## Define the log file name
+log_file = f"{args.project_name}_apscale_wrapper.log"
+# Open the log file in append mode
+log = open(log_file, 'a')
+
 
 ### Start of pipeline
 time_print("Starting apscale wrapper.")
 
 # Create an apscale directory using bash
 time_print("Creating apscale directory...")
-subprocess.run(["apscale", "--create_project", args.project_name])
+proc=subprocess.run(["apscale", "--create_project", args.project_name], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+for line in proc.stdout:
+    sys.stdout.write(line)
+    log.write(line)
+proc.wait()
 
 # Create an empty Project_report.xlsx file
 ## Create an ExcelWriter object using the openpyxl engine
@@ -394,10 +413,14 @@ target_directory = os.path.join(
 #     ["ln", "-s", sequence_files, target_directory],
 #     shell=True,
 # )
-subprocess.run(
+proc=subprocess.run(
     f'ln -s "$(realpath "{args.sequence_dir}")"/* {target_directory}',
-    shell=True,
+    shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
 )
+for line in proc.stdout:
+    sys.stdout.write(line)
+    log.write(line)
+proc.wait()
 
 # Generate a Settings.xlsx file with given parameters
 time_print("Generating apscale settings file...")
@@ -418,20 +441,30 @@ generateSettings(
 
 # Run apscale
 time_print("Starting apscale...")
-subprocess.run(["apscale", "--run_apscale", f"{args.project_name}_apscale"])
+proc=subprocess.run(["apscale", "--run_apscale", f"{args.project_name}_apscale"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+for line in proc.stdout:
+    sys.stdout.write(line)
+    log.write(line)
+proc.wait()
+
 time_print("Apscale done.")
 
 if args.remove_negative_controls == "True":
     microdecon_suffix = "_microdecon-filtered"
-    subprocess.run(
+    proc=subprocess.run(
         [
             "apscale_remove_negatives.py",
             "--project_dir",
             f"{args.project_name}_apscale",
             "--negative_controls",
             f"{args.negative_controls}",
-        ]
+        ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT
     )
+    for line in proc.stdout:
+        sys.stdout.write(line)
+        log.write(line)
+    proc.wait()
+
 else:
     microdecon_suffix = ""
 
@@ -609,7 +642,7 @@ if args.run_blast == "True":
         esv_table_with_tax_noCutoff.to_csv(esv_outfile_noCutoff, index=False)
 
 # Generate processing graphs using separate script
-subprocess.run(
+proc=subprocess.run(
     [
         "apscale_processing_graphs.py",
         "--project_dir",
@@ -620,10 +653,18 @@ subprocess.run(
         f"{args.scaling_factor}",
         "--blast",
         f"{args.run_blast}",
-    ]
+    ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT
 )
+for line in proc.stdout:
+    sys.stdout.write(line)
+    log.write(line)
+proc.wait()
+
 
 # Generate detailed report
 # TO DO
 
 time_print("Apscale wrapper done.")
+
+# Close the log file
+log.close()
