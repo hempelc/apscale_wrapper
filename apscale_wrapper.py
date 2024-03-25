@@ -162,8 +162,7 @@ def blasting(fastafile, outfile, **kwargs):
     for line in proc.stdout:
         sys.stdout.write(str(line))
         log.write(str(line))
-    proc.wait()
-
+    
 
 # Define arguments
 parser = argparse.ArgumentParser(
@@ -387,7 +386,6 @@ proc=subprocess.run(["apscale", "--create_project", args.project_name], stdout=s
 for line in proc.stdout:
     sys.stdout.write(str(line))
     log.write(str(line))
-proc.wait()
 
 # Create an empty Project_report.xlsx file
 ## Create an ExcelWriter object using the openpyxl engine
@@ -420,7 +418,6 @@ proc=subprocess.run(
 for line in proc.stdout:
     sys.stdout.write(str(line))
     log.write(str(line))
-proc.wait()
 
 # Generate a Settings.xlsx file with given parameters
 time_print("Generating apscale settings file...")
@@ -445,7 +442,6 @@ proc=subprocess.run(["apscale", "--run_apscale", f"{args.project_name}_apscale"]
 for line in proc.stdout:
     sys.stdout.write(str(line))
     log.write(str(line))
-proc.wait()
 
 time_print("Apscale done.")
 
@@ -463,8 +459,7 @@ if args.remove_negative_controls == "True":
     for line in proc.stdout:
         sys.stdout.write(str(line))
         log.write(str(line))
-    proc.wait()
-
+    
 else:
     microdecon_suffix = ""
 
@@ -658,7 +653,6 @@ proc=subprocess.run(
 for line in proc.stdout:
     sys.stdout.write(str(line))
     log.write(str(line))
-proc.wait()
 
 
 # Generate detailed report
