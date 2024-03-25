@@ -157,7 +157,7 @@ def blasting(fastafile, outfile, **kwargs):
             outfile,
             "--cores",
             args.cores,
-        ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+        ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
     )
     for line in proc.stdout:
         sys.stdout.write(str(line))
@@ -382,7 +382,8 @@ time_print("Starting apscale wrapper.")
 
 # Create an apscale directory using bash
 time_print("Creating apscale directory...")
-proc=subprocess.run(["apscale", "--create_project", args.project_name], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+proc=subprocess.run(["apscale", "--create_project", args.project_name],
+                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
 for line in proc.stdout:
     sys.stdout.write(str(line))
     log.write(str(line))
@@ -455,7 +456,7 @@ if args.remove_negative_controls == "True":
             f"{args.project_name}_apscale",
             "--negative_controls",
             f"{args.negative_controls}",
-        ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+        ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
     )
     for line in proc.stdout:
         sys.stdout.write(str(line))
@@ -649,7 +650,7 @@ proc=subprocess.run(
         f"{args.scaling_factor}",
         "--blast",
         f"{args.run_blast}",
-    ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT
+    ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
 )
 for line in proc.stdout:
     sys.stdout.write(str(line))
