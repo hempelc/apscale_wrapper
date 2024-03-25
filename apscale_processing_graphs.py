@@ -1082,11 +1082,11 @@ if blast == "True": # Requirement as we need taxonomic information for Kronagrap
     ## Run the command
     subprocess.call(krona_command_otus, shell=True)
     # Remove formatted files
-    os.remove(os.path.join(
-            outdir,
-            f"{project_name}_ESVs_krona-formatted.csv"))
-    os.remove(os.path.join(
-            outdir,
-            f"{project_name}_OTUs_krona-formatted.csv"))
+    # os.remove(os.path.join(
+    #         outdir,
+    #         f"{project_name}_ESVs_krona-formatted.csv"))
+    # os.remove(os.path.join(
+    #         outdir,
+    #         f"{project_name}_OTUs_krona-formatted.csv"))
 
 time_print("Finished graph generation.")
