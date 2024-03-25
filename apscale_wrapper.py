@@ -160,8 +160,8 @@ def blasting(fastafile, outfile, **kwargs):
         ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT
     )
     for line in proc.stdout:
-        sys.stdout.write(line)
-        log.write(line)
+        sys.stdout.write(str(line))
+        log.write(str(line))
     proc.wait()
 
 
@@ -385,8 +385,8 @@ time_print("Starting apscale wrapper.")
 time_print("Creating apscale directory...")
 proc=subprocess.run(["apscale", "--create_project", args.project_name], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 for line in proc.stdout:
-    sys.stdout.write(line)
-    log.write(line)
+    sys.stdout.write(str(line))
+    log.write(str(line))
 proc.wait()
 
 # Create an empty Project_report.xlsx file
@@ -418,8 +418,8 @@ proc=subprocess.run(
     shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT
 )
 for line in proc.stdout:
-    sys.stdout.write(line)
-    log.write(line)
+    sys.stdout.write(str(line))
+    log.write(str(line))
 proc.wait()
 
 # Generate a Settings.xlsx file with given parameters
@@ -443,8 +443,8 @@ generateSettings(
 time_print("Starting apscale...")
 proc=subprocess.run(["apscale", "--run_apscale", f"{args.project_name}_apscale"], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 for line in proc.stdout:
-    sys.stdout.write(line)
-    log.write(line)
+    sys.stdout.write(str(line))
+    log.write(str(line))
 proc.wait()
 
 time_print("Apscale done.")
@@ -461,8 +461,8 @@ if args.remove_negative_controls == "True":
         ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT
     )
     for line in proc.stdout:
-        sys.stdout.write(line)
-        log.write(line)
+        sys.stdout.write(str(line))
+        log.write(str(line))
     proc.wait()
 
 else:
@@ -656,8 +656,8 @@ proc=subprocess.run(
     ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT
 )
 for line in proc.stdout:
-    sys.stdout.write(line)
-    log.write(line)
+    sys.stdout.write(str(line))
+    log.write(str(line))
 proc.wait()
 
 
