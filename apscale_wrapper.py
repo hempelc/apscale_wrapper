@@ -650,6 +650,8 @@ proc=subprocess.run(
         f"{args.scaling_factor}",
         "--blast",
         f"{args.run_blast}",
+        "--remove_negative_controls",
+        args.remove_negative_controls,
     ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
 )
 for line in proc.stdout:
