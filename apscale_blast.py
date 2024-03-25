@@ -272,9 +272,14 @@ df = pd.read_table(
     dtype={"qseqid": str, "bitscore": float, "pident": float, "length": int},
 )
 # Save space
-with gzip.open(blastout + '.gz', 'wb', compresslevel=9) as f:
-        f.write(blastout)
+# with gzip.open(blastout + '.gz', 'wb', compresslevel=9) as f:
+#         f.write(blastout)
+# os.remove(blastout)
+with open(blastout, 'rb') as file_in:
+    with gzip.open(blastout + '.gz', 'wb', compresslevel=9) as file_out:
+        file_out.write(file_in.read())
 os.remove(blastout)
+
 
 # Taxonomy formatting
 if args.database_format == "silva":
