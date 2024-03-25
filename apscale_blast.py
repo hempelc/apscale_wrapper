@@ -244,6 +244,9 @@ ranks = ["domain", "phylum", "class", "order", "family", "genus", "species"]
 time_print(f"Running BLAST on {args.fastafile} with database {args.database}...")
 
 # Run BLAST on FASTA file
+blastout = os.path.join(os.path.split(args.fastafile)[0], 
+    "apscale_wrapper_blast_output.tsv"),
+
 subprocess.run(
     [
         "blastn",
@@ -252,7 +255,7 @@ subprocess.run(
         "-db",
         args.database,
         "-out",
-        "apscale_wrapper_blast_output.tsv",
+        blastout,
         "-outfmt",
         "6 qseqid sseqid pident length bitscore",
         "-evalue",
@@ -261,19 +264,18 @@ subprocess.run(
         args.cores,
     ]
 )
-
 # Load in and format BLAST output
 time_print("Formatting BLAST output...")
 df = pd.read_table(
-    "apscale_wrapper_blast_output.tsv",
+    blastout,
     header=None,
     names=["qseqid", "sseqid", "pident", "length", "bitscore"],
     dtype={"qseqid": str, "bitscore": float, "pident": float, "length": int},
 )
 # Save space
-with gzip.open('apscale_wrapper_blast_output.tsv.gz', 'wb', compresslevel=9) as f:
-        f.write("apscale_wrapper_blast_output.tsv")
-os.remove("apscale_wrapper_blast_output.tsv")
+with gzip.open(blastout + '.gz', 'wb', compresslevel=9) as f:
+        f.write(blastout)
+os.remove(blastout)
 
 # Taxonomy formatting
 if args.database_format == "silva":
