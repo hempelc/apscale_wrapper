@@ -1046,7 +1046,6 @@ if blast == "True": # Requirement as we need taxonomic information for Kronagrap
     esv_krona_df = krona_formatting(esv_final_df)
     otu_krona_df = krona_formatting(otu_final_df)
     # Save so that krona can be run in command line
-    esv_krona_df.to_csv("/Users/simplexdna/Desktop/test.csv", header=False, index=False)
     esv_krona_df.to_csv(os.path.join(
             outdir,
             f"{project_name}_ESVs_krona-formatted.csv",
