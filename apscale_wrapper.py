@@ -435,19 +435,7 @@ if args.remove_negative_controls == "True":
 else:
     microdecon_suffix = ""
 
-# Generate processing graphs using separate script
-subprocess.run(
-    [
-        "apscale_processing_graphs.py",
-        "--project_dir",
-        f"{args.project_name}_apscale",
-        "--graph_format",
-        f"{args.graph_format}",
-        "--scaling_factor",
-        f"{args.scaling_factor}",
-    ]
-)
-
+# Run BLAST if specified
 if args.run_blast == "True":
     # Define file names
     fastafile_otus = os.path.join(
@@ -538,7 +526,7 @@ if args.run_blast == "True":
             f"{args.project_name}_apscale_ESV_table_filtered{microdecon_suffix}.parquet.snappy",
         )
 
-    # Run BLAST
+    # Run BLAST command
     blasting(
         fastafile=fastafile_otus,
         outfile=blastoutFile_otus,
@@ -620,5 +608,22 @@ if args.run_blast == "True":
         otu_table_with_tax_noCutoff.to_csv(otu_outfile_noCutoff, index=False)
         esv_table_with_tax_noCutoff.to_csv(esv_outfile_noCutoff, index=False)
 
+# Generate processing graphs using separate script
+subprocess.run(
+    [
+        "apscale_processing_graphs.py",
+        "--project_dir",
+        f"{args.project_name}_apscale",
+        "--graph_format",
+        f"{args.graph_format}",
+        "--scaling_factor",
+        f"{args.scaling_factor}",
+        "--blast",
+        f"{args.run_blast}",
+    ]
+)
+
+# Generate detailed report
+# TO DO
 
 time_print("Apscale wrapper done.")
