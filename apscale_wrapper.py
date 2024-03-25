@@ -26,6 +26,7 @@ warnings.filterwarnings("ignore")
 # Funtion to print datetime and text
 def time_print(text):
     timetext = datetime.datetime.now().strftime("%H:%M:%S") + ": " + text
+    print(timetext)
     log.write(timetext + '\n')  # Write to the log file
     log.flush()  # Flush the buffer to ensure immediate writing to the file
 
