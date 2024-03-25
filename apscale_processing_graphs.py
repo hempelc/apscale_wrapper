@@ -90,6 +90,11 @@ parser.add_argument(
     choices=["True", "False"],
 )
 parser.add_argument(
+    "--remove_negative_controls",
+    help="Have negatve controls been removes? Information required for krona graphs.",
+    choices=["True", "False"],
+)
+parser.add_argument(
     "--scaling_factor",
     help="Scaling factor for graph width. Manual trial and error in 0.2 increments might be required (default: 1).",
     default=1,
@@ -104,6 +109,10 @@ graph_format = args.graph_format
 scaling_factor = args.scaling_factor
 blast = args.blast
 project_name = os.path.basename(project_dir)
+if args.remove_negative_controls == "True":
+    microdecon_suffix = "_microdecon-filtered"
+else:
+    microdecon_suffix = ""
 
 # Start of pipeline
 time_print("Generating apscale processing graphs...")
@@ -128,7 +137,7 @@ esv_final_file = os.path.join(
     project_dir,
     "9_lulu_filtering",
     "denoising",
-    f"{project_name}_ESV_table_filtered_microdecon-filtered_with_taxonomy.csv",
+    f"{project_name}_ESV_table_filtered{microdecon_suffix}_with_taxonomy.csv",
 )
 otu_postlulu_file = os.path.join(
     project_dir,
@@ -145,7 +154,7 @@ otu_final_file = os.path.join(
     project_dir,
     "9_lulu_filtering",
     "otu_clustering",
-    f"{project_name}_OTU_table_filtered_microdecon-filtered_with_taxonomy.csv",
+    f"{project_name}_OTU_table_filtered{microdecon_suffix}_with_taxonomy.csv",
 )
 
 report_sheet_dict = pd.read_excel(report_file, sheet_name=None)
