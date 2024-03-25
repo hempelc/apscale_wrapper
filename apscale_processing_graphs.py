@@ -1049,11 +1049,11 @@ if blast == "True": # Requirement as we need taxonomic information for Kronagrap
     esv_krona_df.to_csv(os.path.join(
             outdir,
             f"{project_name}_ESVs_krona-formatted.csv",
-        ), header=False, index=False)
+        ), header=False, index=False, sep="\t")
     otu_krona_df.to_csv(os.path.join(
             outdir,
             f"{project_name}_OTUs_krona-formatted.csv",
-        ), header=False, index=False)
+        ), header=False, index=False, sep="\t")
     # Use the commandline to run krona on both
     ## Construct the krona command for ESVs
     krona_command_esvs = " ".join([
@@ -1082,11 +1082,11 @@ if blast == "True": # Requirement as we need taxonomic information for Kronagrap
     ## Run the command
     subprocess.call(krona_command_otus, shell=True)
     # Remove formatted files
-    # os.remove(os.path.join(
-    #         outdir,
-    #         f"{project_name}_ESVs_krona-formatted.csv"))
-    # os.remove(os.path.join(
-    #         outdir,
-    #         f"{project_name}_OTUs_krona-formatted.csv"))
+    os.remove(os.path.join(
+            outdir,
+            f"{project_name}_ESVs_krona-formatted.csv"))
+    os.remove(os.path.join(
+            outdir,
+            f"{project_name}_OTUs_krona-formatted.csv"))
 
 time_print("Finished graph generation.")
