@@ -133,7 +133,7 @@ def generateSettings(**kwargs):
 
 # Function to BLAST FASTA files using the apscale blast submodule
 def blasting(fastafile, outfile, **kwargs):
-    proc=subprocess.Popen(
+    proc=subprocess.run(
         [
             "apscale_blast.py",
             "--fastafile",
@@ -163,9 +163,7 @@ def blasting(fastafile, outfile, **kwargs):
     for line in proc.stdout:
         sys.stdout.write(str(line))
         log.write(str(line))
-    proc.stdout.close()
-    proc.wait()
-
+    
 # Define arguments
 parser = argparse.ArgumentParser(
     description="""A wrapper to run apscale on forward and reverse 
@@ -384,13 +382,11 @@ time_print("Starting apscale wrapper.")
 
 # Create an apscale directory using bash
 time_print("Creating apscale directory...")
-proc=subprocess.Popen(["apscale", "--create_project", args.project_name],
+proc=subprocess.run(["apscale", "--create_project", args.project_name],
                     stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
 for line in proc.stdout:
     sys.stdout.write(str(line))
     log.write(str(line))
-proc.stdout.close()
-proc.wait()
 
 # Create an empty Project_report.xlsx file
 ## Create an ExcelWriter object using the openpyxl engine
@@ -412,19 +408,17 @@ target_directory = os.path.join(
     f"{args.project_name}_apscale", "2_demultiplexing", "data"
 )
 # TO DO: involve os.path.join for sequence files to make it universal for systems
-# subprocess.Popen(
+# subprocess.run(
 #     ["ln", "-s", sequence_files, target_directory],
 #     shell=True,
 # )
-proc=subprocess.Popen(
+proc=subprocess.run(
     f'ln -s "$(realpath "{args.sequence_dir}")"/* {target_directory}',
     shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
 )
 for line in proc.stdout:
     sys.stdout.write(str(line))
     log.write(str(line))
-proc.stdout.close()
-proc.wait()
 
 # Generate a Settings.xlsx file with given parameters
 time_print("Generating apscale settings file...")
@@ -445,19 +439,17 @@ generateSettings(
 
 # Run apscale
 time_print("Starting apscale...")
-proc=subprocess.Popen(["apscale", "--run_apscale", f"{args.project_name}_apscale"],
+proc=subprocess.run(["apscale", "--run_apscale", f"{args.project_name}_apscale"],
                     stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
 for line in proc.stdout:
     sys.stdout.write(str(line))
     log.write(str(line))
-#proc.stdout.close()
-proc.wait()
 
 time_print("Apscale done.")
 
 if args.remove_negative_controls == "True":
     microdecon_suffix = "_microdecon-filtered"
-    proc=subprocess.Popen(
+    proc=subprocess.run(
         [
             "apscale_remove_negatives.py",
             "--project_dir",
@@ -469,9 +461,7 @@ if args.remove_negative_controls == "True":
     for line in proc.stdout:
         sys.stdout.write(str(line))
         log.write(str(line))
-    proc.stdout.close()
-    proc.wait()
-
+    
 else:
     microdecon_suffix = ""
 
@@ -649,7 +639,7 @@ if args.run_blast == "True":
         esv_table_with_tax_noCutoff.to_csv(esv_outfile_noCutoff, index=False)
 
 # Generate processing graphs using separate script
-proc=subprocess.Popen(
+proc=subprocess.run(
     [
         "apscale_processing_graphs.py",
         "--project_dir",
@@ -665,8 +655,6 @@ proc=subprocess.Popen(
 for line in proc.stdout:
     sys.stdout.write(str(line))
     log.write(str(line))
-proc.stdout.close()
-proc.wait()
 
 
 # Generate detailed report
