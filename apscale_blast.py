@@ -244,8 +244,7 @@ ranks = ["domain", "phylum", "class", "order", "family", "genus", "species"]
 time_print(f"Running BLAST on {args.fastafile} with database {args.database}...")
 
 # Run BLAST on FASTA file
-blastout = os.path.join(os.path.split(args.fastafile)[0], 
-    "apscale_wrapper_blast_output.tsv"),
+blastout = os.path.join(os.path.dirname(args.fastafile), "apscale_wrapper_blast_output.tsv")
 
 subprocess.run(
     [
