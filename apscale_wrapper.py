@@ -158,7 +158,7 @@ def blasting(fastafile, outfile, **kwargs):
             outfile,
             "--cores",
             args.cores,
-        ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
+        ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, check=False
     )
     for line in proc.stdout:
         sys.stdout.write(str(line))
@@ -433,7 +433,7 @@ time_print("Starting apscale wrapper.")
 # Create an apscale directory
 time_print("Creating apscale directory...")
 proc=subprocess.run(["apscale", "--create_project", args.project_name],
-                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, check=False)
 for line in proc.stdout:
     sys.stdout.write(str(line))
 
@@ -463,7 +463,7 @@ target_directory = os.path.join(
 # )
 proc=subprocess.run(
     f'ln -s "$(realpath "{args.sequence_dir}")"/* {target_directory}',
-    shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
+    shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, check=False
 )
 for line in proc.stdout:
     sys.stdout.write(str(line))
@@ -489,7 +489,7 @@ generateSettings(
 # Run apscale
 time_print("Starting apscale...")
 proc=subprocess.run(["apscale", "--run_apscale", f"{args.project_name}_apscale"],
-                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, check=False)
 for line in proc.stdout:
     sys.stdout.write(str(line))
     log.write(str(line))
@@ -505,7 +505,7 @@ if args.remove_negative_controls == "True":
             f"{args.project_name}_apscale",
             "--negative_controls",
             f"{args.negative_controls}",
-        ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
+        ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, check=False
     )
     for line in proc.stdout:
         sys.stdout.write(str(line))
@@ -701,7 +701,7 @@ proc=subprocess.run(
         f"{args.run_blast}",
         "--remove_negative_controls",
         args.remove_negative_controls,
-    ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
+    ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, check=False
 )
 for line in proc.stdout:
     sys.stdout.write(str(line))
