@@ -370,17 +370,6 @@ args.func(args)
 if args.coi == "True":
     args.swarm_distance = 13
 
-### Start of pipeline
-time_print("Starting apscale wrapper.")
-
-# Create an apscale directory
-time_print("Creating apscale directory...")
-proc=subprocess.run(["apscale", "--create_project", args.project_name],
-                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
-for line in proc.stdout:
-    sys.stdout.write(str(line))
-    log.write(str(line))
-
 # Save settings
 settings = pd.DataFrame.from_dict(vars(args), orient='index', columns=["Parameter"]).astype({"Parameter": str})
 ## Format database string
@@ -431,14 +420,22 @@ elif args.run_blast=="False":
     settings = settings.drop(["database", "evalue", "filter_mode", "bitscore_percentage", "alignment_length", "bitscore_threshold", "cutoff_pidents"])
 ## Export
 settings = settings.reset_index().rename(columns={"index": "Setting"})
-settings_file = os.path.join(f"{args.project_name}_apscale", f"{args.project_name}_apscale_wrapper_settings.csv")
-settings.to_csv(settings_file, index=False)
+settings.to_csv(f"{args.project_name}_apscale_wrapper_settings.csv", index=False)
 
 # Create log
-## Define the log file name
-log_file = os.path.join(f"{args.project_name}_apscale", f"{args.project_name}_apscale_wrapper.log")
 # Open the log file in append mode
-log = open(log_file, 'a')
+log = open(f"{args.project_name}_apscale_wrapper_log.txt", 'a')
+
+
+############################### Start of pipeline
+time_print("Starting apscale wrapper.")
+
+# Create an apscale directory
+time_print("Creating apscale directory...")
+proc=subprocess.run(["apscale", "--create_project", args.project_name],
+                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+for line in proc.stdout:
+    sys.stdout.write(str(line))
 
 # Create an empty Project_report.xlsx file
 ## Create an ExcelWriter object using the openpyxl engine
@@ -718,3 +715,9 @@ time_print("Apscale wrapper done.")
 
 # Close the log file
 log.close()
+
+# Move settings and log files
+os.rename(f"{args.project_name}_apscale_wrapper_settings.csv",
+          os.path.join(f"{args.project_name}_apscale", f"{args.project_name}_apscale_wrapper_settings.csv"))
+os.rename(f"{args.project_name}_apscale_wrapper_log.txt",
+          os.path.join(f"{args.project_name}_apscale", f"{args.project_name}_apscale_wrapper_log.txt"))
