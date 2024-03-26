@@ -210,11 +210,11 @@ parser.add_argument(
     required=True,
 )
 parser.add_argument(
-    "--otu_perc",
-    metavar="NN",
-    default=97,
+    "--maxEE",
+    metavar="N",
+    default=2,
     type=int,
-    help="OTU identify treshold for clustering with vsearch. Only used when --clusteringtool=vsearch (default=97).",
+    help="maxEE (maximum estimated error) value used for quality filtering (default: 2).",
 )
 parser.add_argument(
     "--coi",
@@ -224,11 +224,10 @@ parser.add_argument(
     improve clustering and denoising (default=False).""",
 )
 parser.add_argument(
-    "--swarm_distance",
-    default=1,
-    metavar="N",
-    type=int,
-    help="Distance used for swarm. Overwritten to 13 if --coi=True. Only used when --clusteringtool=swarm (default: 1).",
+    "--prior_denoising",
+    choices=["False", "True"],
+    default="False",
+    help="Set to True if you want to denoise reads prior to OTU clustering (default: False).",
 )
 parser.add_argument(
     "--clusteringtool",
@@ -237,30 +236,18 @@ parser.add_argument(
     help="Tool used for OTU clustering (default=vsearch).",
 )
 parser.add_argument(
-    "--prior_denoising",
-    choices=["False", "True"],
-    default="False",
-    help="Set to True if you want to denoise reads prior to OTU clustering (default: False).",
-)
-parser.add_argument(
-    "--maxEE",
-    metavar="N",
-    default=2,
+    "--otu_perc",
+    metavar="NN",
+    default=97,
     type=int,
-    help="maxEE (maximum estimated error) value used for quality filtering (default: 2).",
+    help="OTU identify treshold for clustering with vsearch. Only used when --clusteringtool=vsearch (default=97).",
 )
 parser.add_argument(
-    "--graph_format",
-    help="Graph format, either HTML, png, svg. HTML is recommended because it creates interactive plots (default: html).",
-    default="html",
-    choices=["png", "svg", "html"],
-)
-parser.add_argument(
-    "--scaling_factor",
-    help="Scaling factor for graph width. Manual trial and error in 0.2 increments might be required (default: 1.0).",
-    default=1.0,
-    metavar="N.N",
-    type=float,
+    "--swarm_distance",
+    default=1,
+    metavar="N",
+    type=int,
+    help="Distance used for swarm. Overwritten to 13 if --coi=True. Only used when --clusteringtool=swarm (default: 1).",
 )
 parser.add_argument(
     "--remove_negative_controls",
@@ -305,19 +292,19 @@ parser.add_argument(
 
         strict:
         Performs 3 steps:
-        (1) bitscore filtering - keeps all hits with a bitscore >= --bitscore_treshold, an alignment length >= --length, and within --bitscore_percentage of the best bitscore per sequence.
+        (1) bitscore filtering - keeps all hits with a bitscore >= --bitscore_treshold, an alignment length >= --alignment_length, and within --bitscore_percentage of the best bitscore per sequence.
         (2) similarity cutoff - only keeps the taxonomy of hits up to a certain rank, depending on the hits' blast percentage identity and cutoff values given in argument --cutoff_pidents.
         (3) LCA approach - assigns the taxonomy to each sequence based on all taxonomic ranks that are identical in the remaining hits of each sequence.
         """,
     default="strict",
 )
 parser.add_argument(
-    "--bitscore_percentage",
-    metavar="%",
-    default="2.0",
+    "--bitscore_threshold",
+    metavar="NNN",
+    default="150",
     help=(
-        """Used if --run_blast=True. Percentage threshold (in %%) for bitscore filter when choosing
-        filter_mode option "strict" (default=2.0)."""
+        """Used if --run_blast=True. Bitscore threshold to perform bitscore filtering on when choosing
+        filter_mode option "strict" (default=150)."""
     ),
 )
 parser.add_argument(
@@ -330,12 +317,12 @@ parser.add_argument(
     ),
 )
 parser.add_argument(
-    "--bitscore_threshold",
-    metavar="NNN",
-    default="150",
+    "--bitscore_percentage",
+    metavar="%",
+    default="2.0",
     help=(
-        """Used if --run_blast=True. Bitscore threshold to perform bitscore filtering on when choosing
-        filter_mode option "strict" (default=150)."""
+        """Used if --run_blast=True. Percentage threshold (in %%) for bitscore filter when choosing
+        filter_mode option "strict" (default=2.0)."""
     ),
 )
 parser.add_argument(
@@ -349,6 +336,19 @@ parser.add_argument(
         class, phylum. Domain is always retained. Taxonomy is only kept for a rank if the BLAST hit's
         pident is >= the respective cutoff (default=98,95,90,85,80,75)."""
     ),
+)
+parser.add_argument(
+    "--graph_format",
+    help="Graph format, either HTML, png, svg. HTML is recommended because it creates interactive plots (default: html).",
+    default="html",
+    choices=["png", "svg", "html"],
+)
+parser.add_argument(
+    "--scaling_factor",
+    help="Scaling factor for graph width. Manual trial and error in 0.2 increments might be required (default: 1.0).",
+    default=1.0,
+    metavar="N.N",
+    type=float,
 )
 parser.add_argument(
     "--cores",
@@ -369,7 +369,60 @@ args.func(args)
 # Overwrite the parameter for --swarm_distance if --coi=="True"
 if args.coi == "True":
     args.swarm_distance = 13
-    
+
+# Save settings
+settings = pd.DataFrame.from_dict(vars(args), orient='index', columns=["Parameter"]).astype({"Parameter": str})
+## Format database string
+settings.at['database', 'Parameter'] = os.path.basename(settings.at['database', 'Parameter'])
+## Drop unnecessary settings
+settings = settings.drop(["sequence_dir", "graph_format", "scaling_factor", "database_format", "cores", "func"])
+## Add manual setting descriptions where helpful (requires manual tweaking if more settings are added or the order is changed)
+## TO DO: Doing this automatically with the argparse help descriptions
+settings["Description"] = ["", "", "", 
+    "Minimum limit of expected amplicon length (used for length filtering)",
+    "Maximum limit of expected amplicon length (used for length filtering)",
+    "maxEE (maximum estimated error) value used for quality filtering",
+    "If coi=True, the pipeline invokes DnoisE instead of Unoise for the denoising step",
+    "If prior_denoising=True, then the reads are denoised prior to clustering",
+    "", "Percentage for OTU clustering",
+    "Distance used by swarm to determine clusters",
+    "", "", "", "",
+    "E-value used for BLAST",
+    """Filtering options for BLAST results. Expnad this cell for a detailed description:
+
+    If filter_mode=soft:
+    Keeps the best hit (highest bitscore) for each sequence.
+    If multiple hits have the same highest bitscore, an LCA approach is applied
+    (assigns the taxonomy to each sequence based on all taxonomic ranks that are
+    identical in the remaining hits of each sequence).
+
+    If filter_mode=strict:
+    Performs 3 steps:
+    (1) Bitscore filtering - keeps all hits with a bitscore >= bitscore_treshold, an alignment length >= alignment_length, and within bitscore_percentage of the best bitscore per sequence.
+    (2) Similarity cutoff - only keeps the taxonomy of hits up to a certain rank, depending on the hits' blast percentage identity and cutoff values given in argument cutoff_pidents.
+    (3) LCA approach - assigns the taxonomy to each sequence based on all taxonomic ranks that are identical in the remaining hits of each sequence.
+    """,
+    "Bitscore threshold used to filter BLAST hits (see the description of filter_mode)",
+    "Alignment length used to filter BLAST hits (see the description of filter_mode)",
+    "Bitscore percentage used to filter BLAST hits (see the description of filter_mode)",
+    "Cutoff values for percentage identity scores to filter unreliable taxonomy for BLAST hits (see the description of filter_mode). Rank order: species, genus, family, order, class, phylum. Domain is always kept.",
+]
+## Filter settings based on invoked parameters
+if args.clusteringtool == "vsearch":
+    settings = settings.drop(["swarm_distance"])
+elif args.clusteringtool == "swarm":
+    settings = settings.drop(["otu_perc"])
+if args.remove_negative_controls=="False":
+    settings = settings.drop(["negative_controls"])
+if args.run_blast=="True" and args.filter_mode=="soft":
+    settings = settings.drop(["bitscore_percentage", "alignment_length", "bitscore_threshold", "cutoff_pidents"])
+elif args.run_blast=="False":
+    settings = settings.drop(["database", "evalue", "filter_mode", "bitscore_percentage", "alignment_length", "bitscore_threshold", "cutoff_pidents"])
+## Export
+settings = settings.reset_index().rename(columns={"index": "Setting"})
+settings.to_csv(f"{args.project_name}_apscale_wrapper_settings.csv", index=False)
+
+
 # Log options
 ## Define the log file name
 log_file = f"{args.project_name}_apscale_wrapper.log"
