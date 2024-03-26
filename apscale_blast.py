@@ -7,14 +7,13 @@ By Chris Hempel (christopher.hempel@kaust.edu.sa) on 20 Jan 2022
 """
 
 import datetime
-import pandas as pd
 import argparse
 import warnings
 import subprocess
 import copy
 import os
 import gzip
-
+import pandas as pd
 
 # Define that warnings are not printed to console
 warnings.filterwarnings("ignore")
@@ -244,7 +243,9 @@ ranks = ["domain", "phylum", "class", "order", "family", "genus", "species"]
 time_print(f"Running BLAST on {args.fastafile} with database {args.database}...")
 
 # Run BLAST on FASTA file
-blastout = os.path.join(os.path.dirname(args.fastafile), "apscale_wrapper_blast_output.tsv")
+blastout = os.path.join(
+    os.path.dirname(args.fastafile), "apscale_wrapper_blast_output.tsv"
+)
 
 subprocess.run(
     [
@@ -275,8 +276,8 @@ df = pd.read_table(
 # with gzip.open(blastout + '.gz', 'wb', compresslevel=9) as f:
 #         f.write(blastout)
 # os.remove(blastout)
-with open(blastout, 'rb') as file_in:
-    with gzip.open(blastout + '.gz', 'wb', compresslevel=9) as file_out:
+with open(blastout, "rb") as file_in:
+    with gzip.open(blastout + ".gz", "wb", compresslevel=9) as file_out:
         file_out.write(file_in.read())
 os.remove(blastout)
 

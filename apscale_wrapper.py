@@ -27,7 +27,7 @@ warnings.filterwarnings("ignore")
 def time_print(text):
     timetext = datetime.datetime.now().strftime("%H:%M:%S") + ": " + text
     print(timetext)
-    log.write(timetext + '\n')  # Write to the log file
+    log.write(timetext + "\n")  # Write to the log file
     log.flush()  # Flush the buffer to ensure immediate writing to the file
 
 
@@ -133,7 +133,7 @@ def generateSettings(**kwargs):
 
 # Function to BLAST FASTA files using the apscale blast submodule
 def blasting(fastafile, outfile, **kwargs):
-    proc=subprocess.run(
+    proc = subprocess.run(
         [
             "apscale_blast.py",
             "--fastafile",
@@ -158,12 +158,17 @@ def blasting(fastafile, outfile, **kwargs):
             outfile,
             "--cores",
             args.cores,
-        ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, check=False
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        check=False,
     )
     for line in proc.stdout:
         sys.stdout.write(str(line))
         log.write(str(line))
-    
+
+
 # Define arguments
 parser = argparse.ArgumentParser(
     description="""A wrapper to run apscale on forward and reverse 
@@ -371,22 +376,42 @@ if args.coi == "True":
     args.swarm_distance = 13
 
 # Save settings
-settings = pd.DataFrame.from_dict(vars(args), orient='index', columns=["Parameter"]).astype({"Parameter": str})
+settings = pd.DataFrame.from_dict(
+    vars(args), orient="index", columns=["Parameter"]
+).astype({"Parameter": str})
 ## Format database string
-settings.at['database', 'Parameter'] = os.path.basename(settings.at['database', 'Parameter'])
+settings.at["database", "Parameter"] = os.path.basename(
+    settings.at["database", "Parameter"]
+)
 ## Drop unnecessary settings
-settings = settings.drop(["sequence_dir", "graph_format", "scaling_factor", "database_format", "cores", "func"])
+settings = settings.drop(
+    [
+        "sequence_dir",
+        "graph_format",
+        "scaling_factor",
+        "database_format",
+        "cores",
+        "func",
+    ]
+)
 ## Add manual setting descriptions where helpful (requires manual tweaking if more settings are added or the order is changed)
 ## TO DO: Doing this automatically with the argparse help descriptions
-settings["Description"] = ["", "", "", 
+settings["Description"] = [
+    "",
+    "",
+    "",
     "Minimum limit of expected amplicon length (used for length filtering)",
     "Maximum limit of expected amplicon length (used for length filtering)",
     "maxEE (maximum estimated error) value used for quality filtering",
     "If coi=True, the pipeline invokes DnoisE instead of Unoise for the denoising step",
     "If prior_denoising=True, then the reads are denoised prior to clustering",
-    "", "Percentage for OTU clustering",
+    "",
+    "Percentage for OTU clustering",
     "Distance used by swarm to determine clusters",
-    "", "", "", "",
+    "",
+    "",
+    "",
+    "",
     "E-value used for BLAST",
     """Filtering options for BLAST results. Expnad this cell for a detailed description:
 
@@ -412,19 +437,36 @@ if args.clusteringtool == "vsearch":
     settings = settings.drop(["swarm_distance"])
 elif args.clusteringtool == "swarm":
     settings = settings.drop(["otu_perc"])
-if args.remove_negative_controls=="False":
+if args.remove_negative_controls == "False":
     settings = settings.drop(["negative_controls"])
-if args.run_blast=="True" and args.filter_mode=="soft":
-    settings = settings.drop(["bitscore_percentage", "alignment_length", "bitscore_threshold", "cutoff_pidents"])
-elif args.run_blast=="False":
-    settings = settings.drop(["database", "evalue", "filter_mode", "bitscore_percentage", "alignment_length", "bitscore_threshold", "cutoff_pidents"])
+if args.run_blast == "True" and args.filter_mode == "soft":
+    settings = settings.drop(
+        [
+            "bitscore_percentage",
+            "alignment_length",
+            "bitscore_threshold",
+            "cutoff_pidents",
+        ]
+    )
+elif args.run_blast == "False":
+    settings = settings.drop(
+        [
+            "database",
+            "evalue",
+            "filter_mode",
+            "bitscore_percentage",
+            "alignment_length",
+            "bitscore_threshold",
+            "cutoff_pidents",
+        ]
+    )
 ## Export
 settings = settings.reset_index().rename(columns={"index": "Setting"})
 settings.to_csv(f"{args.project_name}_apscale_wrapper_settings.csv", index=False)
 
 # Create log
 # Open the log file in append mode
-log = open(f"{args.project_name}_apscale_wrapper_log.txt", 'a')
+log = open(f"{args.project_name}_apscale_wrapper_log.txt", "a")
 
 
 ############################### Start of pipeline
@@ -432,8 +474,13 @@ time_print("Starting apscale wrapper.")
 
 # Create an apscale directory
 time_print("Creating apscale directory...")
-proc=subprocess.run(["apscale", "--create_project", args.project_name],
-                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, check=False)
+proc = subprocess.run(
+    ["apscale", "--create_project", args.project_name],
+    stdout=subprocess.PIPE,
+    stderr=subprocess.STDOUT,
+    text=True,
+    check=False,
+)
 for line in proc.stdout:
     sys.stdout.write(str(line))
 
@@ -461,9 +508,13 @@ target_directory = os.path.join(
 #     ["ln", "-s", sequence_files, target_directory],
 #     shell=True,
 # )
-proc=subprocess.run(
+proc = subprocess.run(
     f'ln -s "$(realpath "{args.sequence_dir}")"/* {target_directory}',
-    shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, check=False
+    shell=True,
+    stdout=subprocess.PIPE,
+    stderr=subprocess.STDOUT,
+    text=True,
+    check=False,
 )
 for line in proc.stdout:
     sys.stdout.write(str(line))
@@ -488,8 +539,13 @@ generateSettings(
 
 # Run apscale
 time_print("Starting apscale...")
-proc=subprocess.run(["apscale", "--run_apscale", f"{args.project_name}_apscale"],
-                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, check=False)
+proc = subprocess.run(
+    ["apscale", "--run_apscale", f"{args.project_name}_apscale"],
+    stdout=subprocess.PIPE,
+    stderr=subprocess.STDOUT,
+    text=True,
+    check=False,
+)
 for line in proc.stdout:
     sys.stdout.write(str(line))
     log.write(str(line))
@@ -498,19 +554,23 @@ time_print("Apscale done.")
 
 if args.remove_negative_controls == "True":
     microdecon_suffix = "_microdecon-filtered"
-    proc=subprocess.run(
+    proc = subprocess.run(
         [
             "apscale_remove_negatives.py",
             "--project_dir",
             f"{args.project_name}_apscale",
             "--negative_controls",
             f"{args.negative_controls}",
-        ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, check=False
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        check=False,
     )
     for line in proc.stdout:
         sys.stdout.write(str(line))
         log.write(str(line))
-    
+
 else:
     microdecon_suffix = ""
 
@@ -688,7 +748,7 @@ if args.run_blast == "True":
         esv_table_with_tax_noCutoff.to_csv(esv_outfile_noCutoff, index=False)
 
 # Generate processing graphs using separate script
-proc=subprocess.run(
+proc = subprocess.run(
     [
         "apscale_processing_graphs.py",
         "--project_dir",
@@ -701,7 +761,11 @@ proc=subprocess.run(
         f"{args.run_blast}",
         "--remove_negative_controls",
         args.remove_negative_controls,
-    ], stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, check=False
+    ],
+    stdout=subprocess.PIPE,
+    stderr=subprocess.STDOUT,
+    text=True,
+    check=False,
 )
 for line in proc.stdout:
     sys.stdout.write(str(line))
@@ -717,7 +781,16 @@ time_print("Apscale wrapper done.")
 log.close()
 
 # Move settings and log files
-os.rename(f"{args.project_name}_apscale_wrapper_settings.csv",
-          os.path.join(f"{args.project_name}_apscale", f"{args.project_name}_apscale_wrapper_settings.csv"))
-os.rename(f"{args.project_name}_apscale_wrapper_log.txt",
-          os.path.join(f"{args.project_name}_apscale", f"{args.project_name}_apscale_wrapper_log.txt"))
+os.rename(
+    f"{args.project_name}_apscale_wrapper_settings.csv",
+    os.path.join(
+        f"{args.project_name}_apscale",
+        f"{args.project_name}_apscale_wrapper_settings.csv",
+    ),
+)
+os.rename(
+    f"{args.project_name}_apscale_wrapper_log.txt",
+    os.path.join(
+        f"{args.project_name}_apscale", f"{args.project_name}_apscale_wrapper_log.txt"
+    ),
+)

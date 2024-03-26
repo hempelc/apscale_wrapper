@@ -44,25 +44,39 @@ def calculate_read_stats(lst):
         round(stdev(lst), 2),
     ]
 
+
 # Function to format a df for krona
 def krona_formatting(df):
     ranks = ["domain", "phylum", "class", "order", "family", "genus", "species"]
-    # Sum samples    
-    sample_sums = df.drop(columns=["ID", "Seq", "lowest_taxon", "lowest_rank"] + ranks).sum(axis=1).rename('Sum')
+    # Sum samples
+    sample_sums = (
+        df.drop(columns=["ID", "Seq", "lowest_taxon", "lowest_rank"] + ranks)
+        .sum(axis=1)
+        .rename("Sum")
+    )
     krona_df = pd.concat([sample_sums, df[ranks]], axis=1)
     # Fix taxonomy formatting
     ## Turn all non-taxa names into NaN
-    krona_df = krona_df.replace("Taxonomy unreliable", np.nan).replace("Not available in database", np.nan).replace("No match in database", np.nan).replace("_", " ", regex=True)
+    krona_df = (
+        krona_df.replace("Taxonomy unreliable", np.nan)
+        .replace("Not available in database", np.nan)
+        .replace("No match in database", np.nan)
+        .replace("_", " ", regex=True)
+    )
     ## If entire taxonomy is NaN, replace with "Unknown"
     for index, row in krona_df.iterrows():
         if pd.isna(row["domain"]):
-            krona_df.loc[index, "domain":] = 'Unknown'
+            krona_df.loc[index, "domain":] = "Unknown"
     ## Fill NaNs with last tax entry
-    krona_df = krona_df.fillna(method='ffill', axis=1)
+    krona_df = krona_df.fillna(method="ffill", axis=1)
     # Aggregate taxa
-    krona_df_agg = krona_df.groupby(krona_df.columns[1:].tolist())["Sum"].sum().reset_index()
+    krona_df_agg = (
+        krona_df.groupby(krona_df.columns[1:].tolist())["Sum"].sum().reset_index()
+    )
     # Move the Sum column to the front
-    column_order = [krona_df_agg.columns.tolist()[-1]] + krona_df_agg.columns.tolist()[:-1]
+    column_order = [krona_df_agg.columns.tolist()[-1]] + krona_df_agg.columns.tolist()[
+        :-1
+    ]
     krona_df_agg = krona_df_agg[column_order]
     # Drop entries with Sum==0 (shouldn't be necessary but just in case)
     krona_df_agg = krona_df_agg.loc[krona_df_agg["Sum"] != 0]
@@ -1040,53 +1054,55 @@ else:
 time_print("Clustergram generated for OTUs.")
 
 # Kronagraphs
-if blast == "True": # Requirement as we need taxonomic information for Kronagraphs
+if blast == "True":  # Requirement as we need taxonomic information for Kronagraphs
     time_print("Generating kronagraphs...")
     # Format dfs for Krona
     esv_krona_df = krona_formatting(esv_final_df)
     otu_krona_df = krona_formatting(otu_final_df)
     # Save so that krona can be run in command line
-    esv_krona_df.to_csv(os.path.join(
+    esv_krona_df.to_csv(
+        os.path.join(
             outdir,
             f"{project_name}_ESVs_krona-formatted.csv",
-        ), header=False, index=False, sep="\t")
-    otu_krona_df.to_csv(os.path.join(
+        ),
+        header=False,
+        index=False,
+        sep="\t",
+    )
+    otu_krona_df.to_csv(
+        os.path.join(
             outdir,
             f"{project_name}_OTUs_krona-formatted.csv",
-        ), header=False, index=False, sep="\t")
+        ),
+        header=False,
+        index=False,
+        sep="\t",
+    )
     # Use the commandline to run krona on both
     ## Construct the krona command for ESVs
-    krona_command_esvs = " ".join([
-        "ktImportText",
-        "-o",
-        os.path.join(
-            outdir,
-            f"{project_name}_20_esv_krona.html"),
-        os.path.join(
-            outdir,
-            f"{project_name}_ESVs_krona-formatted.csv")
-    ])
+    krona_command_esvs = " ".join(
+        [
+            "ktImportText",
+            "-o",
+            os.path.join(outdir, f"{project_name}_20_esv_krona.html"),
+            os.path.join(outdir, f"{project_name}_ESVs_krona-formatted.csv"),
+        ]
+    )
     ## Run the command
     subprocess.call(krona_command_esvs, shell=True)
     ## Construct the krona command for OTUs
-    krona_command_otus = " ".join([
-        "ktImportText",
-        "-o",
-        os.path.join(
-            outdir,
-            f"{project_name}_20_otu_krona.html"),
-        os.path.join(
-            outdir,
-            f"{project_name}_OTUs_krona-formatted.csv")
-    ])
+    krona_command_otus = " ".join(
+        [
+            "ktImportText",
+            "-o",
+            os.path.join(outdir, f"{project_name}_20_otu_krona.html"),
+            os.path.join(outdir, f"{project_name}_OTUs_krona-formatted.csv"),
+        ]
+    )
     ## Run the command
     subprocess.call(krona_command_otus, shell=True)
     # Remove formatted files
-    os.remove(os.path.join(
-            outdir,
-            f"{project_name}_ESVs_krona-formatted.csv"))
-    os.remove(os.path.join(
-            outdir,
-            f"{project_name}_OTUs_krona-formatted.csv"))
+    os.remove(os.path.join(outdir, f"{project_name}_ESVs_krona-formatted.csv"))
+    os.remove(os.path.join(outdir, f"{project_name}_OTUs_krona-formatted.csv"))
 
 time_print("Finished graph generation.")
