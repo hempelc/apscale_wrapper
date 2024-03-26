@@ -46,6 +46,10 @@ def remove_negs_from_df(df, unit, negative_controls):
         neg for neg in negative_controls if neg not in negative_controls_keep
     ]
 
+    # If all negative controls are removed because they don't contain any reads, return the df without neg controls
+    if not negative_controls_keep:
+        return df.drop(columns=negative_controls_drop)
+
     # Identify true samples and all samples
     true_samples = list(df.columns.difference(negative_controls + ["ID", "Seq"]))
     samples = negative_controls_keep + true_samples
