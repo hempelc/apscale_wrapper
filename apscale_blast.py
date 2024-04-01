@@ -62,8 +62,10 @@ def lowest_taxon_and_rank(row):
     exceptions = [
         "Taxonomy unreliable - multiple matching taxa",
         "Taxonomy unreliable - percentage similarity threshold for rank not met"
+        "Taxonomy unreliable - bitscore and alignment length threshold not met",
         "No match",
         "Unknown in PR2 database",
+        "Unknown in BOLD database",
     ]
     lowest_taxon = "None"
     lowest_rank = "None"
@@ -157,8 +159,8 @@ parser.add_argument(
 )
 parser.add_argument(
     "--database_format",
-    help="Format of the database. Currently available formats are: midori2, pr2, silva. Note: the SILVA database has to have a specific format.",
-    choices=["midori2", "pr2", "silva"],
+    help="Format of the database. Currently available formats are: midori2, pr2, silva, bold. Note: the SILVA and BOLD databases have to have a specific format.",
+    choices=["midori2", "pr2", "silva", "bold"],
     required=True,
 )
 parser.add_argument(
@@ -307,6 +309,15 @@ elif args.database_format == "midori2":
     # Only keep desired columns and ranks and fill missing values with "NA"
     df = df.drop(["sseqid", "taxonomy"], axis=1).fillna("NA")
 
+elif args.database_format == "bold":
+    ranks = ["kingdom", "phylum", "class", "order", "family", "genus", "species"]
+    # Split the taxonomy column by semicolon and expand into new columns
+    df[ranks] = df["taxonomy"].str.split(";", expand=True)
+    # Replace 'foo' by 'apple' in the entire DataFrame
+    df = df.replace("Unknown_in_BOLD_database", "Unknown in BOLD database")
+    # Only keep desired columns and ranks and fill missing values with "NA"
+    df = df.drop(["sseqid", "taxonomy"], axis=1).fillna("NA")
+
 # TO BE ADDED AT SOME POINT
 # elif args.database_format == "ncbi_nt":
 #     # Drop rows containing "Unknown" = taxid could not be translated
@@ -356,7 +367,7 @@ elif args.filter_mode == "strict":
         (df["length"] < args.alignment_length)
         & (df["bitscore"] < args.bitscore_threshold),
         ranks,
-    ] = "NA"
+    ] = "Taxonomy unreliable - bitscore and alignment length threshold not met"
 
     time_print(
         "Grouping IDs and filtering hits based on bitscore cutoff for each ID..."
@@ -377,14 +388,14 @@ elif args.filter_mode == "strict":
     cutoff_term = (
         "Taxonomy unreliable - percentage similarity threshold for rank not met"
     )
-    df.loc[df["pident"] < args.cutoff_pidents[0], "species"] = "NA"
-    df.loc[df["pident"] < args.cutoff_pidents[1], "genus"] = "NA"
-    df.loc[df["pident"] < args.cutoff_pidents[2], "family"] = "NA"
+    df.loc[df["pident"] < args.cutoff_pidents[0], "species"] = cutoff_term
+    df.loc[df["pident"] < args.cutoff_pidents[1], "genus"] = cutoff_term
+    df.loc[df["pident"] < args.cutoff_pidents[2], "family"] = cutoff_term
     df.loc[
         df["pident"] < args.cutoff_pidents[3], ["order", "suborder", "infraorder"]
-    ] = "NA"
-    df.loc[df["pident"] < args.cutoff_pidents[4], ["class", "subclass"]] = "NA"
-    df.loc[df["pident"] < args.cutoff_pidents[5], ["phylum", "subphylum"]] = "NA"
+    ] = cutoff_term
+    df.loc[df["pident"] < args.cutoff_pidents[4], ["class", "subclass"]] = cutoff_term
+    df.loc[df["pident"] < args.cutoff_pidents[5], ["phylum", "subphylum"]] = cutoff_term
 
     # Process the copied df so that a column for cutoff ranks is used instead of the actual cutoff
     df_no_cutoffs = post_processing(df_no_cutoffs)
