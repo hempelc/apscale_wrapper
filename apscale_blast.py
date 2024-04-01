@@ -59,7 +59,12 @@ def add_suffix(filename, suffix="_no_cutoff"):
 
 # Function to get lowest identified taxon and rank per row
 def lowest_taxon_and_rank(row):
-    exceptions = ["Taxonomy unreliable", "No match", "Unknown in PR2 database"]
+    exceptions = [
+        "Taxonomy unreliable - multiple matching taxa",
+        "Taxonomy unreliable - percentage similarity threshold for rank not met"
+        "No match",
+        "Unknown in PR2 database",
+    ]
     lowest_taxon = "None"
     lowest_rank = "None"
 
@@ -82,8 +87,8 @@ def post_processing(df):
     ## Make a df mask: group dfs, check if ranks have more than one taxon, and if yes, True, else False
     lca_mask = df_tmp.groupby(["qseqid"]).transform(lambda x: len(set(x)) != 1)
 
-    ## Replace ranks in df with "NA" based on mask
-    df_tmp = df_tmp.mask(lca_mask, "NA")
+    ## Replace ranks in df with "Taxonomy unreliable - multiple matching taxa" based on mask
+    df_tmp = df_tmp.mask(lca_mask, "Taxonomy unreliable - multiple matching taxa")
 
     # Add qseqid and pident info
     df_tmp["qseqid"] = df["qseqid"]
@@ -369,6 +374,9 @@ elif args.filter_mode == "strict":
 
     time_print("Applying similarity cutoffs and LCA filter...")
     # Process the original df
+    cutoff_term = (
+        "Taxonomy unreliable - percentage similarity threshold for rank not met"
+    )
     df.loc[df["pident"] < args.cutoff_pidents[0], "species"] = "NA"
     df.loc[df["pident"] < args.cutoff_pidents[1], "genus"] = "NA"
     df.loc[df["pident"] < args.cutoff_pidents[2], "family"] = "NA"
