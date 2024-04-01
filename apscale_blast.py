@@ -310,7 +310,7 @@ elif args.database_format == "midori2":
     df = df.drop(["sseqid", "taxonomy"], axis=1).fillna("NA")
 
 elif args.database_format == "bold":
-    ranks = ["kingdom", "phylum", "class", "order", "family", "genus", "species"]
+    ranks = ["phylum", "class", "order", "family", "genus", "species"]
     # Split the taxonomy column by semicolon and expand into new columns
     df[ranks] = df["taxonomy"].str.split(";", expand=True)
     # Replace 'foo' by 'apple' in the entire DataFrame
@@ -391,11 +391,9 @@ elif args.filter_mode == "strict":
     df.loc[df["pident"] < args.cutoff_pidents[0], "species"] = cutoff_term
     df.loc[df["pident"] < args.cutoff_pidents[1], "genus"] = cutoff_term
     df.loc[df["pident"] < args.cutoff_pidents[2], "family"] = cutoff_term
-    df.loc[
-        df["pident"] < args.cutoff_pidents[3], ["order", "suborder", "infraorder"]
-    ] = cutoff_term
-    df.loc[df["pident"] < args.cutoff_pidents[4], ["class", "subclass"]] = cutoff_term
-    df.loc[df["pident"] < args.cutoff_pidents[5], ["phylum", "subphylum"]] = cutoff_term
+    df.loc[df["pident"] < args.cutoff_pidents[3], "order"] = cutoff_term
+    df.loc[df["pident"] < args.cutoff_pidents[4], "class"] = cutoff_term
+    df.loc[df["pident"] < args.cutoff_pidents[5], "phylum"] = cutoff_term
 
     # Process the copied df so that a column for cutoff ranks is used instead of the actual cutoff
     df_no_cutoffs = post_processing(df_no_cutoffs)
