@@ -278,8 +278,8 @@ parser.add_argument(
 )
 parser.add_argument(
     "--database_format",
-    help="Required if --run_blast=True. Format of the database. Currently available formats are: midori2, pr2, silva. Note: the SILVA database has to have a specific format.",
-    choices=["midori2", "pr2", "silva"],
+    help="Format of the database. Currently available formats are: midori2, pr2, silva, bold. Note: the SILVA and BOLD databases have to have a specific format.",
+    choices=["midori2", "pr2", "silva", "bold"],
 )
 parser.add_argument(
     "--evalue",
