@@ -99,6 +99,20 @@ parser.add_argument(
     choices=["png", "svg", "html"],
 )
 parser.add_argument(
+    "--min_length",
+    metavar="NNN",
+    type=int,
+    help="Minimum limit of expected amplicon length (will be plotted in length graph).",
+    required=True,
+)
+parser.add_argument(
+    "--max_length",
+    metavar="NNN",
+    type=int,
+    help="Maximum limit of expected amplicon length (will be plotted in length graph).",
+    required=True,
+)
+parser.add_argument(
     "--blast",
     help="Has BLAST been run on the OTU and ESV tables? Information required for krona graphs.",
     choices=["True", "False"],
@@ -120,6 +134,8 @@ args = parser.parse_args()
 # Set arguments
 project_dir = args.project_dir
 graph_format = args.graph_format
+min_length = args.min_length
+max_length = args.max_length
 scaling_factor = args.scaling_factor
 blast = args.blast
 project_name = os.path.basename(project_dir)
@@ -419,6 +435,16 @@ length_graph = px.bar(
     y="Count",
     labels={"ReadLength": "Sequence length", "Count": "Frequency"},
     title="PE-merged read lengths before quality filtering",
+)
+length_graph.add_vline(
+    x=min_length,
+    line_width=1,
+    line_dash="dash",
+)
+length_graph.add_vline(
+    x=max_length,
+    line_width=1,
+    line_dash="dash",
 )
 
 # Save
