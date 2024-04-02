@@ -107,10 +107,8 @@ def post_processing(df):
     df_processed = df_processed[idx_pident]
     df_processed = df_processed.rename(columns={"pident": "percentage_similarity"})
 
-    # Change column name, fill NA, replace _ in species names, and save the df
-    df_processed = df_processed.rename(columns={"qseqid": "ID"}).replace(
-        "NA", "Taxonomy unreliable"
-    )
+    # Change column name, replace _ in species names, and save the df
+    df_processed = df_processed.rename(columns={"qseqid": "ID"})
     df_processed["species"] = df_processed["species"].str.replace("_", " ")
 
     # Add columns for lowest identified rank and taxon
@@ -317,7 +315,7 @@ elif args.database_format == "bold":
     mask = df["species"].str.endswith("_sp") | df["species"].str.contains(
         "_sp\._", regex=True
     )
-    df.loc[mask, "species"] = "NA"
+    df.loc[mask, "species"] = "Unknown in BOLD database"
     # Replace 'Unknown_in_BOLD_database' by 'Unknown in BOLD database' in the entire DataFrame
     df = df.replace("Unknown_in_BOLD_database", "Unknown in BOLD database")
     # Only keep desired columns and ranks and fill missing values with "NA"
