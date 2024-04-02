@@ -311,12 +311,12 @@ elif args.database_format == "midori2":
 
 elif args.database_format == "bold":
     ranks = ["phylum", "class", "order", "family", "genus", "species"]
-    # Split the taxonomy column by semicolon and expand into new columns
+    # Split the sseqid column by semicolon and expand into new columns
     df[ranks] = df["sseqid"].str.split(";", expand=True)
     # Replace 'foo' by 'apple' in the entire DataFrame
     df = df.replace("Unknown_in_BOLD_database", "Unknown in BOLD database")
     # Only keep desired columns and ranks and fill missing values with "NA"
-    df = df.drop(["sseqid", "taxonomy"], axis=1).fillna("NA")
+    df = df.drop(["sseqid"], axis=1).fillna("NA")
 
 # TO BE ADDED AT SOME POINT
 # elif args.database_format == "ncbi_nt":
