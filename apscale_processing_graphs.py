@@ -61,18 +61,19 @@ def krona_formatting(df):
     # Fix taxonomy formatting
     ## Turn all non-taxa names into NaN
     krona_df = (
-        krona_df.replace("Taxonomy unreliable", np.nan)
+        krona_df.applymap(lambda x: np.nan if "Taxonomy unreliable" in x else x)
         .replace("Not available in database", np.nan)
-        .replace("No match in database", np.nan)
-        .replace("_", " ", regex=True)
+        .replace("Unknown in PR2 database", np.nan)
+        .replace("Unknown in BOLD database", np.nan)
+        .replace("_", " ", regex=True),
     )
-    ## If entire taxonomy is NaN, replace with "Unknown"
+    ## If entire taxonomy is NaN, replace with "Taxonomy unreliable"
     for index, row in krona_df.iterrows():
         if database_format == "bold":
             if pd.isna(row["phylum"]):
-                krona_df.loc[index, "phylum":] = "Unknown"
+                krona_df.loc[index, "phylum":] = "Taxonomy unreliable"
         elif pd.isna(row["domain"]):
-            krona_df.loc[index, "domain":] = "Unknown"
+            krona_df.loc[index, "domain":] = "Taxonomy unreliable"
     ## Fill NaNs with last tax entry
     krona_df = krona_df.fillna(method="ffill", axis=1)
     # Aggregate taxa
