@@ -63,7 +63,7 @@ def lowest_taxon_and_rank(row):
         "Taxonomy unreliable - multiple matching taxa",
         "Taxonomy unreliable - percentage similarity threshold for rank not met",
         "Taxonomy unreliable - bitscore and alignment length threshold not met",
-        "No match",
+        "No match in database",
         "Unknown in PR2 database",
         "Unknown in BOLD database",
     ]
@@ -123,8 +123,8 @@ def post_processing(df):
 
 # Function to determine the cutoff rank of the processed taxonomy df
 def determine_cutoff_rank(id_value):
-    if id_value == "No match":
-        return "No match"
+    if id_value == "No match in database":
+        return "No match in database"
     tax = "phylum"
     if id_value >= args.cutoff_pidents[5]:
         tax = "class"
@@ -314,8 +314,8 @@ elif args.database_format == "bold":
     # Split the sseqid column by semicolon and expand into new columns
     df[ranks] = df["sseqid"].str.split(";", expand=True)
     # Replace species names containing " sp. "" or ending with "sp"
-    mask = df["species"].str.endswith(" sp") | df["species"].str.contains(
-        " sp\. ", regex=True
+    mask = df["species"].str.endswith("_sp") | df["species"].str.contains(
+        "_sp\._", regex=True
     )
     df.loc[mask, "species"] = "NA"
     # Replace 'Unknown_in_BOLD_database' by 'Unknown in BOLD database' in the entire DataFrame
