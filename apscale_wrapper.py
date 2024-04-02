@@ -719,7 +719,7 @@ if args.run_blast == "True":
         blastout_esvs,
         on="ID",
         how="outer",
-    ).fillna("Test 2")
+    ).fillna("No match in database")
     # Save
     otu_table_with_tax.to_csv(otu_outfile, index=False)
     esv_table_with_tax.to_csv(esv_outfile, index=False)

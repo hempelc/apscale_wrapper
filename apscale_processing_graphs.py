@@ -61,8 +61,14 @@ def krona_formatting(df):
     # Fix taxonomy formatting
     ## Turn all non-taxa names into NaN
     krona_df = (
-        krona_df.applymap(
-            lambda x: np.nan if isinstance(x, str) and "Taxonomy unreliable" in x else x
+        krona_df.replace("Taxonomy unreliable - multiple matching taxa", np.nan)
+        .replace(
+            "Taxonomy unreliable - percentage similarity threshold for rank not met",
+            np.nan,
+        )
+        .replace(
+            "Taxonomy unreliable - bitscore and alignment length threshold not met",
+            np.nan,
         )
         .replace("Not available in database", np.nan)
         .replace("Unknown in PR2 database", np.nan)
