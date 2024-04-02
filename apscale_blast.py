@@ -314,10 +314,10 @@ elif args.database_format == "bold":
     # Split the sseqid column by semicolon and expand into new columns
     df[ranks] = df["sseqid"].str.split(";", expand=True)
     # Replace species names containing " sp. "" or ending with "sp"
-    mask = df["Column1"].str.endswith(" sp") | df["Column1"].str.contains(
+    mask = df["species"].str.endswith(" sp") | df["species"].str.contains(
         " sp\. ", regex=True
     )
-    df.loc[mask, "Column1"] = "NA"
+    df.loc[mask, "species"] = "NA"
     # Replace 'Unknown_in_BOLD_database' by 'Unknown in BOLD database' in the entire DataFrame
     df = df.replace("Unknown_in_BOLD_database", "Unknown in BOLD database")
     # Only keep desired columns and ranks and fill missing values with "NA"
