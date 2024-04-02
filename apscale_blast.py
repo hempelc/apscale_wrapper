@@ -61,7 +61,7 @@ def add_suffix(filename, suffix="_no_cutoff"):
 def lowest_taxon_and_rank(row):
     exceptions = [
         "Taxonomy unreliable - multiple matching taxa",
-        "Taxonomy unreliable - percentage similarity threshold for rank not met"
+        "Taxonomy unreliable - percentage similarity threshold for rank not met",
         "Taxonomy unreliable - bitscore and alignment length threshold not met",
         "No match",
         "Unknown in PR2 database",
@@ -313,7 +313,12 @@ elif args.database_format == "bold":
     ranks = ["phylum", "class", "order", "family", "genus", "species"]
     # Split the sseqid column by semicolon and expand into new columns
     df[ranks] = df["sseqid"].str.split(";", expand=True)
-    # Replace 'foo' by 'apple' in the entire DataFrame
+    # Replace species names containing " sp. "" or ending with "sp"
+    mask = df["Column1"].str.endswith(" sp") | df["Column1"].str.contains(
+        " sp\. ", regex=True
+    )
+    df.loc[mask, "Column1"] = "NA"
+    # Replace 'Unknown_in_BOLD_database' by 'Unknown in BOLD database' in the entire DataFrame
     df = df.replace("Unknown_in_BOLD_database", "Unknown in BOLD database")
     # Only keep desired columns and ranks and fill missing values with "NA"
     df = df.drop(["sseqid"], axis=1).fillna("NA")
