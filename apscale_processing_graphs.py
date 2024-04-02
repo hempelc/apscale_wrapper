@@ -61,7 +61,9 @@ def krona_formatting(df):
     # Fix taxonomy formatting
     ## Turn all non-taxa names into NaN
     krona_df = (
-        krona_df.applymap(lambda x: np.nan if "Taxonomy unreliable" in x else x)
+        krona_df.applymap(
+            lambda x: np.nan if isinstance(x, str) and "Taxonomy unreliable" in x else x
+        )
         .replace("Not available in database", np.nan)
         .replace("Unknown in PR2 database", np.nan)
         .replace("Unknown in BOLD database", np.nan)
@@ -85,9 +87,7 @@ def krona_formatting(df):
         :-1
     ]
     krona_df_agg = krona_df_agg[column_order]
-    # Drop entries with Sum==0 (shouldn't be necessary but just in case)
-    krona_df_agg = krona_df_agg.loc[krona_df_agg["Sum"] != 0]
-    return krona_df_agg
+    return krona_df_agg.loc[krona_df_agg["Sum"] != 0]
 
 
 # Define arguments
