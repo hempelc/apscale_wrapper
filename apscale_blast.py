@@ -67,8 +67,8 @@ def lowest_taxon_and_rank(row):
         "Unknown in PR2 database",
         "Unknown in BOLD database",
     ]
-    lowest_taxon = "None"
-    lowest_rank = "None"
+    lowest_taxon = "Test 1"
+    lowest_rank = "Test 1"
 
     # Iterate over columns in reverse order
     for col in reversed(ranks):
