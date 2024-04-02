@@ -763,6 +763,8 @@ proc = subprocess.run(
         f"{args.scaling_factor}",
         "--blast",
         f"{args.run_blast}",
+        "--database_format",
+        f"{args.database_format}",
         "--remove_negative_controls",
         args.remove_negative_controls,
     ],
@@ -774,10 +776,6 @@ proc = subprocess.run(
 for line in proc.stdout:
     sys.stdout.write(str(line))
     log.write(str(line))
-
-
-# Generate detailed report
-# TO DO
 
 time_print("Apscale wrapper done.")
 

@@ -47,7 +47,10 @@ def calculate_read_stats(lst):
 
 # Function to format a df for krona
 def krona_formatting(df):
-    ranks = ["domain", "phylum", "class", "order", "family", "genus", "species"]
+    if database_format == "bold":
+        ranks = ["phylum", "class", "order", "family", "genus", "species"]
+    else:
+        ranks = ["domain", "phylum", "class", "order", "family", "genus", "species"]
     # Sum samples
     sample_sums = (
         df.drop(columns=["ID", "Seq", "lowest_taxon", "lowest_rank"] + ranks)
@@ -118,8 +121,13 @@ parser.add_argument(
     choices=["True", "False"],
 )
 parser.add_argument(
+    "--database_format",
+    help="Format of the database used for BLAST. Currently available formats are: midori2, pr2, silva, bold. Information required for krona graphs.",
+    choices=["midori2", "pr2", "silva", "bold"],
+)
+parser.add_argument(
     "--remove_negative_controls",
-    help="Have negatve controls been removes? Information required for krona graphs.",
+    help="Have negatve controls been removed? Information required for krona graphs.",
     choices=["True", "False"],
 )
 parser.add_argument(
@@ -138,6 +146,7 @@ min_length = args.min_length
 max_length = args.max_length
 scaling_factor = args.scaling_factor
 blast = args.blast
+database_format = args.database_format
 project_name = os.path.basename(project_dir)
 if args.remove_negative_controls == "True":
     microdecon_suffix = "_microdecon-filtered"
