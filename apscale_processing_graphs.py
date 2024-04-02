@@ -68,7 +68,10 @@ def krona_formatting(df):
     )
     ## If entire taxonomy is NaN, replace with "Unknown"
     for index, row in krona_df.iterrows():
-        if pd.isna(row["domain"]):
+        if database_format == "bold":
+            if pd.isna(row["phylum"]):
+                krona_df.loc[index, "phylum":] = "Unknown"
+        elif pd.isna(row["domain"]):
             krona_df.loc[index, "domain":] = "Unknown"
     ## Fill NaNs with last tax entry
     krona_df = krona_df.fillna(method="ffill", axis=1)
