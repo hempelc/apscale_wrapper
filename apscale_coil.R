@@ -137,4 +137,4 @@ warning("R package coil: ", num_dropped, " sequences have been identified as NUM
 concatenated_df = subset(concatenated_df, is.na(coil_flag))
 # Drop coil-related columns
 concatenated_df = select(concatenated_df, -genetic_code:-coil_flag)
-write.csv(concatenated_df, file = outfile)
+write.csv(concatenated_df, file = outfile, row.names = FALSE)
