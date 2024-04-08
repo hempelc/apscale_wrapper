@@ -318,6 +318,10 @@ elif args.database_format == "bold":
         | df["species"].str.contains("_cf\._", regex=True)
     )
     df.loc[mask, "species"] = "Unknown in BOLD database"
+    # Replace taxa containing incertae_sedis
+    df[ranks] = df[ranks][
+        df[ranks].apply(lambda x: x.str.contains("incertae_sedis")).any(axis=1)
+    ] = "Unknown in BOLD database"
     # Replace 'Unknown_in_BOLD_database' by 'Unknown in BOLD database' in the entire DataFrame
     df = df.replace("Unknown_in_BOLD_database", "Unknown in BOLD database")
     # Only keep desired columns and ranks and fill missing values with "NA"
