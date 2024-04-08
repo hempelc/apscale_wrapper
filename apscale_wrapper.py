@@ -42,6 +42,21 @@ def validate_args(args):
             "--database and --database_format are required when --run_blast=True."
         )
 
+# Function to search for a file in the directories listed in the PATH environment variable.
+# Needed for the RScript command, as it requires the full path to the R script executable
+def find_file_in_path(filename):
+    # Split the PATH variable into individual directory paths
+    paths = os.environ.get("PATH", "").split(os.pathsep)
+
+    # Check each directory for the presence of the file
+    for path in paths:
+        full_path = os.path.join(path, filename)
+        if os.path.isfile(full_path):
+            return full_path
+
+    # If the file is not found in any directory in PATH
+    return None
+
 
 # Function to generate an apscale Settings.xlsx file
 def generateSettings(**kwargs):
@@ -750,8 +765,9 @@ if args.run_blast == "True":
     # Run coil through an R script if data is COI
     if args.coi == "True":
         time_print("Removing NUMTs from OTUs with the R package coil...")
+        path_to_rscript = find_file_in_path("apscale_coil.R")
         proc = subprocess.run(  # Rscript only works with the full path to the R script, so we fetch it with "which"
-            ["Rscript", '"$(which', 'apscale_coil.R)"', f"{otu_outfile}", "OTU"],
+            ["Rscript", f"{path_to_rscript}", f"{otu_outfile}", "OTU"],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
@@ -763,7 +779,7 @@ if args.run_blast == "True":
 
         time_print("Removing NUMTs from ESVs with the R package coil...")
         proc = subprocess.run(  # Rscript only works with the full path to the R script, so we fetch it with "which"
-            ["Rscript", '"$(which', 'apscale_coil.R)"', f"{esv_outfile}", "ESV"],
+            ["Rscript", f"{path_to_rscript}", f"{esv_outfile}", "ESV"],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
