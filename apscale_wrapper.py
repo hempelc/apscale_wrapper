@@ -42,6 +42,7 @@ def validate_args(args):
             "--database and --database_format are required when --run_blast=True."
         )
 
+
 # Function to search for a file in the directories listed in the PATH environment variable.
 # Needed for the RScript command, as it requires the full path to the R script executable
 def find_file_in_path(filename):
@@ -763,50 +764,52 @@ if args.run_blast == "True":
         esv_table_with_tax_noCutoff.to_csv(esv_outfile_noCutoff, index=False)
 
     # Run coil through an R script if data is COI
-    if args.coi == "True":
-        time_print("Removing NUMTs from OTUs with the R package coil...")
-        path_to_rscript = find_file_in_path("apscale_coil.R")
-        proc = subprocess.run(  # Rscript only works with the full path to the R script, so we fetch it with "which"
-            ["Rscript", f"{path_to_rscript}", f"{otu_outfile}", "OTU"],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True,
-            check=False,
-        )
-        for line in proc.stdout:
-            sys.stdout.write(str(line))
-            log.write(str(line))
+    # NOTE: tests revealed that coil output is not repeatable, sometimes it drops 6 sequences while other times 112,
+    # therefore its implementation is put on hold for now
+    # if args.coi == "True":
+    #     time_print("Removing NUMTs from OTUs with the R package coil...")
+    #     path_to_rscript = find_file_in_path("apscale_coil.R")
+    #     proc = subprocess.run(  # Rscript only works with the full path to the R script, so we fetch it with "which"
+    #         ["Rscript", f"{path_to_rscript}", f"{otu_outfile}", "OTU"],
+    #         stdout=subprocess.PIPE,
+    #         stderr=subprocess.STDOUT,
+    #         text=True,
+    #         check=False,
+    #     )
+    #     for line in proc.stdout:
+    #         sys.stdout.write(str(line))
+    #         log.write(str(line))
 
-        time_print("Removing NUMTs from ESVs with the R package coil...")
-        proc = subprocess.run(  # Rscript only works with the full path to the R script, so we fetch it with "which"
-            ["Rscript", f"{path_to_rscript}", f"{esv_outfile}", "ESV"],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True,
-            check=False,
-        )
-        for line in proc.stdout:
-            sys.stdout.write(str(line))
-            log.write(str(line))
-        if args.filter_mode == "strict":
-            # Drop the removed OTUs/ESvs from the no-cutoff dataframes
-            ## Load in coil fitlered dfs
-            otus_coil_filtered = pd.read_csv(otu_outfile)
-            esvs_coil_filtered = pd.read_csv(esv_outfile)
-            ## Merge dfs with inner on ID to drop IDs that were filtered out by coil
-            otus_coil_filtered_noCutoff = pd.merge(
-                otu_table_with_tax_noCutoff, otus_coil_filtered, on="ID", how="inner"
-            )
-            esvs_coil_filtered_noCutoff = pd.merge(
-                esv_table_with_tax_noCutoff, esvs_coil_filtered, on="ID", how="inner"
-            )
-            # Save
-            otus_coil_filtered_noCutoff.to_csv(
-                otu_outfile_noCutoff.replace(".csv", "_coil_filtered.csv"), index=False
-            )
-            esvs_coil_filtered_noCutoff.to_csv(
-                esv_outfile_noCutoff.replace(".csv", "_coil_filtered.csv"), index=False
-            )
+    #     time_print("Removing NUMTs from ESVs with the R package coil...")
+    #     proc = subprocess.run(  # Rscript only works with the full path to the R script, so we fetch it with "which"
+    #         ["Rscript", f"{path_to_rscript}", f"{esv_outfile}", "ESV"],
+    #         stdout=subprocess.PIPE,
+    #         stderr=subprocess.STDOUT,
+    #         text=True,
+    #         check=False,
+    #     )
+    #     for line in proc.stdout:
+    #         sys.stdout.write(str(line))
+    #         log.write(str(line))
+    #     if args.filter_mode == "strict":
+    #         # Drop the removed OTUs/ESvs from the no-cutoff dataframes
+    #         ## Load in coil fitlered dfs
+    #         otus_coil_filtered = pd.read_csv(otu_outfile)
+    #         esvs_coil_filtered = pd.read_csv(esv_outfile)
+    #         ## Merge dfs with inner on ID to drop IDs that were filtered out by coil
+    #         otus_coil_filtered_noCutoff = pd.merge(
+    #             otu_table_with_tax_noCutoff, otus_coil_filtered, on="ID", how="inner"
+    #         )
+    #         esvs_coil_filtered_noCutoff = pd.merge(
+    #             esv_table_with_tax_noCutoff, esvs_coil_filtered, on="ID", how="inner"
+    #         )
+    #         # Save
+    #         otus_coil_filtered_noCutoff.to_csv(
+    #             otu_outfile_noCutoff.replace(".csv", "_coil_filtered.csv"), index=False
+    #         )
+    #         esvs_coil_filtered_noCutoff.to_csv(
+    #             esv_outfile_noCutoff.replace(".csv", "_coil_filtered.csv"), index=False
+    #         )
 
 
 # Generate processing graphs using separate script
