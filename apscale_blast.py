@@ -295,9 +295,7 @@ if args.database_format == "silva":
     # Only keep desired columns and ranks and fill missing values with "NA"
     df = df.drop(["sseqid"], axis=1).fillna("NA")
     # Replace taxa containing Not_available
-    df[ranks] = df[ranks][
-        df[ranks].apply(lambda x: x.str.contains("Not_available")).any(axis=1)
-    ] = "Unknown in SILVA database"
+    df[ranks] = df[ranks].replace("Not_available", "Unknown in SILVA database")
 
 elif args.database_format == "midori2":
     # Remove any of "phylum", "class", "order", "family", "genus", and "species" followed by _ as well as _ followed by a number and all the extra information before the domain
