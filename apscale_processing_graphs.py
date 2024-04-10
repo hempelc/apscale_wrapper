@@ -1141,7 +1141,7 @@ if blast == "True":  # Requirement as we need taxonomic information for Kronagra
         [
             "ktImportText",
             "-o",
-            os.path.join(outdir, f"{project_name}_20_otu_krona.html"),
+            os.path.join(outdir, f"{project_name}_21_otu_krona.html"),
             os.path.join(outdir, f"{project_name}_OTUs_krona-formatted.csv"),
         ]
     )
