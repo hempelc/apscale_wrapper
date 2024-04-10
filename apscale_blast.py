@@ -271,7 +271,6 @@ subprocess.run(
     ]
 )
 # Load in and format BLAST output
-blastout = "/Users/simplexdna/Desktop/apscale_wrapper_blast_output.tsv"
 time_print("Formatting BLAST output...")
 df = pd.read_table(
     blastout,
