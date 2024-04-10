@@ -271,6 +271,7 @@ subprocess.run(
     ]
 )
 # Load in and format BLAST output
+blastout = "/Users/simplexdna/Desktop/apscale_wrapper_blast_output.tsv"
 time_print("Formatting BLAST output...")
 df = pd.read_table(
     blastout,
@@ -322,9 +323,9 @@ elif args.database_format == "bold":
     )
     df.loc[mask, "species"] = "Unknown in BOLD database"
     # Replace taxa containing incertae_sedis
-    df[ranks] = df[ranks][
-        df[ranks].apply(lambda x: x.str.contains("incertae_sedis")).any(axis=1)
-    ] = "Unknown in BOLD database"
+    df[ranks] = df[ranks].applymap(
+        lambda x: "Unknown in BOLD database" if "incertae_sedis" in x else x
+    )
     # Replace 'Unknown_in_BOLD_database' by 'Unknown in BOLD database' in the entire DataFrame
     df = df.replace("Unknown_in_BOLD_database", "Unknown in BOLD database")
     # Only keep desired columns and ranks and fill missing values with "NA"
