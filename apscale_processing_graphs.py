@@ -73,6 +73,7 @@ def krona_formatting(df):
         .replace("Not available in database", np.nan)
         .replace("Unknown in PR2 database", np.nan)
         .replace("Unknown in BOLD database", np.nan)
+        .replace("Unknown in SILVA database", np.nan)
         .replace("_", " ", regex=True)
     )
     ## If entire taxonomy is NaN, replace with "Taxonomy unreliable"
