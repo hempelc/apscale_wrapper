@@ -429,7 +429,7 @@ settings["Description"] = [
     "",
     "",
     "E-value used for BLAST",
-    """Filtering options for BLAST results. Expnad this cell for a detailed description:
+    """Filtering options for BLAST results. Expand this cell for a detailed description:
 
     If filter_mode=soft:
     Keeps the best hit (highest bitscore) for each sequence.
@@ -720,9 +720,6 @@ if args.run_blast == "True":
     # Read in BLAST results
     blastout_otus = pd.read_csv(blastoutFile_otus)
     blastout_esvs = pd.read_csv(blastoutFile_esvs)
-    # Clean up
-    os.remove(blastoutFile_otus)
-    os.remove(blastoutFile_esvs)
     # Merge tables
     otu_table_with_tax = pd.merge(
         otu_table,
