@@ -125,17 +125,17 @@ def determine_cutoff_rank(id_value):
     if id_value == "No match in database":
         return "No match in database"
     tax = "phylum"
-    if id_value >= args.cutoff_pidents[5]:
+    if id_value >= args.blast_cutoff_pidents[5]:
         tax = "class"
-    if id_value >= args.cutoff_pidents[4]:
+    if id_value >= args.blast_cutoff_pidents[4]:
         tax = "order"
-    if id_value >= args.cutoff_pidents[3]:
+    if id_value >= args.blast_cutoff_pidents[3]:
         tax = "family"
-    if id_value >= args.cutoff_pidents[2]:
+    if id_value >= args.blast_cutoff_pidents[2]:
         tax = "genus"
-    if id_value >= args.cutoff_pidents[1]:
+    if id_value >= args.blast_cutoff_pidents[1]:
         tax = "species"
-    if id_value >= args.cutoff_pidents[0]:
+    if id_value >= args.blast_cutoff_pidents[0]:
         tax = "none"
     return tax
 
@@ -366,14 +366,14 @@ elif args.database_format == "pr2":
     df[ranks] = df[ranks].apply(replace_pr2_tax)
 
 
-if args.filter_mode == "soft":
+if args.blast_filter_mode == "soft":
     time_print(
         "Grouping IDs and filtering hits based on the highest bitscore of each ID..."
     )
     idx = df.groupby(["qseqid"])["bitscore"].transform(max) == df["bitscore"]
     df = df[idx]
 
-elif args.filter_mode == "strict":
+elif args.blast_filter_mode == "strict":
     time_print("Filtering hits based on bitscore and length...")
     df.loc[
         (df["length"] < args.blast_alignment_length)

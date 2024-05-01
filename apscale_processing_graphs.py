@@ -70,6 +70,10 @@ def krona_formatting(df):
             "Taxonomy unreliable - bitscore and alignment length threshold not met",
             np.nan,
         )
+        .replace(
+            "Taxonomy unreliable - confidence threshold not met",
+            np.nan,
+        )
         .replace("Not available in database", np.nan)
         .replace("Unknown in PR2 database", np.nan)
         .replace("Unknown in BOLD database", np.nan)
@@ -127,13 +131,13 @@ parser.add_argument(
     required=True,
 )
 parser.add_argument(
-    "--blast",
-    help="Has BLAST been run on the OTU and ESV tables? Information required for krona graphs.",
+    "--add_taxonomy",
+    help="Has taxonomy been added to the OTU and ESV tables? Information required for krona graphs.",
     choices=["True", "False"],
 )
 parser.add_argument(
     "--database_format",
-    help="Format of the database used for BLAST. Currently available formats are: midori2, pr2, silva, bold. Information required for krona graphs.",
+    help="Format of the reference database. Information required for krona graphs.",
     choices=["midori2", "pr2", "silva", "bold"],
 )
 parser.add_argument(
@@ -156,7 +160,7 @@ graph_format = args.graph_format
 min_length = args.min_length
 max_length = args.max_length
 scaling_factor = args.scaling_factor
-blast = args.blast
+add_taxonomy = args.add_taxonomy
 database_format = args.database_format
 project_name = os.path.basename(project_dir)
 if args.remove_negative_controls == "True":
@@ -1100,7 +1104,9 @@ else:
 time_print("Clustergram generated for OTUs.")
 
 # Kronagraphs
-if blast == "True":  # Requirement as we need taxonomic information for Kronagraphs
+if (
+    add_taxonomy == "True"
+):  # Requirement as we need taxonomic information for Kronagraphs
     time_print("Generating kronagraphs...")
     # Format dfs for Krona
     esv_krona_df = krona_formatting(esv_final_df)

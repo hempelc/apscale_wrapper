@@ -10,8 +10,8 @@ import datetime
 import argparse
 import warnings
 import subprocess
-import copy
 import os
+import re
 import pandas as pd
 
 # Define that warnings are not printed to console
@@ -44,7 +44,6 @@ def add_suffix(filename, suffix="_no_cutoff"):
 def lowest_taxon_and_rank(row):
     exceptions = [
         "Taxonomy unreliable - confidence threshold not met",
-        "No match in database",
         "Unknown in PR2 database",
         "Unknown in BOLD database",
         "Unknown in SILVA database",
@@ -54,8 +53,12 @@ def lowest_taxon_and_rank(row):
 
     # Iterate over columns in reverse order
     for col in reversed(ranks):
-        value = row[col].replace(r"\(\d\.\d{2}\)", "", regex=True)
-        if pd.notna(value) and value not in exceptions:
+        value = re.sub(r"\(\d\.\d{2}\)", "", row[col])
+        if value == "No match in database":
+            lowest_taxon = value
+            lowest_rank = value
+            break
+        elif pd.notna(value) and value not in exceptions:
             lowest_taxon = value
             lowest_rank = col
             break  # Break on the first valid entry found
@@ -74,7 +77,7 @@ def post_processing(df):
     return df
 
 
-def tax_formatting(df, tax_col):
+def tax_formatting(df, tax_col, ranks):
     # Taxonomy formatting
     if args.database_format == "silva":
         # Annotate entries with no DB match
@@ -262,15 +265,15 @@ df_no_cutoffs = df[["ID", "tax_with_scores"]]
 df_with_cutoffs = df[["ID", "tax"]]
 
 # Format taxonomy
-df_no_cutoffs = tax_formatting(df_no_cutoffs, "tax_with_scores")
-df_with_cutoffs = tax_formatting(df_with_cutoffs, "tax")
+df_no_cutoffs = tax_formatting(df_no_cutoffs, "tax_with_scores", ranks)
+df_with_cutoffs = tax_formatting(df_with_cutoffs, "tax", ranks)
 
 # Process and save df
 df_no_cutoffs = post_processing(df_no_cutoffs)
 df_with_cutoffs = post_processing(df_with_cutoffs)
 
 # Save
-df_no_cutoffs.to_csv(args.outfile, index=False)
-df_with_cutoffs.to_csv(add_suffix(args.outfile), index=False)
+df_no_cutoffs.to_csv(add_suffix(args.outfile), index=False)
+df_with_cutoffs.to_csv(args.outfile, index=False)
 
 time_print("SINTAX formatting done.")

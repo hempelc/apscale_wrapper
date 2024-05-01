@@ -40,7 +40,7 @@ def validate_args(args):
     if (
         args.add_taxonomy == "True"
         and not args.taxonomy_classifier
-        and not args.database_format
+        or not args.database_format
     ):
         parser.error(
             "--taxonomy_classifier and --database_format are required when --add_taxonomy=True."
@@ -450,9 +450,14 @@ settings = pd.DataFrame.from_dict(
     vars(args), orient="index", columns=["Parameter"]
 ).astype({"Parameter": str})
 ## Format database string
-settings.at["database", "Parameter"] = os.path.basename(
-    settings.at["database", "Parameter"]
-)
+if args.taxonomy_classifier == "blast":
+    settings.at["blast_database", "Parameter"] = os.path.basename(
+        settings.at["blast_database", "Parameter"]
+    )
+elif args.taxonomy_classifier == "sintax":
+    settings.at["sintax_database", "Parameter"] = os.path.basename(
+        settings.at["sintax_database", "Parameter"]
+    )
 ## Drop unnecessary settings
 settings = settings.drop(
     [
@@ -479,6 +484,8 @@ settings["Description"] = [
     "",
     "Percentage for OTU clustering",
     "Distance used by swarm to determine clusters",
+    "",
+    "",
     "",
     "",
     "",
@@ -512,7 +519,7 @@ if args.remove_negative_controls == "False":
     settings = settings.drop(["negative_controls"])
 if args.add_taxonomy == "True":
     if args.taxonomy_classifier == "blast":
-        settings = settings.drop(["sintax_confidence_cutoff"])
+        settings = settings.drop(["sintax_confidence_cutoff", "sintax_database"])
         if args.blast_filter_mode == "soft":
             settings = settings.drop(
                 [
@@ -525,6 +532,7 @@ if args.add_taxonomy == "True":
     elif args.taxonomy_classifier == "sintax":
         settings = settings.drop(
             [
+                "blast_database",
                 "blast_evalue",
                 "blast_filter_mode",
                 "blast_bitscore_percentage",
@@ -785,14 +793,14 @@ if args.add_taxonomy == "True":
         # Run SINTAX command
         sintax(
             fastafile=fastafile_otus,
-            outfile=classificationOutFile_esvs,
+            outfile=classificationOutFile_otus,
             sintax_database=args.sintax_database,
             database_format=args.database_format,
             sintax_confidence_cutoff=args.sintax_confidence_cutoff,
             cores=args.cores,
         )
         sintax(
-            fastafile=fastafile_otus,
+            fastafile=fastafile_esvs,
             outfile=classificationOutFile_esvs,
             sintax_database=args.sintax_database,
             database_format=args.database_format,
@@ -919,8 +927,8 @@ proc = subprocess.run(
         f"{args.max_length}",
         "--scaling_factor",
         f"{args.scaling_factor}",
-        "--blast",
-        f"{args.run_blast}",
+        "--add_taxonomy",
+        f"{args.add_taxonomy}",
         "--database_format",
         f"{args.database_format}",
         "--remove_negative_controls",
