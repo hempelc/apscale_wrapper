@@ -37,10 +37,18 @@ def validate_args(args):
         parser.error(
             "--negative_controls is required when --remove_negative_controls=True."
         )
-    if args.run_blast == "True" and (not args.database or not args.database_format):
+    if (
+        args.add_taxonomy == "True"
+        and not args.taxonomy_classifier
+        and not args.database_format
+    ):
         parser.error(
-            "--database and --database_format are required when --run_blast=True."
+            "--taxonomy_classifier and --database_format are required when --add_taxonomy=True."
         )
+    if args.taxonomy_classifier == "blast" and not args.blast_database:
+        parser.error("--blast_database is required when --taxonomy_classifier=blast.")
+    if args.taxonomy_classifier == "sintax" and not args.sintax_database:
+        parser.error("--sintax_database is required when --taxonomy_classifier=sintax.")
 
 
 # Function to search for a file in the directories listed in the PATH environment variable.
@@ -154,22 +162,50 @@ def blasting(fastafile, outfile, **kwargs):
             "apscale_blast.py",
             "--fastafile",
             fastafile,
-            "--database",
-            args.database,
+            "--blast_database",
+            args.blast_database,
             "--database_format",
             args.database_format,
-            "--evalue",
-            args.evalue,
-            "--filter_mode",
-            args.filter_mode,
-            "--bitscore_percentage",
-            args.bitscore_percentage,
-            "--alignment_length",
-            args.alignment_length,
-            "--bitscore_threshold",
-            args.bitscore_threshold,
-            "--cutoff_pidents",
-            args.cutoff_pidents,
+            "--blast_evalue",
+            args.blast_evalue,
+            "--blast_filter_mode",
+            args.blast_filter_mode,
+            "--blast_bitscore_percentage",
+            args.blast_bitscore_percentage,
+            "--blast_alignment_length",
+            args.blast_alignment_length,
+            "--blast_bitscore_threshold",
+            args.blast_bitscore_threshold,
+            "--blast_cutoff_pidents",
+            args.blast_cutoff_pidents,
+            "--outfile",
+            outfile,
+            "--cores",
+            args.cores,
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        check=False,
+    )
+    for line in proc.stdout:
+        sys.stdout.write(str(line))
+        log.write(str(line))
+
+
+# Function to run SINTAX on FASTA files using the apscale sintax submodule
+def sintax(fastafile, outfile, **kwargs):
+    proc = subprocess.run(
+        [
+            "apscale_sintax.py",
+            "--fastafile",
+            fastafile,
+            "--sintax_database",
+            args.sintax_database,
+            "--database_format",
+            args.database_format,
+            "--sintax_confidence_cutoff",
+            args.sintax_confidence_cutoff,
             "--outfile",
             outfile,
             "--cores",
@@ -261,14 +297,14 @@ parser.add_argument(
     metavar="NN",
     default=97,
     type=int,
-    help="OTU identify treshold for clustering with vsearch. Only used when --clusteringtool=vsearch (default=97).",
+    help="Used if --clusteringtool=vsearch. OTU identify treshold for clustering with vsearch (default=97).",
 )
 parser.add_argument(
     "--swarm_distance",
     default=1,
     metavar="N",
     type=int,
-    help="Distance used for swarm. Overwritten to 13 if --coi=True. Only used when --clusteringtool=swarm (default: 1).",
+    help="Used if --clusteringtool=swarm.  Distance used for swarm. Overwritten to 13 if --coi=True (default: 1).",
 )
 parser.add_argument(
     "--remove_negative_controls",
@@ -282,31 +318,41 @@ parser.add_argument(
     metavar="control1,control2,control3",
 )
 parser.add_argument(
-    "--run_blast",
-    help="Do you want to run BLAST on the generated ESVs and OTUs? (default: False)",
+    "--add_taxonomy",
+    help="Do you want to taxonomically annotate ESVs and OTUs? (default: False)",
     default="False",
     choices=["True", "False"],
 )
 parser.add_argument(
-    "--database",
-    help="Required if --run_blast=True. BLAST database.",
+    "--taxonomy_classifier",
+    help="Required if --add_taxonomy=True. Classifier used to add taxonomy.",
+    choices=["blast", "sintax"],
+)
+parser.add_argument(
+    "--blast_database",
+    help="Required if --taxonomy_classifier=blast. BLAST database.",
+    metavar="/PATH/TO/DATABASE",
+)
+parser.add_argument(
+    "--sintax_database",
+    help="Required if --taxonomy_classifier=sintax. SINTAX database.",
     metavar="/PATH/TO/DATABASE",
 )
 parser.add_argument(
     "--database_format",
-    help="Format of the database. Currently available formats are: midori2, pr2, silva, bold. Note: the SILVA and BOLD databases have to have a specific format.",
+    help="Format of the database. Required to format the taxonomy output. Note: the SILVA and BOLD databases have to have a specific format.",
     choices=["midori2", "pr2", "silva", "bold"],
 )
 parser.add_argument(
-    "--evalue",
-    help="Used if --run_blast=True. E-value for BLAST (default: 1e-05).",
+    "--blast_evalue",
+    help="Used if --taxonomy_classifier=blast. E-value for BLAST (default: 1e-05).",
     metavar="1e[exponent]",
     default="1e-05",
 )
 parser.add_argument(
-    "--filter_mode",
+    "--blast_filter_mode",
     choices=["soft", "strict"],
-    help="""Used if --run_blast=True. Filter mode.
+    help="""Used if --taxonomy_classifier=blast. Filter mode.
 
         soft:
         Keeps the best hit (highest bitscore) for each sequence. If multiple hits have the same highest bitscore, an LCA approach is applied (assigns the taxonomy to each sequence based on all taxonomic ranks that are identical in the remaining hits of each sequence).
@@ -320,42 +366,50 @@ parser.add_argument(
     default="strict",
 )
 parser.add_argument(
-    "--bitscore_threshold",
+    "--blast_bitscore_threshold",
     metavar="NNN",
     default="150",
     help=(
-        """Used if --run_blast=True. Bitscore threshold to perform bitscore filtering on when choosing
+        """Used if --taxonomy_classifier=blast. Bitscore threshold to perform bitscore filtering on when choosing
         filter_mode option "strict" (default=150)."""
     ),
 )
 parser.add_argument(
-    "--alignment_length",
+    "--blast_alignment_length",
     metavar="NNN",
     default="100",
     help=(
-        "Used if --run_blast=True. Alignment length threshold to perform bitscore filtering on when "
+        "Used if --taxonomy_classifier=blast. Alignment length threshold to perform bitscore filtering on when "
         'choosing filter_mode option "strict" (default=100).'
     ),
 )
 parser.add_argument(
-    "--bitscore_percentage",
+    "--blast_bitscore_percentage",
     metavar="%",
     default="2.0",
     help=(
-        """Used if --run_blast=True. Percentage threshold (in %%) for bitscore filter when choosing
+        """Used if --taxonomy_classifier=blast. Percentage threshold (in %%) for bitscore filter when choosing
         filter_mode option "strict" (default=2.0)."""
     ),
 )
 parser.add_argument(
-    "--cutoff_pidents",
+    "--blast_cutoff_pidents",
     metavar="N,N,N,N,N,N",
     default="98,95,90,85,80,75",
     help=(
-        """Used if --run_blast=True. Similarity cutoff per hit based on BLAST pident values when choosing
+        """Used if --taxonomy_classifier=blast. Similarity cutoff per hit based on BLAST pident values when choosing
         filter_mode option "strict". cutoff pident values have to be divided by commas
         without spaces, in the order species, genus, family, order,
         class, phylum. Domain is always retained. Taxonomy is only kept for a rank if the BLAST hit's
         pident is >= the respective cutoff (default=98,95,90,85,80,75)."""
+    ),
+)
+parser.add_argument(
+    "--sintax_confidence_cutoff",
+    metavar="N.N",
+    default="0.75",
+    help=(
+        """Used if --taxonomy_classifier=sintax. Confidence value cutoff level, ranging from 0-1 (default=0.75)."""
     ),
 )
 parser.add_argument(
@@ -406,6 +460,7 @@ settings = settings.drop(
         "graph_format",
         "scaling_factor",
         "database_format",
+        "add_taxonomy",
         "cores",
         "func",
     ]
@@ -424,7 +479,6 @@ settings["Description"] = [
     "",
     "Percentage for OTU clustering",
     "Distance used by swarm to determine clusters",
-    "",
     "",
     "",
     "",
@@ -447,6 +501,7 @@ settings["Description"] = [
     "Alignment length used to filter BLAST hits (see the description of filter_mode)",
     "Bitscore percentage used to filter BLAST hits (see the description of filter_mode)",
     "Cutoff values for percentage identity scores to filter unreliable taxonomy for BLAST hits (see the description of filter_mode). Rank order: species, genus, family, order, class, phylum. Domain is always kept.",
+    "Confidence value cutoff level. Confidence values are calulated in SINTAX based on bootstrapping, and a value of 0.75 indicates an error probablity of 25%.",
 ]
 ## Filter settings based on invoked parameters
 if args.clusteringtool == "vsearch":
@@ -455,25 +510,41 @@ elif args.clusteringtool == "swarm":
     settings = settings.drop(["otu_perc"])
 if args.remove_negative_controls == "False":
     settings = settings.drop(["negative_controls"])
-if args.run_blast == "True" and args.filter_mode == "soft":
+if args.add_taxonomy == "True":
+    if args.taxonomy_classifier == "blast":
+        settings = settings.drop(["sintax_confidence_cutoff"])
+        if args.blast_filter_mode == "soft":
+            settings = settings.drop(
+                [
+                    "blast_bitscore_percentage",
+                    "blast_alignment_length",
+                    "blast_bitscore_threshold",
+                    "blast_cutoff_pidents",
+                ]
+            )
+    elif args.taxonomy_classifier == "sintax":
+        settings = settings.drop(
+            [
+                "blast_evalue",
+                "blast_filter_mode",
+                "blast_bitscore_percentage",
+                "blast_alignment_length",
+                "blast_bitscore_threshold",
+                "blast_cutoff_pidents",
+            ]
+        )
+elif args.add_taxonomy == "False":
     settings = settings.drop(
         [
-            "bitscore_percentage",
-            "alignment_length",
-            "bitscore_threshold",
-            "cutoff_pidents",
-        ]
-    )
-elif args.run_blast == "False":
-    settings = settings.drop(
-        [
-            "database",
-            "evalue",
-            "filter_mode",
-            "bitscore_percentage",
-            "alignment_length",
-            "bitscore_threshold",
-            "cutoff_pidents",
+            "blast_database",
+            "sintax_database",
+            "blast_evalue",
+            "blast_filter_mode",
+            "blast_bitscore_percentage",
+            "blast_alignment_length",
+            "blast_bitscore_threshold",
+            "blast_cutoff_pidents",
+            "sintax_confidence_cutoff",
         ]
     )
 ## Export
@@ -590,8 +661,8 @@ if args.remove_negative_controls == "True":
 else:
     microdecon_suffix = ""
 
-# Run BLAST if specified
-if args.run_blast == "True":
+# Add taxonomy if specified
+if args.add_taxonomy == "True":
     # Define file names
     fastafile_otus = os.path.join(
         f"{args.project_name}_apscale",
@@ -605,17 +676,17 @@ if args.run_blast == "True":
         "denoising",
         f"{args.project_name}_apscale_ESVs_filtered{microdecon_suffix}.fasta",
     )
-    blastoutFile_otus = os.path.join(
+    classificationOutFile_otus = os.path.join(
         f"{args.project_name}_apscale",
         "9_lulu_filtering",
         "otu_clustering",
-        f"{args.project_name}_apscale_OTUs{microdecon_suffix}_blasted.csv",
+        f"{args.project_name}_apscale_OTUs{microdecon_suffix}_classified.csv",
     )
-    blastoutFile_esvs = os.path.join(
+    classificationOutFile_esvs = os.path.join(
         f"{args.project_name}_apscale",
         "9_lulu_filtering",
         "denoising",
-        f"{args.project_name}_apscale_ESVs{microdecon_suffix}_blasted.csv",
+        f"{args.project_name}_apscale_ESVs{microdecon_suffix}_classified.csv",
     )
     otu_outfile = os.path.join(
         f"{args.project_name}_apscale",
@@ -629,18 +700,20 @@ if args.run_blast == "True":
         "denoising",
         f"{args.project_name}_apscale_ESV_table_filtered{microdecon_suffix}_with_taxonomy.csv",
     )
-    if args.filter_mode == "strict":
-        blastoutFile_otus_noCutoff = os.path.join(
+    if args.taxonomy_classifier == "sintax" or (
+        args.taxonomy_classifier == "blast" and args.blast_filter_mode == "strict"
+    ):
+        classificationOutFile_otus_noCutoff = os.path.join(
             f"{args.project_name}_apscale",
             "9_lulu_filtering",
             "otu_clustering",
-            f"{args.project_name}_apscale_OTUs{microdecon_suffix}_blasted_no_cutoff.csv",
+            f"{args.project_name}_apscale_OTUs{microdecon_suffix}_classified_no_cutoff.csv",
         )
-        blastoutFile_esvs_noCutoff = os.path.join(
+        classificationOutFile_esvs_noCutoff = os.path.join(
             f"{args.project_name}_apscale",
             "9_lulu_filtering",
             "denoising",
-            f"{args.project_name}_apscale_ESVs{microdecon_suffix}_blasted_no_cutoff.csv",
+            f"{args.project_name}_apscale_ESVs{microdecon_suffix}_classified_no_cutoff.csv",
         )
         otu_outfile_noCutoff = os.path.join(
             f"{args.project_name}_apscale",
@@ -680,36 +753,53 @@ if args.run_blast == "True":
             "denoising",
             f"{args.project_name}_apscale_ESV_table_filtered{microdecon_suffix}.parquet.snappy",
         )
-
-    # Run BLAST command
-    blasting(
-        fastafile=fastafile_otus,
-        outfile=blastoutFile_otus,
-        database=args.database,
-        database_format=args.database_format,
-        evalue=args.evalue,
-        filter_mode=args.filter_mode,
-        bitscore_percentage=args.bitscore_percentage,
-        alignment_length=args.alignment_length,
-        bitscore_threshold=args.bitscore_threshold,
-        cutoff_pidents=args.cutoff_pidents,
-        cores=args.cores,
-    )
-    blasting(
-        fastafile=fastafile_esvs,
-        outfile=blastoutFile_esvs,
-        database=args.database,
-        database_format=args.database_format,
-        evalue=args.evalue,
-        filter_mode=args.filter_mode,
-        bitscore_percentage=args.bitscore_percentage,
-        alignment_length=args.alignment_length,
-        bitscore_threshold=args.bitscore_threshold,
-        cutoff_pidents=args.cutoff_pidents,
-        cores=args.cores,
-    )
-
-    time_print("OTUs and ESVs BLASTed. Merging taxonomy with OTU/ESV tables...")
+    if args.taxonomy_classifier == "blast":
+        # Run BLAST command
+        blasting(
+            fastafile=fastafile_otus,
+            outfile=classificationOutFile_otus,
+            blast_database=args.blast_database,
+            database_format=args.database_format,
+            blast_evalue=args.blast_evalue,
+            blast_filter_mode=args.blast_filter_mode,
+            blast_bitscore_percentage=args.blast_bitscore_percentage,
+            blast_alignment_length=args.blast_alignment_length,
+            blast_bitscore_threshold=args.blast_bitscore_threshold,
+            blast_cutoff_pidents=args.blast_cutoff_pidents,
+            cores=args.cores,
+        )
+        blasting(
+            fastafile=fastafile_esvs,
+            outfile=classificationOutFile_esvs,
+            blast_database=args.blast_database,
+            database_format=args.database_format,
+            blast_evalue=args.blast_evalue,
+            blast_filter_mode=args.blast_filter_mode,
+            blast_bitscore_percentage=args.blast_bitscore_percentage,
+            blast_alignment_length=args.blast_alignment_length,
+            blast_bitscore_threshold=args.blast_bitscore_threshold,
+            blast_cutoff_pidents=args.blast_cutoff_pidents,
+            cores=args.cores,
+        )
+    elif args.taxonomy_classifier == "sintax":
+        # Run SINTAX command
+        sintax(
+            fastafile=fastafile_otus,
+            outfile=classificationOutFile_esvs,
+            sintax_database=args.sintax_database,
+            database_format=args.database_format,
+            sintax_confidence_cutoff=args.sintax_confidence_cutoff,
+            cores=args.cores,
+        )
+        sintax(
+            fastafile=fastafile_otus,
+            outfile=classificationOutFile_esvs,
+            sintax_database=args.sintax_database,
+            database_format=args.database_format,
+            sintax_confidence_cutoff=args.sintax_confidence_cutoff,
+            cores=args.cores,
+        )
+    time_print("Taxonomy generated. Merging taxonomy with OTU/ESV tables...")
     # Read in OTU and ESV tables
     if args.remove_negative_controls == "True":
         otu_table = pd.read_csv(otu_table_file)
@@ -717,42 +807,48 @@ if args.run_blast == "True":
     else:
         otu_table = pd.read_parquet(otu_table_file, engine="fastparquet")
         esv_table = pd.read_parquet(esv_table_file, engine="fastparquet")
-    # Read in BLAST results
-    blastout_otus = pd.read_csv(blastoutFile_otus)
-    blastout_esvs = pd.read_csv(blastoutFile_esvs)
+    # Read in classification results
+    classificationOut_otus = pd.read_csv(classificationOutFile_otus)
+    classificationOut_esvs = pd.read_csv(classificationOutFile_esvs)
     # Merge tables
     otu_table_with_tax = pd.merge(
         otu_table,
-        blastout_otus,
+        classificationOut_otus,
         on="ID",
         how="outer",
     ).fillna("No match in database")
     esv_table_with_tax = pd.merge(
         esv_table,
-        blastout_esvs,
+        classificationOut_esvs,
         on="ID",
         how="outer",
     ).fillna("No match in database")
     # Save
     otu_table_with_tax.to_csv(otu_outfile, index=False)
     esv_table_with_tax.to_csv(esv_outfile, index=False)
-    if args.filter_mode == "strict":
-        # Read in BLAST results with no cutoff
-        blastout_otus_noCutoff = pd.read_csv(blastoutFile_otus_noCutoff)
-        blastout_esvs_noCutoff = pd.read_csv(blastoutFile_esvs_noCutoff)
+    if args.taxonomy_classifier == "sintax" or (
+        args.taxonomy_classifier == "blast" and args.blast_filter_mode == "strict"
+    ):
+        # Read in classification results with no cutoff
+        classificationOut_otus_noCutoff = pd.read_csv(
+            classificationOutFile_otus_noCutoff
+        )
+        classificationOut_esvs_noCutoff = pd.read_csv(
+            classificationOutFile_esvs_noCutoff
+        )
         # Clean up
-        os.remove(blastoutFile_otus_noCutoff)
-        os.remove(blastoutFile_esvs_noCutoff)
+        os.remove(classificationOutFile_otus_noCutoff)
+        os.remove(classificationOutFile_esvs_noCutoff)
         # Merge tables
         otu_table_with_tax_noCutoff = pd.merge(
             otu_table,
-            blastout_otus_noCutoff,
+            classificationOut_otus_noCutoff,
             on="ID",
             how="outer",
         ).fillna("No match in database")
         esv_table_with_tax_noCutoff = pd.merge(
             esv_table,
-            blastout_esvs_noCutoff,
+            classificationOut_esvs_noCutoff,
             on="ID",
             how="outer",
         ).fillna("No match in database")

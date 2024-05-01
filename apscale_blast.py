@@ -151,7 +151,7 @@ parser.add_argument(
     metavar="file.fasta",
 )
 parser.add_argument(
-    "--database",
+    "--blast_database",
     help="BLAST database.",
     metavar="/PATH/TO/DATABASE",
     required=True,
@@ -163,13 +163,13 @@ parser.add_argument(
     required=True,
 )
 parser.add_argument(
-    "--evalue",
+    "--blast_evalue",
     help="E-value for BLAST (default: 1e-05).",
     metavar="1e[exponent]",
     default="1e-05",
 )
 parser.add_argument(
-    "--filter_mode",
+    "--blast_filter_mode",
     choices=["soft", "strict"],
     help="""Filter mode.
 
@@ -185,7 +185,7 @@ parser.add_argument(
     default="strict",
 )
 parser.add_argument(
-    "--bitscore_percentage",
+    "--blast_bitscore_percentage",
     metavar="%",
     default=2.0,
     type=float,
@@ -195,7 +195,7 @@ parser.add_argument(
     ),
 )
 parser.add_argument(
-    "--alignment_length",
+    "--blast_alignment_length",
     metavar="NNN",
     default=100,
     type=int,
@@ -205,7 +205,7 @@ parser.add_argument(
     ),
 )
 parser.add_argument(
-    "--bitscore_threshold",
+    "--blast_bitscore_threshold",
     metavar="NNN",
     default=150,
     type=int,
@@ -215,7 +215,7 @@ parser.add_argument(
     ),
 )
 parser.add_argument(
-    "--cutoff_pidents",
+    "--blast_cutoff_pidents",
     metavar="N,N,N,N,N,N",
     default=[98, 95, 90, 85, 80, 75],
     type=list_of_integers,
@@ -242,11 +242,11 @@ parser.add_argument(
 
 # Set arguments
 args = parser.parse_args()
-bitscore_percentage = args.bitscore_percentage / 100
+bitscore_percentage = args.blast_bitscore_percentage / 100
 ranks = ["domain", "phylum", "class", "order", "family", "genus", "species"]
 
 # Start of pipeline
-time_print(f"Running BLAST on {args.fastafile} with database {args.database}...")
+time_print(f"Running BLAST on {args.fastafile} with database {args.blast_database}...")
 
 # Run BLAST on FASTA file
 blastout = os.path.join(
@@ -259,13 +259,13 @@ subprocess.run(
         "-query",
         args.fastafile,
         "-db",
-        args.database,
+        args.blast_database,
         "-out",
         blastout,
         "-outfmt",
         "6 qseqid sseqid pident length bitscore",
         "-evalue",
-        args.evalue,
+        args.blast_evalue,
         "-num_threads",
         args.cores,
     ]
@@ -376,8 +376,8 @@ if args.filter_mode == "soft":
 elif args.filter_mode == "strict":
     time_print("Filtering hits based on bitscore and length...")
     df.loc[
-        (df["length"] < args.alignment_length)
-        & (df["bitscore"] < args.bitscore_threshold),
+        (df["length"] < args.blast_alignment_length)
+        & (df["bitscore"] < args.blast_bitscore_threshold),
         ranks,
     ] = "Taxonomy unreliable - bitscore and alignment length threshold not met"
 
@@ -400,12 +400,12 @@ elif args.filter_mode == "strict":
     cutoff_term = (
         "Taxonomy unreliable - percentage similarity threshold for rank not met"
     )
-    df.loc[df["pident"] < args.cutoff_pidents[0], "species"] = cutoff_term
-    df.loc[df["pident"] < args.cutoff_pidents[1], "genus"] = cutoff_term
-    df.loc[df["pident"] < args.cutoff_pidents[2], "family"] = cutoff_term
-    df.loc[df["pident"] < args.cutoff_pidents[3], "order"] = cutoff_term
-    df.loc[df["pident"] < args.cutoff_pidents[4], "class"] = cutoff_term
-    df.loc[df["pident"] < args.cutoff_pidents[5], "phylum"] = cutoff_term
+    df.loc[df["pident"] < args.blast_cutoff_pidents[0], "species"] = cutoff_term
+    df.loc[df["pident"] < args.blast_cutoff_pidents[1], "genus"] = cutoff_term
+    df.loc[df["pident"] < args.blast_cutoff_pidents[2], "family"] = cutoff_term
+    df.loc[df["pident"] < args.blast_cutoff_pidents[3], "order"] = cutoff_term
+    df.loc[df["pident"] < args.blast_cutoff_pidents[4], "class"] = cutoff_term
+    df.loc[df["pident"] < args.blast_cutoff_pidents[5], "phylum"] = cutoff_term
 
     # Process the copied df so that a column for cutoff ranks is used instead of the actual cutoff
     df_no_cutoffs = post_processing(df_no_cutoffs)
