@@ -68,8 +68,8 @@ def lowest_taxon_and_rank(row):
 
 # Define function to process tax dfs
 def post_processing(df):
-    # Remove underscore from species
-    df["species"] = df["species"].str.replace("_", " ")
+    # Remove underscores
+    df[ranks] = df[ranks].replace(r"_", " ", regex=True)
     # Make a df without confidence values (for df_no_cutoff)
     df_ranks = df[ranks].replace(r"\(\d\.\d{2}\)", "", regex=True)
     lowest_columns = df_ranks.apply(lowest_taxon_and_rank, axis=1)
@@ -102,11 +102,14 @@ def tax_formatting(df, tax_col, ranks):
         )
 
     elif args.database_format == "bold":
-        ranks = ["phylum", "class", "order", "family", "genus", "species"]
         # Annotate entries with no DB match
         df = df.fillna(",".join(["No match in database" for _ in range(len(ranks))]))
         # Split the tax_col column by comma and expand into new columns
-        df[ranks] = df[tax_col].str.split(",", expand=True)
+        df[ranks] = (
+            df[tax_col]
+            .str.split(",", expand=True)
+            .fillna("Taxonomy unreliable - confidence threshold not met")
+        )
         # Replace species names containing " sp. "" or ending with "sp"
         mask = (
             df["species"].str.endswith("_sp")
@@ -121,9 +124,7 @@ def tax_formatting(df, tax_col, ranks):
         # Replace 'Unknown_in_BOLD_database' by 'Unknown in BOLD database' in the entire DataFrame
         df = df.replace("Unknown_in_BOLD_database", "Unknown in BOLD database")
         # Only keep desired columns and ranks and fill missing values with "NA"
-        df = df.drop([tax_col], axis=1).fillna(
-            "Taxonomy unreliable - confidence threshold not met"
-        )
+        df = df.drop([tax_col], axis=1)
 
     # TO BE ADDED AT SOME POINT
     # elif args.database_format == "ncbi_nt":
@@ -208,7 +209,10 @@ parser.add_argument(
 
 # Set arguments
 args = parser.parse_args()
-ranks = ["domain", "phylum", "class", "order", "family", "genus", "species"]
+if args.database_format == "bold":
+    ranks = ["phylum", "class", "order", "family", "genus", "species"]
+else:
+    ranks = ["domain", "phylum", "class", "order", "family", "genus", "species"]
 
 # Start of pipeline
 time_print(
