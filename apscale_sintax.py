@@ -234,6 +234,8 @@ subprocess.run(
         sintaxout,
         "--sintax_cutoff",
         args.sintax_confidence_cutoff,
+        "--threads",
+        args.cores,
     ]
 )
 
