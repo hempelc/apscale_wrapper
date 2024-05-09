@@ -913,6 +913,7 @@ if args.add_taxonomy == "True":
 
 # Generate processing graphs using separate script
 if args.database_format:
+    print(args.database_format)
     proc = subprocess.run(
         [
             "apscale_processing_graphs.py",
