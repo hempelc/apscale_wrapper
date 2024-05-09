@@ -100,12 +100,11 @@ def krona_formatting(df):
     krona_df_agg = krona_df_agg[column_order]
     return krona_df_agg.loc[krona_df_agg["Sum"] != 0]
 
+
 # Define a custom validation function for the parameters
 def validate_args(args):
     if args.add_taxonomy == "True" and not args.database_format:
-        parser.error(
-            "--database_format is required when --add_taxonomy=True."
-        )
+        parser.error("--database_format is required when --add_taxonomy=True.")
 
 
 # Define arguments
@@ -175,7 +174,7 @@ min_length = args.min_length
 max_length = args.max_length
 scaling_factor = args.scaling_factor
 add_taxonomy = args.add_taxonomy
-if add_taxonomy=="True":
+if add_taxonomy == "True":
     database_format = args.database_format
 project_name = os.path.basename(project_dir)
 if args.remove_negative_controls == "True":
@@ -202,12 +201,6 @@ esv_postlulu_file = os.path.join(
 esv_prelulu_file = os.path.join(
     project_dir, "8_denoising", f"{project_name}_ESV_table.parquet.snappy"
 )
-esv_final_file = os.path.join(
-    project_dir,
-    "9_lulu_filtering",
-    "denoising",
-    f"{project_name}_ESV_table_filtered{microdecon_suffix}_with_taxonomy.csv",
-)
 otu_postlulu_file = os.path.join(
     project_dir,
     "9_lulu_filtering",
@@ -219,26 +212,16 @@ otu_prelulu_file = os.path.join(
     "7_otu_clustering",
     f"{project_name}_OTU_table.parquet.snappy",
 )
-otu_final_file = os.path.join(
-    project_dir,
-    "9_lulu_filtering",
-    "otu_clustering",
-    f"{project_name}_OTU_table_filtered{microdecon_suffix}_with_taxonomy.csv",
-)
 
 report_sheet_dict = pd.read_excel(report_file, sheet_name=None)
 esv_postlulu_df = pd.read_parquet(esv_postlulu_file, engine="fastparquet")
-time_print("1/6 files imported...")
+time_print("1/4 files imported...")
 esv_prelulu_df = pd.read_parquet(esv_prelulu_file, engine="fastparquet")
-time_print("2/6 files imported...")
-esv_final_df = pd.read_csv(esv_final_file)
-time_print("3/6 files imported...")
+time_print("2/4 files imported...")
 otu_postlulu_df = pd.read_parquet(otu_postlulu_file, engine="fastparquet")
-time_print("4/6 files imported...")
+time_print("3/4 files imported...")
 otu_prelulu_df = pd.read_parquet(otu_prelulu_file, engine="fastparquet")
-time_print("5/6 files imported...")
-otu_final_df = pd.read_csv(otu_final_file)
-time_print("6/6 files imported. Import done. Generating graphs...")
+time_print("4/4 files imported. Import done. Generating graphs...")
 
 # ESV table processing
 esv_postlulu_df_mod = esv_postlulu_df.drop("Seq", axis=1).set_index("ID")
@@ -1123,6 +1106,26 @@ if (
     add_taxonomy == "True"
 ):  # Requirement as we need taxonomic information for Kronagraphs
     time_print("Generating kronagraphs...")
+    time_print("Importing final ESV and OTU tables...")
+
+    otu_final_file = os.path.join(
+        project_dir,
+        "9_lulu_filtering",
+        "otu_clustering",
+        f"{project_name}_OTU_table_filtered{microdecon_suffix}_with_taxonomy.csv",
+    )
+    esv_final_file = os.path.join(
+        project_dir,
+        "9_lulu_filtering",
+        "denoising",
+        f"{project_name}_ESV_table_filtered{microdecon_suffix}_with_taxonomy.csv",
+    )
+
+    otu_final_df = pd.read_csv(otu_final_file)
+    time_print("1/2 final files imported...")
+    esv_final_df = pd.read_csv(esv_final_file)
+    time_print("1/2 final files imported. Import done. Generating kronagraphs...")
+
     # Format dfs for Krona
     esv_krona_df = krona_formatting(esv_final_df)
     otu_krona_df = krona_formatting(otu_final_df)
