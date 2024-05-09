@@ -31,7 +31,7 @@ def time_print(text):
     log.flush()  # Flush the buffer to ensure immediate writing to the file
 
 
-# Define a custom validation function to enforce the requirement for --remove_negative_controls and --run_blast
+# Define a custom validation function for the parameters
 def validate_args(args):
     if args.remove_negative_controls == "True" and not args.negative_controls:
         parser.error(
@@ -912,34 +912,64 @@ if args.add_taxonomy == "True":
 
 
 # Generate processing graphs using separate script
-proc = subprocess.run(
-    [
-        "apscale_processing_graphs.py",
-        "--project_dir",
-        f"{args.project_name}_apscale",
-        "--graph_format",
-        f"{args.graph_format}",
-        "--min_length",
-        f"{args.min_length}",
-        "--max_length",
-        f"{args.max_length}",
-        "--scaling_factor",
-        f"{args.scaling_factor}",
-        "--add_taxonomy",
-        f"{args.add_taxonomy}",
-        "--database_format",
-        f"{args.database_format}",
-        "--remove_negative_controls",
-        args.remove_negative_controls,
-    ],
-    stdout=subprocess.PIPE,
-    stderr=subprocess.STDOUT,
-    text=True,
-    check=False,
-)
-for line in proc.stdout:
-    sys.stdout.write(str(line))
-    log.write(str(line))
+if args.database_format:
+    proc = subprocess.run(
+        [
+            "apscale_processing_graphs.py",
+            "--project_dir",
+            f"{args.project_name}_apscale",
+            "--graph_format",
+            f"{args.graph_format}",
+            "--min_length",
+            f"{args.min_length}",
+            "--max_length",
+            f"{args.max_length}",
+            "--scaling_factor",
+            f"{args.scaling_factor}",
+            "--add_taxonomy",
+            f"{args.add_taxonomy}",
+            "--database_format",
+            f"{args.database_format}",
+            "--remove_negative_controls",
+            args.remove_negative_controls,
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        check=False,
+    )
+    for line in proc.stdout:
+        sys.stdout.write(str(line))
+        log.write(str(line))
+
+else:
+    proc = subprocess.run(
+        [
+            "apscale_processing_graphs.py",
+            "--project_dir",
+            f"{args.project_name}_apscale",
+            "--graph_format",
+            f"{args.graph_format}",
+            "--min_length",
+            f"{args.min_length}",
+            "--max_length",
+            f"{args.max_length}",
+            "--scaling_factor",
+            f"{args.scaling_factor}",
+            "--add_taxonomy",
+            f"{args.add_taxonomy}",
+            "--remove_negative_controls",
+            args.remove_negative_controls,
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        check=False,
+    )
+    for line in proc.stdout:
+        sys.stdout.write(str(line))
+        log.write(str(line))
+
 
 time_print("Apscale wrapper done.")
 

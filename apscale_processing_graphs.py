@@ -100,6 +100,13 @@ def krona_formatting(df):
     krona_df_agg = krona_df_agg[column_order]
     return krona_df_agg.loc[krona_df_agg["Sum"] != 0]
 
+# Define a custom validation function for the parameters
+def validate_args(args):
+    if args.add_taxonomy == "True" and not args.database_format:
+        parser.error(
+            "--database_format is required when --add_taxonomy=True."
+        )
+
 
 # Define arguments
 parser = argparse.ArgumentParser(
@@ -152,7 +159,14 @@ parser.add_argument(
     type=float,
 )
 
+# Register the custom validation function to be called after parsing arguments
+parser.set_defaults(func=validate_args)
+
+# Parse arguments
 args = parser.parse_args()
+
+# Call the custom validation function to check the requirements
+args.func(args)
 
 # Set arguments
 project_dir = args.project_dir
@@ -161,7 +175,8 @@ min_length = args.min_length
 max_length = args.max_length
 scaling_factor = args.scaling_factor
 add_taxonomy = args.add_taxonomy
-database_format = args.database_format
+if add_taxonomy=="True":
+    database_format = args.database_format
 project_name = os.path.basename(project_dir)
 if args.remove_negative_controls == "True":
     microdecon_suffix = "_microdecon-filtered"
