@@ -37,10 +37,8 @@ def validate_args(args):
         parser.error(
             "--negative_controls is required when --remove_negative_controls=True."
         )
-    if (
-        args.add_taxonomy == "True"
-        and not args.taxonomy_classifier
-        or not args.database_format
+    if args.add_taxonomy == "True" and (
+        not args.taxonomy_classifier or not args.database_format
     ):
         parser.error(
             "--taxonomy_classifier and --database_format are required when --add_taxonomy=True."
