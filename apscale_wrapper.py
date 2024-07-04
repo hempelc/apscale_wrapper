@@ -816,6 +816,9 @@ if args.add_taxonomy == "True":
     # Read in classification results
     classificationOut_otus = pd.read_csv(classificationOutFile_otus)
     classificationOut_esvs = pd.read_csv(classificationOutFile_esvs)
+    # Clean up
+    os.remove(classificationOutFile_otus)
+    os.remove(classificationOutFile_esvs)
     # Merge tables
     otu_table_with_tax = pd.merge(
         otu_table,
@@ -913,7 +916,6 @@ if args.add_taxonomy == "True":
 
 # Generate processing graphs using separate script
 if args.database_format:
-    print(args.database_format)
     proc = subprocess.run(
         [
             "apscale_processing_graphs.py",
