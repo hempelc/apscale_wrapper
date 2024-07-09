@@ -104,13 +104,15 @@ def tax_formatting(df, tax_col, ranks):
         df = df.fillna(",".join(["No match in database" for _ in range(len(ranks))]))
         # Split the tax_col column by comma and expand into new columns
         df[ranks] = df[tax_col].str.split(",", expand=True)
+        # Fill missing values with threshold note
+        df[ranks] = df[ranks].fillna(
+            "Taxonomy unreliable - confidence threshold not met"
+        )
         # If any taxon starts with "phylum", "class", "order", "family", "genus", or "species" followed by _, replace the taxa with "Unknown in MIDORI2 database"
         for rank in ranks:
             df[rank] = df[rank].apply(replace_if_match)
-        # Only keep desired columns and ranks and fill missing values with "NA"
-        df = df.drop([tax_col], axis=1).fillna(
-            "Taxonomy unreliable - confidence threshold not met"
-        )
+        # Only keep desired columns and ranks
+        df = df.drop([tax_col], axis=1)
 
     elif args.database_format == "bold":
         # Annotate entries with no DB match
