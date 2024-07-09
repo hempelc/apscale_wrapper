@@ -47,6 +47,7 @@ def lowest_taxon_and_rank(row):
         "Unknown in PR2 database",
         "Unknown in BOLD database",
         "Unknown in SILVA database",
+        "Unknown in MIDORI2 database",
     ]
     lowest_taxon = "Taxonomy unreliable"
     lowest_rank = "Taxonomy unreliable"
@@ -77,6 +78,13 @@ def post_processing(df):
     return df
 
 
+# Function to replace unknown MIDORI2 ranks
+def replace_if_match(taxon):
+    if bool(re.search(r"(phylum|class|order|family|genus|species)_", taxon)):
+        return "Unknown in MIDORI2 database"
+    return taxon
+
+
 def tax_formatting(df, tax_col, ranks):
     # Taxonomy formatting
     if args.database_format == "silva":
@@ -96,6 +104,9 @@ def tax_formatting(df, tax_col, ranks):
         df = df.fillna(",".join(["No match in database" for _ in range(len(ranks))]))
         # Split the tax_col column by comma and expand into new columns
         df[ranks] = df[tax_col].str.split(",", expand=True)
+        # If any taxon starts with "phylum", "class", "order", "family", "genus", or "species" followed by _, replace the taxa with "Unknown in MIDORI2 database"
+        for rank in ranks:
+            df[rank] = df[rank].apply(replace_if_match)
         # Only keep desired columns and ranks and fill missing values with "NA"
         df = df.drop([tax_col], axis=1).fillna(
             "Taxonomy unreliable - confidence threshold not met"

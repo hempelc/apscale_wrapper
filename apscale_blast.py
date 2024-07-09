@@ -14,6 +14,7 @@ import copy
 import os
 import gzip
 import pandas as pd
+import re
 
 # Define that warnings are not printed to console
 warnings.filterwarnings("ignore")
@@ -67,6 +68,7 @@ def lowest_taxon_and_rank(row):
         "Unknown in PR2 database",
         "Unknown in BOLD database",
         "Unknown in SILVA database",
+        "Unknown in MIDORI2 database",
     ]
     lowest_taxon = "Taxonomy unreliable"
     lowest_rank = "Taxonomy unreliable"
@@ -138,6 +140,13 @@ def determine_cutoff_rank(id_value):
     if id_value >= args.blast_cutoff_pidents[0]:
         tax = "none"
     return tax
+
+
+# Function to replace unknown MIDORI2 ranks
+def replace_if_match(taxon):
+    if bool(re.search(r"(phylum|class|order|family|genus|species)_", taxon)):
+        return "Unknown in MIDORI2 database"
+    return taxon
 
 
 # Define arguments
@@ -298,15 +307,19 @@ if args.database_format == "silva":
     df[ranks] = df[ranks].replace("Not_available", "Unknown in SILVA database")
 
 elif args.database_format == "midori2":
-    # Remove any of "phylum", "class", "order", "family", "genus", and "species" followed by _ as well as _ followed by a number and all the extra information before the domain
+    # Remove any _ followed by a number and all the extra information before the domain
     df["taxonomy"] = (
         df["sseqid"]
-        .str.replace(r"(phylum|class|order|family|genus|species)_", "", regex=True)
         .str.replace(r"_\d+", "", regex=True)
         .str.replace(r".*root;", "", regex=True)
     )
     # Split the taxonomy column by semicolon and expand into new columns
     df[ranks] = df["taxonomy"].str.split(";", expand=True)
+
+    # If any taxon starts with "phylum", "class", "order", "family", "genus", or "species" followed by _, replace the taxa with "Unknown in MIDORI2 database"
+    for rank in ranks:
+        df[rank] = df[rank].apply(replace_if_match)
+
     # Only keep desired columns and ranks and fill missing values with "NA"
     df = df.drop(["sseqid", "taxonomy"], axis=1).fillna("NA")
 
