@@ -417,6 +417,11 @@ parser.add_argument(
     choices=["png", "svg", "html"],
 )
 parser.add_argument(
+    "--make_maps",
+    help="Should GBIF-based maps be generated to infer species distribution?.",
+    choices=["True", "False"],
+)
+parser.add_argument(
     "--scaling_factor",
     help="Scaling factor for graph width. Manual trial and error in 0.2 increments might be required (default: 1.0).",
     default=1.0,
@@ -934,7 +939,9 @@ if args.database_format:
             "--database_format",
             f"{args.database_format}",
             "--remove_negative_controls",
-            args.remove_negative_controls,
+            f"{args.remove_negative_controls}",
+            "--make_maps",
+            f"{args.make_maps}",
         ],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
@@ -962,7 +969,9 @@ else:
             "--add_taxonomy",
             f"{args.add_taxonomy}",
             "--remove_negative_controls",
-            args.remove_negative_controls,
+            f"{args.remove_negative_controls}",
+            "--make_maps",
+            f"{args.make_maps}",
         ],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
