@@ -25,7 +25,9 @@ import subprocess
 from statistics import mean, median, stdev
 import time
 import requests_html
-import json
+import aiohttp
+import asyncio
+from tqdm.asyncio import tqdm
 
 
 # Define that warnings are not printed to console
@@ -132,7 +134,7 @@ def gbif_parent_check(phylum_name, species_name):
 
 # Define a wrapper function for the standardization of species names based on GBIF taxonomy
 def gbif_check_taxonomy(df):
-    taxon_table_df = df["phylum", "species"]
+    taxon_table_df = df[["phylum", "species"]]
     # Define excpetions that are no real taxon names and drop them in the df. Also only keep unique species
     exceptions = [
         "Taxonomy unreliable - multiple matching taxa",
@@ -148,12 +150,55 @@ def gbif_check_taxonomy(df):
     ]
     taxon_table_df = taxon_table_df.replace(exceptions, None).dropna().drop_duplicates()
     checked_species = []
+    # Standardize names
     for _, row in taxon_table_df.iterrows():
         phylum_name = row["phylum"]
         species_name = row["species"]
         if checked_species_name := gbif_parent_check(phylum_name, species_name):
             checked_species.append(checked_species_name)
-    return checked_species
+    # Dropcontamination species
+    contamination_species = [
+        "Sus scrofa",
+        "Bos taurus",
+        "Homo sapiens",
+        "Gallus gallus",
+        "Canis lupus",
+        "Felis catus",
+    ]
+    return [
+        taxon
+        for taxon in checked_species
+        if taxon not in contamination_species
+    ]
+
+
+# Define functions to download GBID specimen locations asynchronously
+async def fetch_occurrences(session, taxon_name, country_code):
+    request_name = "%20".join(taxon_name.split(" "))
+    url = f"https://api.gbif.org/v1/occurrence/search?scientificName={request_name}&country={country_code}"
+    async with session.get(url) as response:
+        api_response_json = await response.json()
+        return api_response_json.get("count", 0)
+
+
+async def fetch_all_occurrences(session, taxon_name, country_codes):
+    tasks = [
+        fetch_occurrences(session, taxon_name, country_code)
+        for country_code in country_codes
+    ]
+    return await asyncio.gather(*tasks)
+
+
+async def main(gbif_standardized_species, country_codes, occurrence_df):
+    async with aiohttp.ClientSession() as session:
+        for taxon_name in tqdm(
+            gbif_standardized_species, desc="Downloading GBIF species location data"
+        ):
+            occurrence_list = await fetch_all_occurrences(
+                session, taxon_name, country_codes
+            )
+            occurrence_df[taxon_name] = occurrence_list
+    return occurrence_df
 
 
 def map_generation(gbif_standardized_species_list):
@@ -417,41 +462,27 @@ def map_generation(gbif_standardized_species_list):
     country_codes = [values[0] for values in country_codes_dict.values()]
 
     # Make a df template
-    df = pd.DataFrame(list(country_codes_dict), columns=["Country"])
+    occurrence_df = pd.DataFrame(list(country_codes_dict), columns=["Country"])
 
-    # Request GBIF for occurrence data per species and country
-    for taxon_name in gbif_standardized_species_list:
-        occurrence_list = []
-        for country_code in country_codes:
-            ## create an html session
-            with requests_html.HTMLSession() as session:
-                ## generate html request name
-                request_name = "%20".join(taxon_name.split(" "))
-                ## request that name
-                response = session.get(
-                    f"https://api.gbif.org/v1/occurrence/search?scientificName={request_name}"
-                    + "&country="
-                    + country_code
-                )
-                ## parse json
-                api_response_json = json.loads(response.text)
-                ## get number of occurrences
-                occurrence_list.append(api_response_json["count"])
-        ## store the results in the dataframe
-        df[taxon_name] = occurrence_list
+    # Run the asynchronous GBIF specimen location retrieval function
+    asyncio.run(main(gbif_standardized_species_list, country_codes, occurrence_df))
 
     # Create columns to display the maps
-    species_columns = df.columns[1:]
-    df["Species"] = df.apply(
+    species_columns = occurrence_df.columns[1:]
+    occurrence_df["Species"] = occurrence_df.apply(
         lambda row: "<br>".join(species_columns[row[1:].astype(bool)]), axis=1
     )
-    df["Found in GBIF"] = df.apply(lambda row: any(row[1:-1]), axis=1)
-    df["Found in GBIF"] = df["Found in GBIF"].map({False: "Not found", True: "Found"})
-    df["GBIF specimen count"] = df[species_columns].sum(axis=1)
+    occurrence_df["Found in GBIF"] = occurrence_df.apply(
+        lambda row: any(row[1:-1]), axis=1
+    )
+    occurrence_df["Found in GBIF"] = occurrence_df["Found in GBIF"].map(
+        {False: "Not found", True: "Found"}
+    )
+    occurrence_df["GBIF specimen count"] = occurrence_df[species_columns].sum(axis=1)
 
     # Create the map for countries in which the species were found
     map_presence_absence = px.choropleth(
-        df,
+        occurrence_df,
         locations="Country",
         locationmode="country names",
         hover_name="Country",
@@ -461,7 +492,7 @@ def map_generation(gbif_standardized_species_list):
         scope="world",
     )
     map_presence_absence.update_layout(
-        title_text="Countries in which the detected species are found on GBIF",
+        title_text="Countries in which the detected species are found according to GBIF",
         geo=dict(
             showframe=False,
         ),
@@ -473,7 +504,7 @@ def map_generation(gbif_standardized_species_list):
 
     # Create the map for specimen counts
     map_gbif_specimen_counts = px.choropleth(
-        df,
+        occurrence_df,
         locations="Country",
         locationmode="country names",
         hover_name="Country",
@@ -487,7 +518,7 @@ def map_generation(gbif_standardized_species_list):
         scope="world",
     )
     map_gbif_specimen_counts.update_layout(
-        title_text="GBIF specimen count per country",
+        title_text="Total GBIF specimen counts for all detected species by country",
         geo=dict(
             showframe=False,
         ),
@@ -542,7 +573,8 @@ parser.add_argument(
 )
 parser.add_argument(
     "--make_maps",
-    help="Should GBIF-based maps be generated to infer species distribution?.",
+    help="Should GBIF-based maps be generated to infer species distribution?",
+    default="True",
     choices=["True", "False"],
 )
 parser.add_argument(
@@ -587,7 +619,7 @@ if args.remove_negative_controls == "True":
 else:
     microdecon_suffix = ""
 
-# Start of pipeline
+############################ Start of pipeline
 time_print("Generating apscale processing graphs...")
 
 # Make outdir for project_dir if it doesn't already exist
@@ -1527,7 +1559,7 @@ if make_maps == "True":
     otu_final_df = pd.read_csv(otu_final_file)
     time_print("1/2 final files imported...")
     esv_final_df = pd.read_csv(esv_final_file)
-    time_print("1/2 final files imported. Import done. Generating kronagraphs...")
+    time_print("2/2 final files imported. Import done.")
 
     time_print("Standardizing species names with GBIF...")
     gbif_standardized_species_esvs = gbif_check_taxonomy(esv_final_df)
@@ -1551,6 +1583,20 @@ if make_maps == "True":
             )
         )
     else:
+        map_presence_absence_otus.write_image(
+            os.path.join(
+                outdir,
+                f"{project_name}_20_map_presence_absence_otus.{graph_format}",
+            )
+        )
+    if graph_format == "html":
+        map_counts_otus.write_html(
+            os.path.join(
+                outdir,
+                f"{project_name}_21_map_counts_otus.{graph_format}",
+            )
+        )
+    else:
         map_counts_otus.write_image(
             os.path.join(
                 outdir,
@@ -1567,12 +1613,27 @@ if make_maps == "True":
             )
         )
     else:
+        map_presence_absence_esvs.write_image(
+            os.path.join(
+                outdir,
+                f"{project_name}_22_map_presence_absence_esvs.{graph_format}",
+            )
+        )
+    if graph_format == "html":
+        map_counts_esvs.write_html(
+            os.path.join(
+                outdir,
+                f"{project_name}_23_map_counts_esvs.{graph_format}",
+            )
+        )
+    else:
         map_counts_esvs.write_image(
             os.path.join(
                 outdir,
                 f"{project_name}_23_map_counts_esvs.{graph_format}",
             )
         )
+
     time_print("GBIF maps generated for ESVs.")
 
 
@@ -1581,9 +1642,9 @@ if (
     add_taxonomy == "True"
 ):  # Requirement as we need taxonomic information for Kronagraphs
     time_print("Generating kronagraphs...")
-    time_print("Importing final ESV and OTU tables...")
 
     if make_maps == "False":
+        time_print("Importing final ESV and OTU tables...")
         otu_final_file = os.path.join(
             project_dir,
             "9_lulu_filtering",
@@ -1600,7 +1661,7 @@ if (
         otu_final_df = pd.read_csv(otu_final_file)
         time_print("1/2 final files imported...")
         esv_final_df = pd.read_csv(esv_final_file)
-        time_print("1/2 final files imported. Import done. Generating kronagraphs...")
+        time_print("2/2 final files imported. Import done. Generating kronagraphs...")
 
     # Format dfs for Krona
     esv_krona_df = krona_formatting(esv_final_df)
