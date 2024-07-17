@@ -418,7 +418,8 @@ parser.add_argument(
 )
 parser.add_argument(
     "--make_maps",
-    help="Should GBIF-based maps be generated to infer species distribution?.",
+    help="Should GBIF-based maps be generated to infer species distribution?",
+    default="True",
     choices=["True", "False"],
 )
 parser.add_argument(
@@ -448,7 +449,7 @@ args.func(args)
 if args.coi == "True":
     args.swarm_distance = 13
 
-# Save settings
+######################### Save settings
 settings = pd.DataFrame.from_dict(
     vars(args), orient="index", columns=["Parameter"]
 ).astype({"Parameter": str})
@@ -471,6 +472,7 @@ settings = settings.drop(
         "add_taxonomy",
         "cores",
         "func",
+        "make_maps",
     ]
 )
 ## Add manual setting descriptions where helpful (requires manual tweaking if more settings are added or the order is changed)
@@ -569,6 +571,7 @@ log = open(f"{args.project_name}_apscale_wrapper_log.txt", "a")
 
 ############################### Start of pipeline
 time_print("Starting apscale wrapper.")
+time_print(f"Command: {' '.join(sys.argv)}")
 
 # Create an apscale directory
 time_print("Creating apscale directory...")
@@ -948,10 +951,6 @@ if args.database_format:
         text=True,
         check=False,
     )
-    for line in proc.stdout:
-        sys.stdout.write(str(line))
-        log.write(str(line))
-
 else:
     proc = subprocess.run(
         [
@@ -978,10 +977,9 @@ else:
         text=True,
         check=False,
     )
-    for line in proc.stdout:
-        sys.stdout.write(str(line))
-        log.write(str(line))
-
+for line in proc.stdout:
+    sys.stdout.write(str(line))
+    log.write(str(line))
 
 time_print("Apscale wrapper done.")
 
