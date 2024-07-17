@@ -165,11 +165,7 @@ def gbif_check_taxonomy(df):
         "Canis lupus",
         "Felis catus",
     ]
-    return [
-        taxon
-        for taxon in checked_species
-        if taxon not in contamination_species
-    ]
+    return [taxon for taxon in checked_species if taxon not in contamination_species]
 
 
 # Define functions to download GBID specimen locations asynchronously
@@ -492,7 +488,7 @@ def map_generation(gbif_standardized_species_list):
         scope="world",
     )
     map_presence_absence.update_layout(
-        title_text="Countries in which the detected species are found according to GBIF",
+        title_text="Countries of occurrence for detected species according to GBIF",
         geo=dict(
             showframe=False,
         ),
