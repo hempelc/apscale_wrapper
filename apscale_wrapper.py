@@ -418,8 +418,8 @@ parser.add_argument(
 )
 parser.add_argument(
     "--make_maps",
-    help="Should GBIF-based maps be generated to infer species distribution?",
-    default="True",
+    help="Should GBIF-based maps be generated to infer species distribution? (default: False)",
+    default="False",
     choices=["True", "False"],
 )
 parser.add_argument(
