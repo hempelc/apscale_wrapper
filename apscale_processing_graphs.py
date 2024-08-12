@@ -186,7 +186,7 @@ async def fetch_all_occurrences(session, taxon_name, country_codes):
     return await asyncio.gather(*tasks)
 
 
-async def main(gbif_standardized_species, country_codes, occurrence_df):
+async def async_main(gbif_standardized_species, country_codes, occurrence_df):
     async with aiohttp.ClientSession() as session:
         for taxon_name in tqdm(
             gbif_standardized_species, desc="Downloading GBIF species location data"
