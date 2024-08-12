@@ -18,6 +18,7 @@ import pandas as pd
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
+import plotly.colors as pc
 import argparse
 import warnings
 import dash_bio
@@ -197,10 +198,10 @@ async def main(gbif_standardized_species, country_codes, occurrence_df):
     return occurrence_df
 
 
-def map_generation(gbif_standardized_species_list):
+def maps_and_continent_plot_generation(gbif_standardized_species_list):
     """
     Returns:
-        map_presence_absence, map_counts
+        species_maps, continent_occurrence_plot
     """
     # Define a dictionary with all countries and codes on Earth
     country_codes_dict = {
@@ -461,70 +462,86 @@ def map_generation(gbif_standardized_species_list):
     occurrence_df = pd.DataFrame(list(country_codes_dict), columns=["Country"])
 
     # Run the asynchronous GBIF specimen location retrieval function
-    asyncio.run(main(gbif_standardized_species_list, country_codes, occurrence_df))
-
-    # Create columns to display the maps
-    species_columns = occurrence_df.columns[1:]
-    occurrence_df["Species"] = occurrence_df.apply(
-        lambda row: "<br>".join(species_columns[row[1:].astype(bool)]), axis=1
-    )
-    occurrence_df["Found in GBIF"] = occurrence_df.apply(
-        lambda row: any(row[1:-1]), axis=1
-    )
-    occurrence_df["Found in GBIF"] = occurrence_df["Found in GBIF"].map(
-        {False: "Not found", True: "Found"}
-    )
-    occurrence_df["GBIF specimen count"] = occurrence_df[species_columns].sum(axis=1)
-
-    # Create the map for countries in which the species were found
-    map_presence_absence = px.choropleth(
-        occurrence_df,
-        locations="Country",
-        locationmode="country names",
-        hover_name="Country",
-        hover_data={"Species": True, "Found in GBIF": False, "Country": False},
-        color="Found in GBIF",
-        color_discrete_sequence=["lightgrey", "red"],
-        scope="world",
-    )
-    map_presence_absence.update_layout(
-        title_text="Countries of occurrence for detected species according to GBIF",
-        geo=dict(
-            showframe=False,
-        ),
-        legend_title=None,
-    )
-    map_presence_absence.update_traces(
-        hovertemplate="<b>%{hovertext}</b><br>%{customdata[0]}"
+    asyncio.run(
+        async_main(gbif_standardized_species_list, country_codes, occurrence_df)
     )
 
-    # Create the map for specimen counts
-    map_gbif_specimen_counts = px.choropleth(
-        occurrence_df,
-        locations="Country",
-        locationmode="country names",
-        hover_name="Country",
-        hover_data={
-            "Species": True,
-            "Found in GBIF": False,
-            "Country": False,
-            "GBIF specimen count": True,
-        },
-        color="GBIF specimen count",
-        scope="world",
+    # Create custom colour scale with grey for abundances of 0
+    custom_colors = [[0, "#d3d3d3"]]  # Grey at position 0
+    num_viridis_colors = 10
+    viridis_colors = pc.sequential.Viridis[:num_viridis_colors]
+    # Calculate the interval step for the remaining colors
+    interval_step = 1 / (num_viridis_colors - 1)
+    # Append the first Viridis color with a position of 0.00000001
+    custom_colors.append([0.00000001, viridis_colors[0]])
+    # Append the rest of the Viridis colors at even intervals
+    for i in range(1, num_viridis_colors):
+        interval_position = i * interval_step
+        custom_colors.append([interval_position, viridis_colors[i]])
+    # Ensure the last color is exactly at position 1
+    custom_colors[-1][0] = 1
+
+    # Generate a map per species
+    species_maps = {}
+    for species in gbif_standardized_species_list:
+        # Create the map for specimen counts
+        map_gbif_specimen_counts = px.choropleth(
+            occurrence_df,
+            locations="Country",
+            locationmode="country names",
+            hover_name="Country",
+            hover_data={
+                species: True,
+                "Country": False,
+            },
+            color=species,
+            scope="world",
+            color_continuous_scale=custom_colors,
+        )
+        map_gbif_specimen_counts.update_layout(
+            title_text=f"{species} - GBIF specimen count by country",
+            geo=dict(
+                showframe=False,
+            ),
+            coloraxis_colorbar=dict(
+                title="GBIF specimen count",
+            ),
+        )
+        map_gbif_specimen_counts.update_traces(
+            hovertemplate="<b>%{hovertext}</b><br>GBIF specimen count: %{customdata[0]}"
+        )
+        species_maps[species] = map_gbif_specimen_counts
+
+    # Generate continent occurrence plot
+    ## Generate binary occurrence data per continent and species
+    occurrence_df["Continent"] = occurrence_df["Country"].map(
+        lambda x: country_codes_dict.get(x, [None, None])[1]
     )
-    map_gbif_specimen_counts.update_layout(
-        title_text="Total GBIF specimen counts for all detected species by country",
-        geo=dict(
-            showframe=False,
-        ),
-        legend_title=None,
-    )
-    map_gbif_specimen_counts.update_traces(
-        hovertemplate="<b>%{hovertext}</b><br>GBIF specimen count: %{customdata[3]}<br>%{customdata[0]}"
+    continent_df = occurrence_df.drop("Country", axis=1).groupby("Continent").sum()
+    continent_df[continent_df > 0] = 1
+    continent_df = continent_df.reset_index()
+
+    ## Melt the DataFrame to long format
+    continent_df_melted = continent_df.melt(
+        id_vars=["Continent"], var_name="Species", value_name="Detected"
     )
 
-    return map_presence_absence, map_gbif_specimen_counts
+    ## Generate the bubble plot using Plotly
+    continent_occurrence_plot = px.scatter(
+        continent_df_melted,
+        x="Continent",
+        y="Species",
+        size="Detected",
+        color="Continent",
+        hover_name="Continent",
+        size_max=10,
+        title="Detected species by continent",
+        height=30 * len(continent_df_melted["Species"].unique()),
+        width=550,
+    )
+    continent_occurrence_plot.update_xaxes(tickangle=35)
+
+    return species_maps, continent_occurrence_plot
 
 
 # Define a custom validation function for the parameters
@@ -621,6 +638,10 @@ time_print("Generating apscale processing graphs...")
 # Make outdir for project_dir if it doesn't already exist
 outdir = os.path.join(project_dir, "0_statistics_and_graphs")
 os.makedirs(outdir, exist_ok=True)
+if make_maps == "True":
+    mapdir = os.path.join(outdir, "GBIF_species_occurrence_maps")
+    os.makedirs(mapdir, exist_ok=True)
+
 
 # Import files
 time_print("Importing files. This can take a while...")
@@ -1561,76 +1582,75 @@ if make_maps == "True":
     gbif_standardized_species_esvs = gbif_check_taxonomy(esv_final_df)
     gbif_standardized_species_otus = gbif_check_taxonomy(otu_final_df)
 
-    time_print("Generating GBIF maps for ESVs..")
-    map_presence_absence_esvs, map_counts_esvs = map_generation(
-        gbif_standardized_species_esvs
+    time_print("Generating GBIF maps and continent occurrence plot for ESVs..")
+    species_maps_esvs, continent_occurrence_plot_esvs = (
+        maps_and_continent_plot_generation(gbif_standardized_species_esvs)
     )
-    time_print("Generating GBIF maps for OTUs..")
-    map_presence_absence_otus, map_counts_otus = map_generation(
-        gbif_standardized_species_otus
+    time_print("Generating GBIF maps and continent occurrence plot for OTUs..")
+    species_maps_otus, continent_occurrence_plot_otus = (
+        maps_and_continent_plot_generation(gbif_standardized_species_otus)
     )
 
     ## Save
     if graph_format == "html":
-        map_presence_absence_otus.write_html(
+        for species in species_maps_otus:
+            species_maps_otus[species].write_html(
+                os.path.join(
+                    mapdir,
+                    f"{species}.{graph_format}",
+                )
+            )
+        continent_occurrence_plot_otus.write_html(
             os.path.join(
-                outdir,
-                f"{project_name}_20_map_presence_absence_otus.{graph_format}",
+                mapdir,
+                f"{project_name}_20_continent_occurrence_plot_otus.{graph_format}",
             )
         )
     else:
-        map_presence_absence_otus.write_image(
+        for species in species_maps_otus:
+            species_maps_otus[species].write_image(
+                os.path.join(
+                    mapdir,
+                    f"{species}.{graph_format}",
+                )
+            )
+        continent_occurrence_plot_otus.write_image(
             os.path.join(
-                outdir,
-                f"{project_name}_20_map_presence_absence_otus.{graph_format}",
+                mapdir,
+                f"{project_name}_20_continent_occurrence_plot_otus.{graph_format}",
             )
         )
-    if graph_format == "html":
-        map_counts_otus.write_html(
-            os.path.join(
-                outdir,
-                f"{project_name}_21_map_counts_otus.{graph_format}",
-            )
-        )
-    else:
-        map_counts_otus.write_image(
-            os.path.join(
-                outdir,
-                f"{project_name}_21_map_counts_otus.{graph_format}",
-            )
-        )
-    time_print("GBIF maps generated for OTUs.")
+    time_print("GBIF maps and continent occurrence plot generated for OTUs.")
 
     if graph_format == "html":
-        map_presence_absence_esvs.write_html(
+        for species in species_maps_esvs:
+            species_maps_esvs[species].write_html(
+                os.path.join(
+                    mapdir,
+                    f"{species}.{graph_format}",
+                )
+            )
+        continent_occurrence_plot_esvs.write_html(
             os.path.join(
-                outdir,
-                f"{project_name}_22_map_presence_absence_esvs.{graph_format}",
+                mapdir,
+                f"{project_name}_21_continent_occurrence_plot_esvs.{graph_format}",
             )
         )
     else:
-        map_presence_absence_esvs.write_image(
+        for species in species_maps_esvs:
+            species_maps_esvs[species].write_image(
+                os.path.join(
+                    mapdir,
+                    f"{species}.{graph_format}",
+                )
+            )
+        continent_occurrence_plot_esvs.write_image(
             os.path.join(
-                outdir,
-                f"{project_name}_22_map_presence_absence_esvs.{graph_format}",
+                mapdir,
+                f"{project_name}_21_continent_occurrence_plot_esvs.{graph_format}",
             )
         )
-    if graph_format == "html":
-        map_counts_esvs.write_html(
-            os.path.join(
-                outdir,
-                f"{project_name}_23_map_counts_esvs.{graph_format}",
-            )
-        )
-    else:
-        map_counts_esvs.write_image(
-            os.path.join(
-                outdir,
-                f"{project_name}_23_map_counts_esvs.{graph_format}",
-            )
-        )
-
-    time_print("GBIF maps generated for ESVs.")
+    time_print("GBIF maps and continent occurrence plot generated for ESVs.")
 
 
 # Kronagraphs
