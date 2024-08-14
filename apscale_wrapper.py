@@ -104,7 +104,7 @@ def generateSettings(**kwargs):
         df_5.to_excel(writer, sheet_name="5_quality_filtering", index=False)
 
         ## write the 6_dereplication_pooling sheet
-        df_6 = pd.DataFrame([[4]], columns=["min size to pool"])
+        df_6 = pd.DataFrame([[args.minsize_to_pool]], columns=["min size to pool"])
 
         df_6.to_excel(writer, sheet_name="6_dereplication_pooling", index=False)
 
@@ -284,6 +284,14 @@ parser.add_argument(
     default="False",
     help="Set to True if you want to denoise reads prior to OTU clustering (default: False).",
 )
+parser.add_argument(
+    "--minsize_to_pool",
+    metavar="N",
+    default="4",
+    help="""Filtering criterion during the dereplication and pooling step. Sequences with lower abundance
+    than the criterion are filtered out during pooling (default: 4).""",
+)
+
 parser.add_argument(
     "--clusteringtool",
     default="vsearch",
@@ -486,6 +494,7 @@ settings["Description"] = [
     "maxEE (maximum estimated error) value used for quality filtering",
     "If coi=True, the pipeline invokes DnoisE instead of Unoise for the denoising step",
     "If prior_denoising=True, then the reads are denoised prior to clustering",
+    "Filtering criterion during the dereplication and pooling step. Sequences with lower abundance than the criterion are filtered out during pooling",
     "",
     "Percentage for OTU clustering",
     "Distance used by swarm to determine clusters",
