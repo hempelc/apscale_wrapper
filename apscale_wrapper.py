@@ -134,7 +134,7 @@ def generateSettings(**kwargs):
 
         ## write the 8_denoising sheet
         df_8 = pd.DataFrame(
-            [[2, 8, args.coi, "True"]], columns=["alpha", "minsize", "coi", "to excel"]
+            [[2, args.minsize_denoising, args.coi, "True"]], columns=["alpha", "minsize", "coi", "to excel"]
         )
 
         df_8.to_excel(writer, sheet_name="8_denoising", index=False)
@@ -289,9 +289,8 @@ parser.add_argument(
     metavar="N",
     default="4",
     help="""Filtering criterion during the dereplication and pooling step. Sequences with lower abundance
-    than the criterion are filtered out during pooling (default: 4).""",
+    than the defined threshold are filtered out during pooling (default: 4).""",
 )
-
 parser.add_argument(
     "--clusteringtool",
     default="vsearch",
@@ -307,10 +306,18 @@ parser.add_argument(
 )
 parser.add_argument(
     "--swarm_distance",
-    default=1,
+    default="1,"
     metavar="N",
     type=int,
     help="Used if --clusteringtool=swarm.  Distance used for swarm. Overwritten to 13 if --coi=True (default: 1).",
+)
+parser.add_argument(
+    "--minsize_denoising",
+    default="8",
+    metavar="N",
+    type=int,
+    help="""Filtering criterion during the denoising step. ESVs with lower abundance
+    than the defined threshold are filtered out during denoising (default: 8).""",
 )
 parser.add_argument(
     "--remove_negative_controls",
@@ -494,10 +501,11 @@ settings["Description"] = [
     "maxEE (maximum estimated error) value used for quality filtering",
     "If coi=True, the pipeline invokes DnoisE instead of Unoise for the denoising step",
     "If prior_denoising=True, then the reads are denoised prior to clustering",
-    "Filtering criterion during the dereplication and pooling step. Sequences with lower abundance than the criterion are filtered out during pooling",
+    "Filtering criterion during the dereplication and pooling step. Sequences with lower abundance than the defined threshold are filtered out during pooling",
     "",
     "Percentage for OTU clustering",
     "Distance used by swarm to determine clusters",
+    "Filtering criterion during the denoising step. ESVs with lower abundance than the defined threshold are filtered out during denoising",
     "",
     "",
     "",
