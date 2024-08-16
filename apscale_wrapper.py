@@ -267,7 +267,7 @@ parser.add_argument(
 parser.add_argument(
     "--maxEE",
     metavar="N",
-    default=2,
+    default="2",
     type=int,
     help="maxEE (maximum estimated error) value used for quality filtering (default: 2).",
 )
@@ -306,7 +306,7 @@ parser.add_argument(
 )
 parser.add_argument(
     "--swarm_distance",
-    default="1,"
+    default="1",
     metavar="N",
     type=int,
     help="Used if --clusteringtool=swarm.  Distance used for swarm. Overwritten to 13 if --coi=True (default: 1).",
