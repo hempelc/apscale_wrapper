@@ -526,6 +526,13 @@ def maps_and_continent_plot_generation(gbif_standardized_species_list):
         id_vars=["Continent"], var_name="Species", value_name="Detected"
     )
 
+    ## Define a minimum plot height
+    row_num = len(continent_df_melted["Species"].unique())
+    if row_num < 16:
+        plot_height = 480
+    else:
+        plot_height = 30 * row_num
+
     ## Generate the bubble plot using Plotly
     continent_occurrence_plot = px.scatter(
         continent_df_melted,
@@ -536,7 +543,7 @@ def maps_and_continent_plot_generation(gbif_standardized_species_list):
         hover_name="Continent",
         size_max=10,
         title="Detected species by continent",
-        height=30 * len(continent_df_melted["Species"].unique()),
+        height=plot_height,
         width=550,
     )
     continent_occurrence_plot.update_xaxes(tickangle=35)
@@ -1602,7 +1609,7 @@ if make_maps == "True":
             )
         continent_occurrence_plot_otus.write_html(
             os.path.join(
-                mapdir,
+                outdir,
                 f"{project_name}_20_continent_occurrence_plot_otus.{graph_format}",
             )
         )
@@ -1616,7 +1623,7 @@ if make_maps == "True":
             )
         continent_occurrence_plot_otus.write_image(
             os.path.join(
-                mapdir,
+                outdir,
                 f"{project_name}_20_continent_occurrence_plot_otus.{graph_format}",
             )
         )
@@ -1632,7 +1639,7 @@ if make_maps == "True":
             )
         continent_occurrence_plot_esvs.write_html(
             os.path.join(
-                mapdir,
+                outdir,
                 f"{project_name}_21_continent_occurrence_plot_esvs.{graph_format}",
             )
         )
@@ -1646,7 +1653,7 @@ if make_maps == "True":
             )
         continent_occurrence_plot_esvs.write_image(
             os.path.join(
-                mapdir,
+                outdir,
                 f"{project_name}_21_continent_occurrence_plot_esvs.{graph_format}",
             )
         )
