@@ -1714,7 +1714,7 @@ if (
         [
             "ktImportText",
             "-o",
-            os.path.join(outdir, f"{project_name}_24_esv_krona.html"),
+            os.path.join(outdir, f"{project_name}_22_esv_krona.html"),
             os.path.join(outdir, f"{project_name}_ESVs_krona-formatted.csv"),
         ]
     )
@@ -1725,7 +1725,7 @@ if (
         [
             "ktImportText",
             "-o",
-            os.path.join(outdir, f"{project_name}_25_otu_krona.html"),
+            os.path.join(outdir, f"{project_name}_23_otu_krona.html"),
             os.path.join(outdir, f"{project_name}_OTUs_krona-formatted.csv"),
         ]
     )
