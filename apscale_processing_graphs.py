@@ -169,6 +169,11 @@ def gbif_check_taxonomy(df):
     return [taxon for taxon in checked_species if taxon not in contamination_species]
 
 
+# Function to calculate overlap between two rows (to sort the continent df)
+def calculate_overlap(row1, row2):
+    return np.sum(row1 & row2)
+
+
 # Define functions to download GBID specimen locations asynchronously
 async def fetch_occurrences(session, taxon_name, country_code):
     request_name = "%20".join(taxon_name.split(" "))
@@ -198,7 +203,7 @@ async def async_main(gbif_standardized_species, country_codes, occurrence_df):
     return occurrence_df
 
 
-def maps_and_continent_plot_generation(gbif_standardized_species_list):
+def maps_and_continent_plot_generation(gbif_standardized_species_list, unit):
     """
     Returns:
         species_maps, continent_occurrence_plot
@@ -466,14 +471,11 @@ def maps_and_continent_plot_generation(gbif_standardized_species_list):
         async_main(gbif_standardized_species_list, country_codes, occurrence_df)
     )
 
-    # Create custom colour scale with grey for abundances of 0
-    custom_colors = [[0, "#d3d3d3"]]  # Grey at position 0
     num_viridis_colors = 10
     viridis_colors = pc.sequential.Viridis[:num_viridis_colors]
     # Calculate the interval step for the remaining colors
     interval_step = 1 / (num_viridis_colors - 1)
-    # Append the first Viridis color with a position of 0.00000001
-    custom_colors.append([0.00000001, viridis_colors[0]])
+    custom_colors = [[0, "#d3d3d3"], [0.00000001, viridis_colors[0]]]
     # Append the rest of the Viridis colors at even intervals
     for i in range(1, num_viridis_colors):
         interval_position = i * interval_step
@@ -521,17 +523,35 @@ def maps_and_continent_plot_generation(gbif_standardized_species_list):
     continent_df[continent_df > 0] = 1
     continent_df = continent_df.reset_index()
 
+    ## Sort the df to minimize gaps
+    ### Start with the row with the most 1s
+    sorted_continent_df = (
+        continent_df.loc[continent_df.sum(axis=1).idxmax()].to_frame().T
+    )
+    remaining_df = continent_df.drop(sorted_continent_df.index)
+
+    while not remaining_df.empty:
+        last_row = sorted_continent_df.iloc[-1]
+        ### Calculate overlap with the last row in sorted_continent_df
+        overlaps = remaining_df.apply(
+            lambda row: calculate_overlap(last_row, row), axis=1
+        )
+        ### Select the row with the maximum overlap
+        next_row_idx = overlaps.idxmax()
+        next_row = remaining_df.loc[next_row_idx]
+        ### Append the selected row to the sorted DataFrame
+        sorted_continent_df = pd.concat([sorted_continent_df, next_row.to_frame().T])
+        ### Remove the selected row from the remaining rows
+        remaining_df = remaining_df.drop(next_row_idx)
+
     ## Melt the DataFrame to long format
-    continent_df_melted = continent_df.melt(
+    continent_df_melted = sorted_continent_df.melt(
         id_vars=["Continent"], var_name="Species", value_name="Detected"
     )
 
     ## Define a minimum plot height
     row_num = len(continent_df_melted["Species"].unique())
-    if row_num < 16:
-        plot_height = 480
-    else:
-        plot_height = 30 * row_num
+    plot_height = 480 if row_num < 16 else 30 * row_num
 
     ## Generate the bubble plot using Plotly
     continent_occurrence_plot = px.scatter(
@@ -542,7 +562,7 @@ def maps_and_continent_plot_generation(gbif_standardized_species_list):
         color="Continent",
         hover_name="Continent",
         size_max=10,
-        title="Detected species by continent",
+        title=f"Detected species by continent - {unit}s",
         height=plot_height,
         width=550,
     )
@@ -1591,11 +1611,11 @@ if make_maps == "True":
 
     time_print("Generating GBIF maps and continent occurrence plot for ESVs..")
     species_maps_esvs, continent_occurrence_plot_esvs = (
-        maps_and_continent_plot_generation(gbif_standardized_species_esvs)
+        maps_and_continent_plot_generation(gbif_standardized_species_esvs, "ESV")
     )
     time_print("Generating GBIF maps and continent occurrence plot for OTUs..")
     species_maps_otus, continent_occurrence_plot_otus = (
-        maps_and_continent_plot_generation(gbif_standardized_species_otus)
+        maps_and_continent_plot_generation(gbif_standardized_species_otus, "OTU")
     )
 
     ## Save
