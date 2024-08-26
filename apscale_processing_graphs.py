@@ -522,9 +522,8 @@ def maps_and_continent_plot_generation(gbif_standardized_species_list, unit):
     continent_df = occurrence_df.drop("Country", axis=1).groupby("Continent").sum()
     continent_df[continent_df > 0] = 1
 
-    continent_df.to_csv(os.path.join(outdir, "continent_df.csv"))
-
     ## Sort the df to minimize gaps
+    continent_df = continent_df.T
     ### Start with the row with the most 1s
     sorted_continent_df = (
         continent_df.loc[continent_df.sum(axis=1).idxmax()].to_frame().T
@@ -545,7 +544,13 @@ def maps_and_continent_plot_generation(gbif_standardized_species_list, unit):
         ### Remove the selected row from the remaining rows
         remaining_df = remaining_df.drop(next_row_idx)
 
-    sorted_continent_df = sorted_continent_df.reset_index()
+    sorted_continent_df = sorted_continent_df.T
+
+    sorted_continent_df = (
+        sorted_continent_df.reset_index()
+        .rename(columns={"index": "Continent"})
+        .iloc[:, ::-1]
+    )
 
     ## Melt the DataFrame to long format
     continent_df_melted = sorted_continent_df.melt(
