@@ -522,7 +522,7 @@ def maps_and_continent_plot_generation(gbif_standardized_species_list, unit):
     continent_df = occurrence_df.drop("Country", axis=1).groupby("Continent").sum()
     continent_df[continent_df > 0] = 1
 
-    continent_df.to_csv("continent_df.csv")
+    continent_df.to_csv(os.path.join(outdir, "continent_df.csv"))
 
     ## Sort the df to minimize gaps
     ### Start with the row with the most 1s
