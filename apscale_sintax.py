@@ -145,23 +145,10 @@ def tax_formatting(df, tax_col, ranks):
     #     df = df[~df[ranks].apply(lambda row: row.str.contains("Unknown")).any(axis=1)]
 
     elif args.database_format == "pr2":
-        ranks_pr2 = [
-            "domain",
-            "supergroup",
-            "phylum",
-            "subdivision",
-            "class",
-            "order",
-            "family",
-            "genus",
-            "species",
-        ]
         # Annotate entries with no DB match
-        df = df.fillna(
-            ",".join(["No match in database" for _ in range(len(ranks_pr2))])
-        )
+        df = df.fillna(",".join(["No match in database" for _ in range(len(ranks))]))
         # Split the taxonomy column by comma and expand into new columns
-        df[ranks_pr2] = (
+        df[ranks] = (
             df[tax_col]
             .str.replace(":nucl", "")
             .str.replace(":plas", "")
@@ -171,7 +158,7 @@ def tax_formatting(df, tax_col, ranks):
             .str.split(",", expand=True)
         )
         # Only keep desired columns and ranks and fill missing values with "NA"
-        df = df.drop([tax_col, "supergroup", "subdivision"], axis=1).fillna(
+        df = df.drop(tax_col, axis=1).fillna(
             "Taxonomy unreliable - confidence threshold not met"
         )
         # Replace unknown taxonomy in the PR2 database
