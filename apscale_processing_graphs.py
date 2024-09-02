@@ -179,8 +179,19 @@ async def fetch_occurrences(session, taxon_name, country_code):
     request_name = "%20".join(taxon_name.split(" "))
     url = f"https://api.gbif.org/v1/occurrence/search?scientificName={request_name}&country={country_code}"
     async with session.get(url) as response:
-        api_response_json = await response.json()
-        return api_response_json.get("count", 0)
+        # Check if the response status is OK (200)
+        if response.status == 200:
+            try:
+                api_response_json = await response.json()
+                return api_response_json.get("count", 0)
+            except aiohttp.ContentTypeError:
+                print(f"Unexpected content type at URL: {url}")
+                return 0
+        else:
+            print(
+                f"Error fetching data for {taxon_name} in {country_code}: HTTP {response.status}"
+            )
+            return 0
 
 
 async def fetch_all_occurrences(session, taxon_name, country_codes):
