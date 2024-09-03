@@ -150,6 +150,12 @@ def gbif_check_taxonomy(df):
         "No match in database",
     ]
     taxon_table_df = taxon_table_df.replace(exceptions, None).dropna().drop_duplicates()
+
+    # Check if the 'species' column only contains None values, and if it does, exit early
+    if taxon_table_df["species"].isnull().all():
+        time_print("No valid species found. Skipping map generation.")
+        return []
+
     checked_species = []
     # Standardize names
     for _, row in taxon_table_df.iterrows():
@@ -185,10 +191,10 @@ async def fetch_occurrences(session, taxon_name, country_code):
                 api_response_json = await response.json()
                 return api_response_json.get("count", 0)
             except aiohttp.ContentTypeError:
-                print(f"Unexpected content type at URL: {url}")
+                time_print(f"Unexpected content type at URL: {url}")
                 return 0
         else:
-            print(
+            time_print(
                 f"Error fetching data for {taxon_name} in {country_code}: HTTP {response.status}"
             )
             return 0
@@ -220,7 +226,9 @@ def maps_and_continent_plot_generation(gbif_standardized_species_list, unit):
         species_maps, continent_occurrence_plot
     """
 
-    print("STD LIST:", gbif_standardized_species_list)
+    # Return empty dictionary and None for the plots if the species list is empty, effectively skipping this step
+    if not gbif_standardized_species_list:
+        return {}, None
 
     # Define a dictionary with all countries and codes on Earth
     country_codes_dict = {
@@ -1641,65 +1649,67 @@ if make_maps == "True":
     )
 
     ## Save
-    if graph_format == "html":
-        for species in species_maps_otus:
-            species_maps_otus[species].write_html(
+    if continent_occurrence_plot_otus:
+        if graph_format == "html":
+            for species in species_maps_otus:
+                species_maps_otus[species].write_html(
+                    os.path.join(
+                        mapdir,
+                        f"{species}.{graph_format}",
+                    )
+                )
+            continent_occurrence_plot_otus.write_html(
                 os.path.join(
-                    mapdir,
-                    f"{species}.{graph_format}",
+                    outdir,
+                    f"{project_name}_20_continent_occurrence_plot_otus.{graph_format}",
                 )
             )
-        continent_occurrence_plot_otus.write_html(
-            os.path.join(
-                outdir,
-                f"{project_name}_20_continent_occurrence_plot_otus.{graph_format}",
-            )
-        )
-    else:
-        for species in species_maps_otus:
-            species_maps_otus[species].write_image(
+        else:
+            for species in species_maps_otus:
+                species_maps_otus[species].write_image(
+                    os.path.join(
+                        mapdir,
+                        f"{species}.{graph_format}",
+                    )
+                )
+            continent_occurrence_plot_otus.write_image(
                 os.path.join(
-                    mapdir,
-                    f"{species}.{graph_format}",
+                    outdir,
+                    f"{project_name}_20_continent_occurrence_plot_otus.{graph_format}",
                 )
             )
-        continent_occurrence_plot_otus.write_image(
-            os.path.join(
-                outdir,
-                f"{project_name}_20_continent_occurrence_plot_otus.{graph_format}",
-            )
-        )
-    time_print("GBIF maps and continent occurrence plot generated for OTUs.")
+        time_print("GBIF maps and continent occurrence plot generated for OTUs.")
 
-    if graph_format == "html":
-        for species in species_maps_esvs:
-            species_maps_esvs[species].write_html(
+    if continent_occurrence_plot_otus:
+            if graph_format == "html":
+            for species in species_maps_esvs:
+                species_maps_esvs[species].write_html(
+                    os.path.join(
+                        mapdir,
+                        f"{species}.{graph_format}",
+                    )
+                )
+            continent_occurrence_plot_esvs.write_html(
                 os.path.join(
-                    mapdir,
-                    f"{species}.{graph_format}",
+                    outdir,
+                    f"{project_name}_21_continent_occurrence_plot_esvs.{graph_format}",
                 )
             )
-        continent_occurrence_plot_esvs.write_html(
-            os.path.join(
-                outdir,
-                f"{project_name}_21_continent_occurrence_plot_esvs.{graph_format}",
-            )
-        )
-    else:
-        for species in species_maps_esvs:
-            species_maps_esvs[species].write_image(
+        else:
+            for species in species_maps_esvs:
+                species_maps_esvs[species].write_image(
+                    os.path.join(
+                        mapdir,
+                        f"{species}.{graph_format}",
+                    )
+                )
+            continent_occurrence_plot_esvs.write_image(
                 os.path.join(
-                    mapdir,
-                    f"{species}.{graph_format}",
+                    outdir,
+                    f"{project_name}_21_continent_occurrence_plot_esvs.{graph_format}",
                 )
             )
-        continent_occurrence_plot_esvs.write_image(
-            os.path.join(
-                outdir,
-                f"{project_name}_21_continent_occurrence_plot_esvs.{graph_format}",
-            )
-        )
-    time_print("GBIF maps and continent occurrence plot generated for ESVs.")
+        time_print("GBIF maps and continent occurrence plot generated for ESVs.")
 
 
 # Kronagraphs
