@@ -1681,7 +1681,7 @@ if make_maps == "True":
         time_print("GBIF maps and continent occurrence plot generated for OTUs.")
 
     if continent_occurrence_plot_otus:
-            if graph_format == "html":
+        if graph_format == "html":
             for species in species_maps_esvs:
                 species_maps_esvs[species].write_html(
                     os.path.join(
