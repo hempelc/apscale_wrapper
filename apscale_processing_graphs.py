@@ -230,6 +230,8 @@ def maps_and_continent_plot_generation(gbif_standardized_species_list, unit):
     if not gbif_standardized_species_list:
         return {}, None
 
+    time_print(f"Generating GBIF maps and continent occurrence plot for {unit}s..")
+
     # Define a dictionary with all countries and codes on Earth
     country_codes_dict = {
         "Andorra": ["AD", "Europe"],
@@ -1639,11 +1641,9 @@ if make_maps == "True":
     gbif_standardized_species_esvs = gbif_check_taxonomy(esv_final_df, "ESV")
     gbif_standardized_species_otus = gbif_check_taxonomy(otu_final_df, "OTU")
 
-    time_print("Generating GBIF maps and continent occurrence plot for ESVs..")
     species_maps_esvs, continent_occurrence_plot_esvs = (
         maps_and_continent_plot_generation(gbif_standardized_species_esvs, "ESV")
     )
-    time_print("Generating GBIF maps and continent occurrence plot for OTUs..")
     species_maps_otus, continent_occurrence_plot_otus = (
         maps_and_continent_plot_generation(gbif_standardized_species_otus, "OTU")
     )
