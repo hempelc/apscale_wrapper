@@ -134,7 +134,7 @@ def gbif_parent_check(phylum_name, species_name):
 
 
 # Define a wrapper function for the standardization of species names based on GBIF taxonomy
-def gbif_check_taxonomy(df):
+def gbif_check_taxonomy(df, unit):
     taxon_table_df = df[["phylum", "species"]]
     # Define excpetions that are no real taxon names and drop them in the df. Also only keep unique species
     exceptions = [
@@ -153,7 +153,7 @@ def gbif_check_taxonomy(df):
 
     # Check if the 'species' column only contains None values, and if it does, exit early
     if taxon_table_df["species"].isnull().all():
-        time_print("No valid species found. Skipping map generation.")
+        time_print(f"No valid species found among {unit}s. Skipping map generation.")
         return []
 
     checked_species = []
@@ -1636,8 +1636,8 @@ if make_maps == "True":
     time_print("2/2 final files imported. Import done.")
 
     time_print("Standardizing species names with GBIF...")
-    gbif_standardized_species_esvs = gbif_check_taxonomy(esv_final_df)
-    gbif_standardized_species_otus = gbif_check_taxonomy(otu_final_df)
+    gbif_standardized_species_esvs = gbif_check_taxonomy(esv_final_df, "ESV")
+    gbif_standardized_species_otus = gbif_check_taxonomy(otu_final_df, "OTU")
 
     time_print("Generating GBIF maps and continent occurrence plot for ESVs..")
     species_maps_esvs, continent_occurrence_plot_esvs = (
