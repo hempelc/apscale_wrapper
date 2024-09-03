@@ -219,6 +219,9 @@ def maps_and_continent_plot_generation(gbif_standardized_species_list, unit):
     Returns:
         species_maps, continent_occurrence_plot
     """
+
+    print("STD LIST:", gbif_standardized_species_list)
+
     # Define a dictionary with all countries and codes on Earth
     country_codes_dict = {
         "Andorra": ["AD", "Europe"],
