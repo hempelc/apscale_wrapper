@@ -234,254 +234,262 @@ def maps_and_continent_plot_generation(gbif_standardized_species_list, unit):
 
     # Define a dictionary with all countries and codes on Earth
     country_codes_dict = {
-        "Andorra": ["AD", "Europe"],
-        "United Arab Emirates": ["AE", "Asia"],
-        "Afghanistan": ["AF", "Asia"],
-        "Antigua and Barbuda": ["AG", "North America"],
-        "Anguilla": ["AI", "North America"],
-        "Albania": ["AL", "Europe"],
-        "Armenia": ["AM", "Asia"],
-        "Angola": ["AO", "Africa"],
-        "Antarctica": ["AQ", "Antarctica"],
-        "Argentina": ["AR", "South America"],
-        "American Samoa": ["AS", "Oceania"],
-        "Austria": ["AT", "Europe"],
-        "Australia": ["AU", "Oceania"],
-        "Aruba": ["AW", "North America"],
-        "Åland Islands": ["AX", "Europe"],
-        "Azerbaijan": ["AZ", "Asia"],
-        "Bosnia and Herzegovina": ["BA", "Europe"],
-        "Barbados": ["BB", "North America"],
-        "Bangladesh": ["BD", "Asia"],
-        "Belgium": ["BE", "Europe"],
-        "Burkina Faso": ["BF", "Africa"],
-        "Bulgaria": ["BG", "Europe"],
-        "Bahrain": ["BH", "Asia"],
-        "Burundi": ["BI", "Africa"],
-        "Benin": ["BJ", "Africa"],
-        "Saint Barthélemy": ["BL", "North America"],
-        "Bermuda": ["BM", "North America"],
-        "Brunei Darussalam": ["BN", "Asia"],
-        "Bolivia": ["BO", "South America"],
-        "Bonaire, Sint Eustatius and Saba": ["BQ", "North America"],
-        "Brazil": ["BR", "South America"],
-        "Bahamas": ["BS", "North America"],
-        "Bhutan": ["BT", "Asia"],
-        "Bouvet Island": ["BV", "Antarctica"],
-        "Botswana": ["BW", "Africa"],
-        "Belarus": ["BY", "Europe"],
-        "Belize": ["BZ", "North America"],
-        "Canada": ["CA", "North America"],
-        "Cocos (Keeling) Islands": ["CC", "Asia"],
-        "Congo (Democratic Republic)": ["CD", "Africa"],
-        "Central African Republic": ["CF", "Africa"],
-        "Congo": ["CG", "Africa"],
-        "Switzerland": ["CH", "Europe"],
-        "Côte d'Ivoire": ["CI", "Africa"],
-        "Cook Islands": ["CK", "Oceania"],
-        "Chile": ["CL", "South America"],
-        "Cameroon": ["CM", "Africa"],
-        "China": ["CN", "Asia"],
-        "Colombia": ["CO", "South America"],
-        "Costa Rica": ["CR", "North America"],
-        "Cuba": ["CU", "North America"],
-        "Cabo Verde": ["CV", "Africa"],
-        "Curaçao": ["CW", "North America"],
-        "Christmas Island": ["CX", "Asia"],
-        "Cyprus": ["CY", "Asia"],
-        "Czechia": ["CZ", "Europe"],
-        "Germany": ["DE", "Europe"],
-        "Djibouti": ["DJ", "Africa"],
-        "Denmark": ["DK", "Europe"],
-        "Dominica": ["DM", "North America"],
-        "Dominican Republic": ["DO", "North America"],
-        "Algeria": ["DZ", "Africa"],
-        "Ecuador": ["EC", "South America"],
-        "Estonia": ["EE", "Europe"],
-        "Egypt": ["EG", "Africa"],
-        "Western Sahara": ["EH", "Africa"],
-        "Eritrea": ["ER", "Africa"],
-        "Spain": ["ES", "Europe"],
-        "Ethiopia": ["ET", "Africa"],
-        "Finland": ["FI", "Europe"],
-        "Fiji": ["FJ", "Oceania"],
-        "Falkland Islands": ["FK", "South America"],
-        "Micronesia": ["FM", "Oceania"],
-        "Faroe Islands": ["FO", "Europe"],
-        "France": ["FR", "Europe"],
-        "Gabon": ["GA", "Africa"],
-        "United Kingdom": ["GB", "Europe"],
-        "Grenada": ["GD", "North America"],
-        "Georgia": ["GE", "Asia"],
-        "French Guiana": ["GF", "South America"],
-        "Guernsey": ["GG", "Europe"],
-        "Ghana": ["GH", "Africa"],
-        "Gibraltar": ["GI", "Europe"],
-        "Greenland": ["GL", "North America"],
-        "Gambia": ["GM", "Africa"],
-        "Guinea": ["GN", "Africa"],
-        "Guadeloupe": ["GP", "North America"],
-        "Equatorial Guinea": ["GQ", "Africa"],
-        "Greece": ["GR", "Europe"],
-        "South Georgia and the South Sandwich Islands": ["GS", "Antarctica"],
-        "Guatemala": ["GT", "North America"],
-        "Guam": ["GU", "Oceania"],
-        "Guinea-Bissau": ["GW", "Africa"],
-        "Guyana": ["GY", "South America"],
-        "Hong Kong": ["HK", "Asia"],
-        "Heard Island and McDonald Islands": ["HM", "Antarctica"],
-        "Honduras": ["HN", "North America"],
-        "Croatia": ["HR", "Europe"],
-        "Haiti": ["HT", "North America"],
-        "Hungary": ["HU", "Europe"],
-        "Indonesia": ["ID", "Asia"],
-        "Ireland": ["IE", "Europe"],
-        "Israel": ["IL", "Asia"],
-        "Isle of Man": ["IM", "Europe"],
-        "India": ["IN", "Asia"],
-        "British Indian Ocean Territory": ["IO", "Asia"],
-        "Iraq": ["IQ", "Asia"],
-        "Iran": ["IR", "Asia"],
-        "Iceland": ["IS", "Europe"],
-        "Italy": ["IT", "Europe"],
-        "Jersey": ["JE", "Europe"],
-        "Jamaica": ["JM", "North America"],
-        "Jordan": ["JO", "Asia"],
-        "Japan": ["JP", "Asia"],
-        "Kenya": ["KE", "Africa"],
-        "Kyrgyzstan": ["KG", "Asia"],
-        "Cambodia": ["KH", "Asia"],
-        "Kiribati": ["KI", "Oceania"],
-        "Comoros": ["KM", "Africa"],
-        "Saint Kitts and Nevis": ["KN", "North America"],
-        "Korea (Democratic People's Republic)": ["KP", "Asia"],
-        "Korea (Republic)": ["KR", "Asia"],
-        "Kuwait": ["KW", "Asia"],
-        "Cayman Islands": ["KY", "North America"],
-        "Kazakhstan": ["KZ", "Asia"],
-        "Lao People's Democratic Republic": ["LA", "Asia"],
-        "Lebanon": ["LB", "Asia"],
-        "Saint Lucia": ["LC", "North America"],
-        "Liechtenstein": ["LI", "Europe"],
-        "Sri Lanka": ["LK", "Asia"],
-        "Liberia": ["LR", "Africa"],
-        "Lesotho": ["LS", "Africa"],
-        "Lithuania": ["LT", "Europe"],
-        "Luxembourg": ["LU", "Europe"],
-        "Latvia": ["LV", "Europe"],
-        "Libya": ["LY", "Africa"],
-        "Morocco": ["MA", "Africa"],
-        "Monaco": ["MC", "Europe"],
-        "Moldova (the Republic of)": ["MD", "Europe"],
-        "Montenegro": ["ME", "Europe"],
-        "Saint Martin (French part)": ["MF", "North America"],
-        "Madagascar": ["MG", "Africa"],
-        "Marshall Islands": ["MH", "Oceania"],
-        "Republic of North Macedonia": ["MK", "Europe"],
-        "Mali": ["ML", "Africa"],
-        "Myanmar": ["MM", "Asia"],
-        "Mongolia": ["MN", "Asia"],
-        "Macao": ["MO", "Asia"],
-        "Northern Mariana Islands": ["MP", "Oceania"],
-        "Martinique": ["MQ", "North America"],
-        "Mauritania": ["MR", "Africa"],
-        "Montserrat": ["MS", "North America"],
-        "Malta": ["MT", "Europe"],
-        "Mauritius": ["MU", "Africa"],
-        "Maldives": ["MV", "Asia"],
-        "Malawi": ["MW", "Africa"],
-        "Mexico": ["MX", "North America"],
-        "Malaysia": ["MY", "Asia"],
-        "Mozambique": ["MZ", "Africa"],
-        "Namibia": ["NA", "Africa"],
-        "New Caledonia": ["NC", "Oceania"],
-        "Niger": ["NE", "Africa"],
-        "Norfolk Island": ["NF", "Oceania"],
-        "Nigeria": ["NG", "Africa"],
-        "Nicaragua": ["NI", "North America"],
-        "Netherlands": ["NL", "Europe"],
-        "Norway": ["NO", "Europe"],
-        "Nepal": ["NP", "Asia"],
-        "Nauru": ["NR", "Oceania"],
-        "Niue": ["NU", "Oceania"],
-        "New Zealand": ["NZ", "Oceania"],
-        "Oman": ["OM", "Asia"],
-        "Panama": ["PA", "North America"],
-        "Peru": ["PE", "South America"],
-        "French Polynesia": ["PF", "Oceania"],
-        "Papua New Guinea": ["PG", "Oceania"],
-        "Philippines": ["PH", "Asia"],
-        "Pakistan": ["PK", "Asia"],
-        "Poland": ["PL", "Europe"],
-        "Saint Pierre and Miquelon": ["PM", "North America"],
-        "Pitcairn": ["PN", "Oceania"],
-        "Puerto Rico": ["PR", "North America"],
-        "Palestine, State of": ["PS", "Asia"],
-        "Portugal": ["PT", "Europe"],
-        "Palau": ["PW", "Oceania"],
-        "Paraguay": ["PY", "South America"],
-        "Qatar": ["QA", "Asia"],
-        "Réunion": ["RE", "Africa"],
-        "Romania": ["RO", "Europe"],
-        "Serbia": ["RS", "Europe"],
-        "Russian Federation": ["RU", "Europe"],
-        "Rwanda": ["RW", "Africa"],
-        "Saudi Arabia": ["SA", "Asia"],
-        "Solomon Islands": ["SB", "Oceania"],
-        "Seychelles": ["SC", "Africa"],
-        "Sudan": ["SD", "Africa"],
-        "Sweden": ["SE", "Europe"],
-        "Singapore": ["SG", "Asia"],
-        "Saint Helena, Ascension and Tristan da Cunha": ["SH", "Africa"],
-        "Slovenia": ["SI", "Europe"],
-        "Svalbard and Jan Mayen": ["SJ", "Europe"],
-        "Slovakia": ["SK", "Europe"],
-        "Sierra Leone": ["SL", "Africa"],
-        "San Marino": ["SM", "Europe"],
-        "Senegal": ["SN", "Africa"],
-        "Somalia": ["SO", "Africa"],
-        "Suriname": ["SR", "South America"],
-        "South Sudan": ["SS", "Africa"],
-        "Sao Tome and Principe": ["ST", "Africa"],
-        "El Salvador": ["SV", "North America"],
-        "Syrian Arab Republic": ["SY", "Asia"],
-        "Eswatini": ["SZ", "Africa"],
-        "Turks and Caicos Islands": ["TC", "North America"],
-        "Chad": ["TD", "Africa"],
-        "French Southern Territories": ["TF", "Antarctica"],
-        "Togo": ["TG", "Africa"],
-        "Thailand": ["TH", "Asia"],
-        "Tajikistan": ["TJ", "Asia"],
-        "Tokelau": ["TK", "Oceania"],
-        "Timor-Leste": ["TL", "Asia"],
-        "Turkmenistan": ["TM", "Asia"],
-        "Tunisia": ["TN", "Africa"],
-        "Tonga": ["TO", "Oceania"],
-        "Turkey": ["TR", "Europe"],
-        "Trinidad and Tobago": ["TT", "North America"],
-        "Tuvalu": ["TV", "Oceania"],
-        "Taiwan": ["TW", "Asia"],
-        "Tanzania": ["TZ", "Africa"],
-        "Ukraine": ["UA", "Europe"],
-        "Uganda": ["UG", "Africa"],
-        "United States Minor Outlying Islands": ["UM", "Oceania"],
-        "United States of America": ["US", "North America"],
-        "Uruguay": ["UY", "South America"],
-        "Uzbekistan": ["UZ", "Asia"],
-        "Holy See": ["VA", "Europe"],
-        "Saint Vincent and the Grenadines": ["VC", "North America"],
-        "Venezuela (Bolivarian Republic of)": ["VE", "South America"],
-        "Virgin Islands (British)": ["VG", "North America"],
-        "Virgin Islands (U.S.)": ["VI", "North America"],
-        "Viet Nam": ["VN", "Asia"],
-        "Vanuatu": ["VU", "Oceania"],
-        "Wallis and Futuna": ["WF", "Oceania"],
-        "Samoa": ["WS", "Oceania"],
-        "Yemen": ["YE", "Asia"],
-        "Mayotte": ["YT", "Africa"],
-        "South Africa": ["ZA", "Africa"],
-        "Zambia": ["ZM", "Africa"],
-        "Zimbabwe": ["ZW", "Africa"],
+        "Andorra": ["AD", "Europe", "Palearctic"],
+        "United Arab Emirates": ["AE", "Asia", "Palearctic"],
+        "Afghanistan": ["AF", "Asia", "Palearctic"],
+        "Antigua and Barbuda": ["AG", "North America", "Neotropical"],
+        "Anguilla": ["AI", "North America", "Neotropical"],
+        "Albania": ["AL", "Europe", "Palearctic"],
+        "Armenia": ["AM", "Asia", "Palearctic"],
+        "Angola": ["AO", "Africa", "Afrotropical"],
+        "Antarctica": ["AQ", "Antarctica", "Antarctic"],
+        "Argentina": ["AR", "South America", "Neotropical"],
+        "American Samoa": ["AS", "Oceania", "Oceanian"],
+        "Austria": ["AT", "Europe", "Palearctic"],
+        "Australia": ["AU", "Oceania", "Australasian"],
+        "Aruba": ["AW", "North America", "Neotropical"],
+        "Åland Islands": ["AX", "Europe", "Palearctic"],
+        "Azerbaijan": ["AZ", "Asia", "Palearctic"],
+        "Bosnia and Herzegovina": ["BA", "Europe", "Palearctic"],
+        "Barbados": ["BB", "North America", "Neotropical"],
+        "Bangladesh": ["BD", "Asia", "Indomalayan"],
+        "Belgium": ["BE", "Europe", "Palearctic"],
+        "Burkina Faso": ["BF", "Africa", "Afrotropical"],
+        "Bulgaria": ["BG", "Europe", "Palearctic"],
+        "Bahrain": ["BH", "Asia", "Palearctic"],
+        "Burundi": ["BI", "Africa", "Afrotropical"],
+        "Benin": ["BJ", "Africa", "Afrotropical"],
+        "Saint Barthélemy": ["BL", "North America", "Neotropical"],
+        "Bermuda": ["BM", "North America", "Neotropical"],
+        "Brunei Darussalam": ["BN", "Asia", "Indomalayan"],
+        "Bolivia": ["BO", "South America", "Neotropical"],
+        "Bonaire, Sint Eustatius and Saba": ["BQ", "North America", "Neotropical"],
+        "Brazil": ["BR", "South America", "Neotropical"],
+        "Bahamas": ["BS", "North America", "Neotropical"],
+        "Bhutan": ["BT", "Asia", "Indomalayan"],
+        "Bouvet Island": ["BV", "Antarctica", "Antarctic"],
+        "Botswana": ["BW", "Africa", "Afrotropical"],
+        "Belarus": ["BY", "Europe", "Palearctic"],
+        "Belize": ["BZ", "North America", "Neotropical"],
+        "Canada": ["CA", "North America", "Nearctic"],
+        "Cocos (Keeling) Islands": ["CC", "Asia", "Indomalayan"],
+        "Congo (Democratic Republic)": ["CD", "Africa", "Afrotropical"],
+        "Central African Republic": ["CF", "Africa", "Afrotropical"],
+        "Congo": ["CG", "Africa", "Afrotropical"],
+        "Switzerland": ["CH", "Europe", "Palearctic"],
+        "Côte d'Ivoire": ["CI", "Africa", "Afrotropical"],
+        "Cook Islands": ["CK", "Oceania", "Oceanian"],
+        "Chile": ["CL", "South America", "Neotropical"],
+        "Cameroon": ["CM", "Africa", "Afrotropical"],
+        "China": ["CN", "Asia", "Palearctic/Indomalayan"],
+        "Colombia": ["CO", "South America", "Neotropical"],
+        "Costa Rica": ["CR", "North America", "Neotropical"],
+        "Cuba": ["CU", "North America", "Neotropical"],
+        "Cabo Verde": ["CV", "Africa", "Afrotropical"],
+        "Curaçao": ["CW", "North America", "Neotropical"],
+        "Christmas Island": ["CX", "Asia", "Indomalayan"],
+        "Cyprus": ["CY", "Asia", "Palearctic"],
+        "Czechia": ["CZ", "Europe", "Palearctic"],
+        "Germany": ["DE", "Europe", "Palearctic"],
+        "Djibouti": ["DJ", "Africa", "Afrotropical"],
+        "Denmark": ["DK", "Europe", "Palearctic"],
+        "Dominica": ["DM", "North America", "Neotropical"],
+        "Dominican Republic": ["DO", "North America", "Neotropical"],
+        "Algeria": ["DZ", "Africa", "Palearctic"],
+        "Ecuador": ["EC", "South America", "Neotropical"],
+        "Estonia": ["EE", "Europe", "Palearctic"],
+        "Egypt": ["EG", "Africa", "Palearctic"],
+        "Western Sahara": ["EH", "Africa", "Palearctic"],
+        "Eritrea": ["ER", "Africa", "Afrotropical"],
+        "Spain": ["ES", "Europe", "Palearctic"],
+        "Ethiopia": ["ET", "Africa", "Afrotropical"],
+        "Finland": ["FI", "Europe", "Palearctic"],
+        "Fiji": ["FJ", "Oceania", "Australasian"],
+        "Falkland Islands": ["FK", "South America", "Neotropical"],
+        "Micronesia": ["FM", "Oceania", "Oceanian"],
+        "Faroe Islands": ["FO", "Europe", "Palearctic"],
+        "France": ["FR", "Europe", "Palearctic"],
+        "Gabon": ["GA", "Africa", "Afrotropical"],
+        "United Kingdom": ["GB", "Europe", "Palearctic"],
+        "Grenada": ["GD", "North America", "Neotropical"],
+        "Georgia": ["GE", "Asia", "Palearctic"],
+        "French Guiana": ["GF", "South America", "Neotropical"],
+        "Guernsey": ["GG", "Europe", "Palearctic"],
+        "Ghana": ["GH", "Africa", "Afrotropical"],
+        "Gibraltar": ["GI", "Europe", "Palearctic"],
+        "Greenland": ["GL", "North America", "Nearctic"],
+        "Gambia": ["GM", "Africa", "Afrotropical"],
+        "Guinea": ["GN", "Africa", "Afrotropical"],
+        "Guadeloupe": ["GP", "North America", "Neotropical"],
+        "Equatorial Guinea": ["GQ", "Africa", "Afrotropical"],
+        "Greece": ["GR", "Europe", "Palearctic"],
+        "South Georgia and the South Sandwich Islands": [
+            "GS",
+            "Antarctica",
+            "Antarctic",
+        ],
+        "Guatemala": ["GT", "North America", "Neotropical"],
+        "Guam": ["GU", "Oceania", "Oceanian"],
+        "Guinea-Bissau": ["GW", "Africa", "Afrotropical"],
+        "Guyana": ["GY", "South America", "Neotropical"],
+        "Hong Kong": ["HK", "Asia", "Indomalayan"],
+        "Heard Island and McDonald Islands": ["HM", "Antarctica", "Antarctic"],
+        "Honduras": ["HN", "North America", "Neotropical"],
+        "Croatia": ["HR", "Europe", "Palearctic"],
+        "Haiti": ["HT", "North America", "Neotropical"],
+        "Hungary": ["HU", "Europe", "Palearctic"],
+        "Indonesia": ["ID", "Asia", "Indomalayan"],
+        "Ireland": ["IE", "Europe", "Palearctic"],
+        "Israel": ["IL", "Asia", "Palearctic"],
+        "Isle of Man": ["IM", "Europe", "Palearctic"],
+        "India": ["IN", "Asia", "Indomalayan"],
+        "British Indian Ocean Territory": ["IO", "Asia", "Indomalayan"],
+        "Iraq": ["IQ", "Asia", "Palearctic"],
+        "Iran": ["IR", "Asia", "Palearctic"],
+        "Iceland": ["IS", "Europe", "Palearctic"],
+        "Italy": ["IT", "Europe", "Palearctic"],
+        "Jersey": ["JE", "Europe", "Palearctic"],
+        "Jamaica": ["JM", "North America", "Neotropical"],
+        "Jordan": ["JO", "Asia", "Palearctic"],
+        "Japan": ["JP", "Asia", "Palearctic"],
+        "Kenya": ["KE", "Africa", "Afrotropical"],
+        "Kyrgyzstan": ["KG", "Asia", "Palearctic"],
+        "Cambodia": ["KH", "Asia", "Indomalayan"],
+        "Kiribati": ["KI", "Oceania", "Oceanian"],
+        "Comoros": ["KM", "Africa", "Afrotropical"],
+        "Saint Kitts and Nevis": ["KN", "North America", "Neotropical"],
+        "Korea (Democratic People's Republic)": ["KP", "Asia", "Palearctic"],
+        "Korea (Republic)": ["KR", "Asia", "Palearctic"],
+        "Kuwait": ["KW", "Asia", "Palearctic"],
+        "Cayman Islands": ["KY", "North America", "Neotropical"],
+        "Kazakhstan": ["KZ", "Asia", "Palearctic"],
+        "Lao People's Democratic Republic": ["LA", "Asia", "Indomalayan"],
+        "Lebanon": ["LB", "Asia", "Palearctic"],
+        "Saint Lucia": ["LC", "North America", "Neotropical"],
+        "Liechtenstein": ["LI", "Europe", "Palearctic"],
+        "Sri Lanka": ["LK", "Asia", "Indomalayan"],
+        "Liberia": ["LR", "Africa", "Afrotropical"],
+        "Lesotho": ["LS", "Africa", "Afrotropical"],
+        "Lithuania": ["LT", "Europe", "Palearctic"],
+        "Luxembourg": ["LU", "Europe", "Palearctic"],
+        "Latvia": ["LV", "Europe", "Palearctic"],
+        "Libya": ["LY", "Africa", "Palearctic"],
+        "Morocco": ["MA", "Africa", "Palearctic"],
+        "Monaco": ["MC", "Europe", "Palearctic"],
+        "Moldova (the Republic of)": ["MD", "Europe", "Palearctic"],
+        "Montenegro": ["ME", "Europe", "Palearctic"],
+        "Saint Martin (French part)": ["MF", "North America", "Neotropical"],
+        "Madagascar": ["MG", "Africa", "Afrotropical"],
+        "Marshall Islands": ["MH", "Oceania", "Oceanian"],
+        "Republic of North Macedonia": ["MK", "Europe", "Palearctic"],
+        "Mali": ["ML", "Africa", "Afrotropical"],
+        "Myanmar": ["MM", "Asia", "Indomalayan"],
+        "Mongolia": ["MN", "Asia", "Palearctic"],
+        "Macao": ["MO", "Asia", "Indomalayan"],
+        "Northern Mariana Islands": ["MP", "Oceania", "Oceanian"],
+        "Martinique": ["MQ", "North America", "Neotropical"],
+        "Mauritania": ["MR", "Africa", "Palearctic"],
+        "Montserrat": ["MS", "North America", "Neotropical"],
+        "Malta": ["MT", "Europe", "Palearctic"],
+        "Mauritius": ["MU", "Africa", "Afrotropical"],
+        "Maldives": ["MV", "Asia", "Indomalayan"],
+        "Malawi": ["MW", "Africa", "Afrotropical"],
+        "Mexico": ["MX", "North America", "Nearctic/Neotropical"],
+        "Malaysia": ["MY", "Asia", "Indomalayan"],
+        "Mozambique": ["MZ", "Africa", "Afrotropical"],
+        "Namibia": ["NA", "Africa", "Afrotropical"],
+        "New Caledonia": ["NC", "Oceania", "Australasian"],
+        "Niger": ["NE", "Africa", "Afrotropical"],
+        "Norfolk Island": ["NF", "Oceania", "Australasian"],
+        "Nigeria": ["NG", "Africa", "Afrotropical"],
+        "Nicaragua": ["NI", "North America", "Neotropical"],
+        "Netherlands": ["NL", "Europe", "Palearctic"],
+        "Norway": ["NO", "Europe", "Palearctic"],
+        "Nepal": ["NP", "Asia", "Indomalayan"],
+        "Nauru": ["NR", "Oceania", "Oceanian"],
+        "Niue": ["NU", "Oceania", "Oceanian"],
+        "New Zealand": ["NZ", "Oceania", "Australasian"],
+        "Oman": ["OM", "Asia", "Palearctic"],
+        "Panama": ["PA", "North America", "Neotropical"],
+        "Peru": ["PE", "South America", "Neotropical"],
+        "French Polynesia": ["PF", "Oceania", "Oceanian"],
+        "Papua New Guinea": ["PG", "Oceania", "Australasian"],
+        "Philippines": ["PH", "Asia", "Indomalayan"],
+        "Pakistan": ["PK", "Asia", "Palearctic"],
+        "Poland": ["PL", "Europe", "Palearctic"],
+        "Saint Pierre and Miquelon": ["PM", "North America", "Nearctic"],
+        "Pitcairn": ["PN", "Oceania", "Oceanian"],
+        "Puerto Rico": ["PR", "North America", "Neotropical"],
+        "Palestine, State of": ["PS", "Asia", "Palearctic"],
+        "Portugal": ["PT", "Europe", "Palearctic"],
+        "Palau": ["PW", "Oceania", "Oceanian"],
+        "Paraguay": ["PY", "South America", "Neotropical"],
+        "Qatar": ["QA", "Asia", "Palearctic"],
+        "Réunion": ["RE", "Africa", "Afrotropical"],
+        "Romania": ["RO", "Europe", "Palearctic"],
+        "Serbia": ["RS", "Europe", "Palearctic"],
+        "Russian Federation": ["RU", "Europe/Asia", "Palearctic"],
+        "Rwanda": ["RW", "Africa", "Afrotropical"],
+        "Saudi Arabia": ["SA", "Asia", "Palearctic"],
+        "Solomon Islands": ["SB", "Oceania", "Australasian"],
+        "Seychelles": ["SC", "Africa", "Afrotropical"],
+        "Sudan": ["SD", "Africa", "Afrotropical"],
+        "Sweden": ["SE", "Europe", "Palearctic"],
+        "Singapore": ["SG", "Asia", "Indomalayan"],
+        "Saint Helena, Ascension and Tristan da Cunha": [
+            "SH",
+            "Africa",
+            "Afrotropical",
+        ],
+        "Slovenia": ["SI", "Europe", "Palearctic"],
+        "Svalbard and Jan Mayen": ["SJ", "Europe", "Palearctic"],
+        "Slovakia": ["SK", "Europe", "Palearctic"],
+        "Sierra Leone": ["SL", "Africa", "Afrotropical"],
+        "San Marino": ["SM", "Europe", "Palearctic"],
+        "Senegal": ["SN", "Africa", "Afrotropical"],
+        "Somalia": ["SO", "Africa", "Afrotropical"],
+        "Suriname": ["SR", "South America", "Neotropical"],
+        "South Sudan": ["SS", "Africa", "Afrotropical"],
+        "Sao Tome and Principe": ["ST", "Africa", "Afrotropical"],
+        "El Salvador": ["SV", "North America", "Neotropical"],
+        "Syrian Arab Republic": ["SY", "Asia", "Palearctic"],
+        "Eswatini": ["SZ", "Africa", "Afrotropical"],
+        "Turks and Caicos Islands": ["TC", "North America", "Neotropical"],
+        "Chad": ["TD", "Africa", "Afrotropical"],
+        "French Southern Territories": ["TF", "Antarctica", "Antarctic"],
+        "Togo": ["TG", "Africa", "Afrotropical"],
+        "Thailand": ["TH", "Asia", "Indomalayan"],
+        "Tajikistan": ["TJ", "Asia", "Palearctic"],
+        "Tokelau": ["TK", "Oceania", "Oceanian"],
+        "Timor-Leste": ["TL", "Asia", "Indomalayan"],
+        "Turkmenistan": ["TM", "Asia", "Palearctic"],
+        "Tunisia": ["TN", "Africa", "Palearctic"],
+        "Tonga": ["TO", "Oceania", "Oceanian"],
+        "Turkey": ["TR", "Asia", "Palearctic"],
+        "Trinidad and Tobago": ["TT", "North America", "Neotropical"],
+        "Tuvalu": ["TV", "Oceania", "Oceanian"],
+        "Taiwan": ["TW", "Asia", "Indomalayan"],
+        "Tanzania": ["TZ", "Africa", "Afrotropical"],
+        "Ukraine": ["UA", "Europe", "Palearctic"],
+        "Uganda": ["UG", "Africa", "Afrotropical"],
+        "United States Minor Outlying Islands": ["UM", "Oceania", "Oceanian"],
+        "United States of America": ["US", "North America", "Nearctic"],
+        "Uruguay": ["UY", "South America", "Neotropical"],
+        "Uzbekistan": ["UZ", "Asia", "Palearctic"],
+        "Holy See": ["VA", "Europe", "Palearctic"],
+        "Saint Vincent and the Grenadines": ["VC", "North America", "Neotropical"],
+        "Venezuela (Bolivarian Republic of)": ["VE", "South America", "Neotropical"],
+        "Virgin Islands (British)": ["VG", "North America", "Neotropical"],
+        "Virgin Islands (U.S.)": ["VI", "North America", "Neotropical"],
+        "Viet Nam": ["VN", "Asia", "Indomalayan"],
+        "Vanuatu": ["VU", "Oceania", "Oceanian"],
+        "Wallis and Futuna": ["WF", "Oceania", "Oceanian"],
+        "Samoa": ["WS", "Oceania", "Oceanian"],
+        "Yemen": ["YE", "Asia", "Palearctic"],
+        "Mayotte": ["YT", "Africa", "Afrotropical"],
+        "South Africa": ["ZA", "Africa", "Afrotropical"],
+        "Zambia": ["ZM", "Africa", "Afrotropical"],
+        "Zimbabwe": ["ZW", "Africa", "Afrotropical"],
     }
 
     # Extract country codes from the dictionary keys
@@ -600,7 +608,69 @@ def maps_and_continent_plot_generation(gbif_standardized_species_list, unit):
     )
     continent_occurrence_plot.update_xaxes(tickangle=35)
 
-    return species_maps, continent_occurrence_plot
+    # Generate region occurrence plot
+    ## Generate binary occurrence data per continent and species
+    occurrence_df["Biogeographic region"] = occurrence_df["Country"].map(
+        lambda x: country_codes_dict.get(x, [None, None])[2]
+    )
+    region_df = (
+        occurrence_df.drop("Country", axis=1).groupby("Biogeographic region").sum()
+    )
+    region_df[region_df > 0] = 1
+
+    ## Sort the df to minimize gaps
+    region_df = region_df.T
+    ### Start with the row with the most 1s
+    sorted_region_df = region_df.loc[region_df.sum(axis=1).idxmax()].to_frame().T
+    remaining_df = region_df.drop(sorted_region_df.index)
+
+    while not remaining_df.empty:
+        last_row = sorted_region_df.iloc[-1]
+        ### Calculate overlap with the last row in sorted_region_df
+        overlaps = remaining_df.apply(
+            lambda row: calculate_overlap(last_row, row), axis=1
+        )
+        ### Select the row with the maximum overlap
+        next_row_idx = overlaps.idxmax()
+        next_row = remaining_df.loc[next_row_idx]
+        ### Append the selected row to the sorted DataFrame
+        sorted_region_df = pd.concat([sorted_region_df, next_row.to_frame().T])
+        ### Remove the selected row from the remaining rows
+        remaining_df = remaining_df.drop(next_row_idx)
+
+    sorted_region_df = sorted_region_df.T
+
+    sorted_region_df = (
+        sorted_region_df.reset_index()
+        .rename(columns={"index": "Biogeographic region"})
+        .iloc[:, ::-1]
+    )
+
+    ## Melt the DataFrame to long format
+    region_df_melted = sorted_region_df.melt(
+        id_vars=["Biogeographic region"], var_name="Species", value_name="Detected"
+    )
+
+    ## Define a minimum plot height
+    row_num = len(region_df_melted["Species"].unique())
+    plot_height = 480 if row_num < 16 else 30 * row_num
+
+    ## Generate the bubble plot using Plotly
+    region_occurrence_plot = px.scatter(
+        region_df_melted,
+        x="Biogeographic region",
+        y="Species",
+        size="Detected",
+        color="Biogeographic region",
+        hover_name="Biogeographic region",
+        size_max=10,
+        title=f"Detected species by biogeographic region - {unit}s",
+        height=plot_height,
+        width=550,
+    )
+    region_occurrence_plot.update_xaxes(tickangle=35)
+
+    return species_maps, continent_occurrence_plot, region_occurrence_plot
 
 
 # Define a custom validation function for the parameters
@@ -1641,10 +1711,12 @@ if make_maps == "True":
     gbif_standardized_species_esvs = gbif_check_taxonomy(esv_final_df, "ESV")
     gbif_standardized_species_otus = gbif_check_taxonomy(otu_final_df, "OTU")
 
-    species_maps_esvs, continent_occurrence_plot_esvs = (
-        maps_and_continent_plot_generation(gbif_standardized_species_esvs, "ESV")
-    )
-    species_maps_otus, continent_occurrence_plot_otus = (
+    (
+        species_maps_esvs,
+        continent_occurrence_plot_esvs,
+        region_occurrence_plot_esvs,
+    ) = maps_and_continent_plot_generation(gbif_standardized_species_esvs, "ESV")
+    species_maps_otus, continent_occurrence_plot_otus, region_occurrence_plot_otus = (
         maps_and_continent_plot_generation(gbif_standardized_species_otus, "OTU")
     )
 
@@ -1664,6 +1736,12 @@ if make_maps == "True":
                     f"{project_name}_20_continent_occurrence_plot_otus.{graph_format}",
                 )
             )
+            region_occurrence_plot_otus.write_html(
+                os.path.join(
+                    outdir,
+                    f"{project_name}_21_region_occurrence_plot_otus.{graph_format}",
+                )
+            )
         else:
             for species in species_maps_otus:
                 species_maps_otus[species].write_image(
@@ -1678,9 +1756,16 @@ if make_maps == "True":
                     f"{project_name}_20_continent_occurrence_plot_otus.{graph_format}",
                 )
             )
+            region_occurrence_plot_otus.write_image(
+                os.path.join(
+                    outdir,
+                    f"{project_name}_21_region_occurrence_plot_otus.{graph_format}",
+                )
+            )
+
         time_print("GBIF maps and continent occurrence plot generated for OTUs.")
 
-    if continent_occurrence_plot_otus:
+    if continent_occurrence_plot_esvs:
         if graph_format == "html":
             for species in species_maps_esvs:
                 species_maps_esvs[species].write_html(
@@ -1692,9 +1777,16 @@ if make_maps == "True":
             continent_occurrence_plot_esvs.write_html(
                 os.path.join(
                     outdir,
-                    f"{project_name}_21_continent_occurrence_plot_esvs.{graph_format}",
+                    f"{project_name}_22_continent_occurrence_plot_esvs.{graph_format}",
                 )
             )
+            region_occurrence_plot_esvs.write_html(
+                os.path.join(
+                    outdir,
+                    f"{project_name}_23_region_occurrence_plot_esvs.{graph_format}",
+                )
+            )
+
         else:
             for species in species_maps_esvs:
                 species_maps_esvs[species].write_image(
@@ -1706,9 +1798,16 @@ if make_maps == "True":
             continent_occurrence_plot_esvs.write_image(
                 os.path.join(
                     outdir,
-                    f"{project_name}_21_continent_occurrence_plot_esvs.{graph_format}",
+                    f"{project_name}_22_continent_occurrence_plot_esvs.{graph_format}",
                 )
             )
+            region_occurrence_plot_esvs.write_image(
+                os.path.join(
+                    outdir,
+                    f"{project_name}_23_region_occurrence_plot_esvs.{graph_format}",
+                )
+            )
+
         time_print("GBIF maps and continent occurrence plot generated for ESVs.")
 
 
@@ -1766,7 +1865,7 @@ if (
         [
             "ktImportText",
             "-o",
-            os.path.join(outdir, f"{project_name}_22_esv_krona.html"),
+            os.path.join(outdir, f"{project_name}_24_esv_krona.html"),
             os.path.join(outdir, f"{project_name}_ESVs_krona-formatted.csv"),
         ]
     )
@@ -1777,7 +1876,7 @@ if (
         [
             "ktImportText",
             "-o",
-            os.path.join(outdir, f"{project_name}_23_otu_krona.html"),
+            os.path.join(outdir, f"{project_name}_25_otu_krona.html"),
             os.path.join(outdir, f"{project_name}_OTUs_krona-formatted.csv"),
         ]
     )
