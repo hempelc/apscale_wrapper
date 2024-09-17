@@ -553,6 +553,9 @@ def maps_and_continent_plot_generation(gbif_standardized_species_list, unit):
     occurrence_df["Continent"] = occurrence_df["Country"].map(
         lambda x: country_codes_dict.get(x, [None, None])[1]
     )
+    ### Handle cases in which a country falls in 2 continents (make multiple rows)
+    occurrence_df["Continent"] = occurrence_df["Continent"].str.split("/")
+    occurrence_df = occurrence_df.explode("Continent")
     continent_df = occurrence_df.drop("Country", axis=1).groupby("Continent").sum()
     continent_df[continent_df > 0] = 1
 
@@ -615,6 +618,11 @@ def maps_and_continent_plot_generation(gbif_standardized_species_list, unit):
     occurrence_df["Biogeographic realm"] = occurrence_df["Country"].map(
         lambda x: country_codes_dict.get(x, [None, None])[2]
     )
+    ### Handle cases in which a country falls in 2 realms (make multiple rows)
+    occurrence_df["Biogeographic realm"] = occurrence_df[
+        "Biogeographic realm"
+    ].str.split("/")
+    occurrence_df = occurrence_df.explode("Biogeographic realm")
     realm_df = (
         occurrence_df.drop("Country", axis=1)
         .drop("Continent", axis=1)
