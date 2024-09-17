@@ -230,7 +230,9 @@ def maps_and_continent_plot_generation(gbif_standardized_species_list, unit):
     if not gbif_standardized_species_list:
         return {}, None
 
-    time_print(f"Generating GBIF maps and continent occurrence plot for {unit}s..")
+    time_print(
+        f"Generating GBIF maps, continent occurrence plot, and realm occurrence plot for {unit}s.."
+    )
 
     # Define a dictionary with all countries and codes on Earth
     country_codes_dict = {
@@ -610,25 +612,25 @@ def maps_and_continent_plot_generation(gbif_standardized_species_list, unit):
 
     occurrence_df.to_csv("continent_occurrence_plot.csv")
 
-    # Generate region occurrence plot
+    # Generate realm occurrence plot
     ## Generate binary occurrence data per continent and species
-    occurrence_df["Biogeographic region"] = occurrence_df["Country"].map(
+    occurrence_df["Biogeographic realm"] = occurrence_df["Country"].map(
         lambda x: country_codes_dict.get(x, [None, None])[2]
     )
-    region_df = (
-        occurrence_df.drop("Country", axis=1).groupby("Biogeographic region").sum()
+    realm_df = (
+        occurrence_df.drop("Country", axis=1).groupby("Biogeographic realm").sum()
     )
-    region_df[region_df > 0] = 1
+    realm_df[realm_df > 0] = 1
 
     ## Sort the df to minimize gaps
-    region_df = region_df.T
+    realm_df = realm_df.T
     ### Start with the row with the most 1s
-    sorted_region_df = region_df.loc[region_df.sum(axis=1).idxmax()].to_frame().T
-    remaining_df = region_df.drop(sorted_region_df.index)
+    sorted_realm_df = realm_df.loc[realm_df.sum(axis=1).idxmax()].to_frame().T
+    remaining_df = realm_df.drop(sorted_realm_df.index)
 
     while not remaining_df.empty:
-        last_row = sorted_region_df.iloc[-1]
-        ### Calculate overlap with the last row in sorted_region_df
+        last_row = sorted_realm_df.iloc[-1]
+        ### Calculate overlap with the last row in sorted_realm_df
         overlaps = remaining_df.apply(
             lambda row: calculate_overlap(last_row, row), axis=1
         )
@@ -636,43 +638,43 @@ def maps_and_continent_plot_generation(gbif_standardized_species_list, unit):
         next_row_idx = overlaps.idxmax()
         next_row = remaining_df.loc[next_row_idx]
         ### Append the selected row to the sorted DataFrame
-        sorted_region_df = pd.concat([sorted_region_df, next_row.to_frame().T])
+        sorted_realm_df = pd.concat([sorted_realm_df, next_row.to_frame().T])
         ### Remove the selected row from the remaining rows
         remaining_df = remaining_df.drop(next_row_idx)
 
-    sorted_region_df = sorted_region_df.T
+    sorted_realm_df = sorted_realm_df.T
 
-    sorted_region_df = (
-        sorted_region_df.reset_index()
-        .rename(columns={"index": "Biogeographic region"})
+    sorted_realm_df = (
+        sorted_realm_df.reset_index()
+        .rename(columns={"index": "Biogeographic realm"})
         .iloc[:, ::-1]
     )
 
     ## Melt the DataFrame to long format
-    region_df_melted = sorted_region_df.melt(
-        id_vars=["Biogeographic region"], var_name="Species", value_name="Detected"
+    realm_df_melted = sorted_realm_df.melt(
+        id_vars=["Biogeographic realm"], var_name="Species", value_name="Detected"
     )
 
     ## Define a minimum plot height
-    row_num = len(region_df_melted["Species"].unique())
+    row_num = len(realm_df_melted["Species"].unique())
     plot_height = 480 if row_num < 16 else 30 * row_num
 
     ## Generate the bubble plot using Plotly
-    region_occurrence_plot = px.scatter(
-        region_df_melted,
-        x="Biogeographic region",
+    realm_occurrence_plot = px.scatter(
+        realm_df_melted,
+        x="Biogeographic realm",
         y="Species",
         size="Detected",
-        color="Biogeographic region",
-        hover_name="Biogeographic region",
+        color="Biogeographic realm",
+        hover_name="Biogeographic realm",
         size_max=10,
-        title=f"Detected species by biogeographic region - {unit}s",
+        title=f"Detected species by biogeographic realm - {unit}s",
         height=plot_height,
         width=550,
     )
-    region_occurrence_plot.update_xaxes(tickangle=35)
+    realm_occurrence_plot.update_xaxes(tickangle=35)
 
-    return species_maps, continent_occurrence_plot, region_occurrence_plot
+    return species_maps, continent_occurrence_plot, realm_occurrence_plot
 
 
 # Define a custom validation function for the parameters
@@ -1716,9 +1718,9 @@ if make_maps == "True":
     (
         species_maps_esvs,
         continent_occurrence_plot_esvs,
-        region_occurrence_plot_esvs,
+        realm_occurrence_plot_esvs,
     ) = maps_and_continent_plot_generation(gbif_standardized_species_esvs, "ESV")
-    species_maps_otus, continent_occurrence_plot_otus, region_occurrence_plot_otus = (
+    species_maps_otus, continent_occurrence_plot_otus, realm_occurrence_plot_otus = (
         maps_and_continent_plot_generation(gbif_standardized_species_otus, "OTU")
     )
 
@@ -1738,10 +1740,10 @@ if make_maps == "True":
                     f"{project_name}_20_continent_occurrence_plot_otus.{graph_format}",
                 )
             )
-            region_occurrence_plot_otus.write_html(
+            realm_occurrence_plot_otus.write_html(
                 os.path.join(
                     outdir,
-                    f"{project_name}_21_region_occurrence_plot_otus.{graph_format}",
+                    f"{project_name}_21_realm_occurrence_plot_otus.{graph_format}",
                 )
             )
         else:
@@ -1758,14 +1760,16 @@ if make_maps == "True":
                     f"{project_name}_20_continent_occurrence_plot_otus.{graph_format}",
                 )
             )
-            region_occurrence_plot_otus.write_image(
+            realm_occurrence_plot_otus.write_image(
                 os.path.join(
                     outdir,
-                    f"{project_name}_21_region_occurrence_plot_otus.{graph_format}",
+                    f"{project_name}_21_realm_occurrence_plot_otus.{graph_format}",
                 )
             )
 
-        time_print("GBIF maps and continent occurrence plot generated for OTUs.")
+        time_print(
+            "GBIF maps, continent occurrence plot, and realm occurrence plot generated for OTUs."
+        )
 
     if continent_occurrence_plot_esvs:
         if graph_format == "html":
@@ -1782,10 +1786,10 @@ if make_maps == "True":
                     f"{project_name}_22_continent_occurrence_plot_esvs.{graph_format}",
                 )
             )
-            region_occurrence_plot_esvs.write_html(
+            realm_occurrence_plot_esvs.write_html(
                 os.path.join(
                     outdir,
-                    f"{project_name}_23_region_occurrence_plot_esvs.{graph_format}",
+                    f"{project_name}_23_realm_occurrence_plot_esvs.{graph_format}",
                 )
             )
 
@@ -1803,14 +1807,16 @@ if make_maps == "True":
                     f"{project_name}_22_continent_occurrence_plot_esvs.{graph_format}",
                 )
             )
-            region_occurrence_plot_esvs.write_image(
+            realm_occurrence_plot_esvs.write_image(
                 os.path.join(
                     outdir,
-                    f"{project_name}_23_region_occurrence_plot_esvs.{graph_format}",
+                    f"{project_name}_23_realm_occurrence_plot_esvs.{graph_format}",
                 )
             )
 
-        time_print("GBIF maps and continent occurrence plot generated for ESVs.")
+        time_print(
+            "GBIF maps, continent occurrence plot, and realm occurrence plot generated for ESVs."
+        )
 
 
 # Kronagraphs
