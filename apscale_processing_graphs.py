@@ -679,7 +679,7 @@ def maps_and_continent_plot_generation(gbif_standardized_species_list, unit):
         size_max=10,
         title=f"Detected species by biogeographic realm - {unit}s",
         height=plot_height,
-        width=550,
+        width=650,
     )
     realm_occurrence_plot.update_xaxes(tickangle=35)
 
