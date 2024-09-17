@@ -610,15 +610,16 @@ def maps_and_continent_plot_generation(gbif_standardized_species_list, unit):
     )
     continent_occurrence_plot.update_xaxes(tickangle=35)
 
-    occurrence_df.to_csv("continent_occurrence_plot.csv")
-
     # Generate realm occurrence plot
     ## Generate binary occurrence data per continent and species
     occurrence_df["Biogeographic realm"] = occurrence_df["Country"].map(
         lambda x: country_codes_dict.get(x, [None, None])[2]
     )
     realm_df = (
-        occurrence_df.drop("Country", axis=1).groupby("Biogeographic realm").sum()
+        occurrence_df.drop("Country", axis=1)
+        .drop("Continent", axis=1)
+        .groupby("Biogeographic realm")
+        .sum()
     )
     realm_df[realm_df > 0] = 1
 
