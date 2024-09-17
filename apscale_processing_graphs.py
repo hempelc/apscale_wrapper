@@ -608,6 +608,8 @@ def maps_and_continent_plot_generation(gbif_standardized_species_list, unit):
     )
     continent_occurrence_plot.update_xaxes(tickangle=35)
 
+    occurrence_df.to_csv("continent_occurrence_plot.csv")
+
     # Generate region occurrence plot
     ## Generate binary occurrence data per continent and species
     occurrence_df["Biogeographic region"] = occurrence_df["Country"].map(
