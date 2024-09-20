@@ -171,6 +171,8 @@ def gbif_check_taxonomy(df, unit):
         "Gallus gallus",
         "Canis lupus",
         "Felis catus",
+        "Ovis aries",
+        "Capra hircus",
     ]
     return [taxon for taxon in checked_species if taxon not in contamination_species]
 
