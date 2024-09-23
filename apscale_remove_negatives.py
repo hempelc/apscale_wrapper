@@ -145,7 +145,12 @@ time_print(
 )
 
 # Path to ESV/OTU post-LULU files
-otu_postlulu_file = "/Users/simplexdna/Desktop/00140_Allcott_Senegal_12S_fish_apscale_ESV_table_filtered.parquet.snappy"
+otu_postlulu_file = os.path.join(
+    args.project_dir,
+    "9_lulu_filtering",
+    "otu_clustering",
+    f"{project_name}_OTU_table_filtered.parquet.snappy",
+)
 esv_postlulu_file = os.path.join(
     args.project_dir,
     "9_lulu_filtering",
