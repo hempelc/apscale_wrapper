@@ -40,9 +40,6 @@ def write_fasta(df, filename):
 
 # Define function to process dfs
 def remove_negs_from_df(df, unit, negative_controls):
-    unit = "ESV"
-    df = otu_postlulu_df
-    negative_controls = ["NegF-EC1", "NegF-EC2", "NegF-IC1", "NegF-PC1"]
     # Identify negative controls that do and don't contain 0 reads (microDecon gives an error if used with negative controls with 0 reads)
     negative_controls_keep = [neg for neg in negative_controls if df[neg].sum() > 0]
     negative_controls_drop = [
