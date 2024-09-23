@@ -728,8 +728,8 @@ else:
     otu_table = pd.read_parquet(otu_table_file, engine="fastparquet")
     esv_table = pd.read_parquet(esv_table_file, engine="fastparquet")
 ## Add the column
-otu_table["Total_reads"] = otu_table.drop(columns=["ID", "Seq"]).sum(axis=1)
-esv_table["Total_reads"] = esv_table.drop(columns=["ID", "Seq"]).sum(axis=1)
+otu_table["total_reads"] = otu_table.drop(columns=["ID", "Seq"]).sum(axis=1)
+esv_table["total_reads"] = esv_table.drop(columns=["ID", "Seq"]).sum(axis=1)
 ## Save
 if args.remove_negative_controls == "True":
     otu_table.to_csv(otu_table_file, index=False)
