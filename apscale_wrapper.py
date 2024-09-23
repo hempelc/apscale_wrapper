@@ -134,7 +134,8 @@ def generateSettings(**kwargs):
 
         ## write the 8_denoising sheet
         df_8 = pd.DataFrame(
-            [[2, args.minsize_denoising, args.coi, "True"]], columns=["alpha", "minsize", "coi", "to excel"]
+            [[2, args.minsize_denoising, args.coi, "True"]],
+            columns=["alpha", "minsize", "coi", "to excel"],
         )
 
         df_8.to_excel(writer, sheet_name="8_denoising", index=False)
@@ -692,6 +693,51 @@ if args.remove_negative_controls == "True":
 else:
     microdecon_suffix = ""
 
+# Add a column with the total number of reads per OTU and ESV
+## Read in OTU and ESV tables
+if args.remove_negative_controls == "True":
+    otu_table_file = os.path.join(
+        f"{args.project_name}_apscale",
+        "9_lulu_filtering",
+        "otu_clustering",
+        f"{args.project_name}_apscale_OTU_table_filtered{microdecon_suffix}.csv",
+    )
+    esv_table_file = os.path.join(
+        f"{args.project_name}_apscale",
+        "9_lulu_filtering",
+        "denoising",
+        f"{args.project_name}_apscale_ESV_table_filtered{microdecon_suffix}.csv",
+    )
+else:
+    otu_table_file = os.path.join(
+        f"{args.project_name}_apscale",
+        "9_lulu_filtering",
+        "otu_clustering",
+        f"{args.project_name}_apscale_OTU_table_filtered{microdecon_suffix}.parquet.snappy",
+    )
+    esv_table_file = os.path.join(
+        f"{args.project_name}_apscale",
+        "9_lulu_filtering",
+        "denoising",
+        f"{args.project_name}_apscale_ESV_table_filtered{microdecon_suffix}.parquet.snappy",
+    )
+if args.remove_negative_controls == "True":
+    otu_table = pd.read_csv(otu_table_file)
+    esv_table = pd.read_csv(esv_table_file)
+else:
+    otu_table = pd.read_parquet(otu_table_file, engine="fastparquet")
+    esv_table = pd.read_parquet(esv_table_file, engine="fastparquet")
+## Add the column
+otu_table["Total_reads"] = otu_table.drop(columns=["ID", "Seq"]).sum(axis=1)
+esv_table["Total_reads"] = esv_table.drop(columns=["ID", "Seq"]).sum(axis=1)
+## Save
+if args.remove_negative_controls == "True":
+    otu_table.to_csv(otu_table_file, index=False)
+    esv_table.to_csv(esv_table_file, index=False)
+else:
+    otu_table.to_parquet(otu_table_file, engine="fastparquet", index=False)
+    esv_table.to_parquet(esv_table_file, engine="fastparquet", index=False)
+
 # Add taxonomy if specified
 if args.add_taxonomy == "True":
     # Define file names
@@ -757,32 +803,6 @@ if args.add_taxonomy == "True":
             "9_lulu_filtering",
             "denoising",
             f"{args.project_name}_apscale_ESV_table_filtered{microdecon_suffix}_with_taxonomy_no_cutoff.csv",
-        )
-    if args.remove_negative_controls == "True":
-        otu_table_file = os.path.join(
-            f"{args.project_name}_apscale",
-            "9_lulu_filtering",
-            "otu_clustering",
-            f"{args.project_name}_apscale_OTU_table_filtered{microdecon_suffix}.csv",
-        )
-        esv_table_file = os.path.join(
-            f"{args.project_name}_apscale",
-            "9_lulu_filtering",
-            "denoising",
-            f"{args.project_name}_apscale_ESV_table_filtered{microdecon_suffix}.csv",
-        )
-    else:
-        otu_table_file = os.path.join(
-            f"{args.project_name}_apscale",
-            "9_lulu_filtering",
-            "otu_clustering",
-            f"{args.project_name}_apscale_OTU_table_filtered{microdecon_suffix}.parquet.snappy",
-        )
-        esv_table_file = os.path.join(
-            f"{args.project_name}_apscale",
-            "9_lulu_filtering",
-            "denoising",
-            f"{args.project_name}_apscale_ESV_table_filtered{microdecon_suffix}.parquet.snappy",
         )
     if args.taxonomy_classifier == "blast":
         # Run BLAST command
