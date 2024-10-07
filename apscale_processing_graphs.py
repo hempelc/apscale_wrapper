@@ -51,6 +51,15 @@ def calculate_read_stats(lst):
     ]
 
 
+# Function to replace all but leftmost duplicates in row with NA
+def replace_duplicates_with_nan(df):
+    columns = df.columns[::-1]
+    for i in range(len(columns) - 1):
+        mask = df[columns[i]] == df[columns[i + 1]]
+        df.loc[mask, columns[i]] = np.nan
+    return df
+
+
 # Function to format a df for krona
 def krona_formatting(df):
     if database_format == "bold":
@@ -104,6 +113,8 @@ def krona_formatting(df):
         :-1
     ]
     krona_df_agg = krona_df_agg[column_order]
+    # Replace all but leftmost duplicates in row with NA
+    krona_df_agg = replace_duplicates_with_nan(krona_df_agg)
     return krona_df_agg.loc[krona_df_agg["Sum"] != 0]
 
 
