@@ -60,43 +60,31 @@ def replace_duplicates_with_nan(df):
     return df
 
 
-# Function to format a df for krona
+# Function to format a taxonomy df for krona
 def krona_formatting(df):
     if database_format == "bold":
         ranks = ["phylum", "class", "order", "family", "genus", "species"]
     else:
         ranks = ["domain", "phylum", "class", "order", "family", "genus", "species"]
     # Sum samples
-    sample_sums = (
-        df.drop(
-            columns=["ID", "Seq", "lowest_taxon", "lowest_rank", "total_reads"] + ranks
-        )
-        .sum(axis=1)
-        .rename("Sum")
-    )
-    krona_df = pd.concat([sample_sums, df[ranks]], axis=1)
+    sample_sums = df.drop(
+        columns=["ID", "Seq", "lowest_taxon", "lowest_rank", "total_reads"] + ranks
+    ).sum(axis=1)
+    krona_df = pd.concat([sample_sums.rename("Sum"), df[ranks]], axis=1)
     # Fix taxonomy formatting
     ## Turn all non-taxa names into NaN
-    krona_df = (
-        krona_df.replace("Taxonomy unreliable - multiple matching taxa", np.nan)
-        .replace(
-            "Taxonomy unreliable - percentage similarity threshold for rank not met",
-            np.nan,
-        )
-        .replace(
-            "Taxonomy unreliable - bitscore and alignment length threshold not met",
-            np.nan,
-        )
-        .replace(
-            "Taxonomy unreliable - confidence threshold not met",
-            np.nan,
-        )
-        .replace("Not available in database", np.nan)
-        .replace("Unknown in PR2 database", np.nan)
-        .replace("Unknown in BOLD database", np.nan)
-        .replace("Unknown in SILVA database", np.nan)
-        .replace("_", " ", regex=True)
-    )
+    krona_df = krona_df.replace(
+        {
+            "Taxonomy unreliable - multiple matching taxa": np.nan,
+            "Taxonomy unreliable - percentage similarity threshold for rank not met": np.nan,
+            "Taxonomy unreliable - bitscore and alignment length threshold not met": np.nan,
+            "Taxonomy unreliable - confidence threshold not met": np.nan,
+            "Not available in database": np.nan,
+            "Unknown in PR2 database": np.nan,
+            "Unknown in BOLD database": np.nan,
+            "Unknown in SILVA database": np.nan,
+        }
+    ).replace("_", " ", regex=True)
     ## If entire taxonomy is NaN, replace with "Taxonomy unreliable"
     for index, row in krona_df.iterrows():
         if database_format == "bold":
@@ -106,18 +94,13 @@ def krona_formatting(df):
             krona_df.loc[index, "domain":] = "Taxonomy unreliable"
     ## Fill NaNs with last tax entry
     krona_df = krona_df.fillna(method="ffill", axis=1)
+
     # Aggregate taxa
-    krona_df_agg = (
-        krona_df.groupby(krona_df.columns[1:].tolist())["Sum"].sum().reset_index()
-    )
+    krona_df_agg = krona_df.groupby(ranks)["Sum"].sum().reset_index()
     # Move the Sum column to the front
-    column_order = [krona_df_agg.columns.tolist()[-1]] + krona_df_agg.columns.tolist()[
-        :-1
-    ]
-    krona_df_agg = krona_df_agg[column_order]
-    # Replace all but leftmost duplicates in row with NA
-    krona_df_agg = replace_duplicates_with_nan(krona_df_agg)
-    return krona_df_agg.loc[krona_df_agg["Sum"] != 0]
+    krona_df_agg = krona_df_agg[["Sum"] + ranks]
+    # Replace all but leftmost duplicates in row with NA and return
+    return replace_duplicates_with_nan(krona_df_agg[krona_df_agg["Sum"] > 0])
 
 
 # Define a function to standardize species names based on GBIF taxonomy
