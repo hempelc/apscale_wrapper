@@ -68,7 +68,9 @@ def krona_formatting(df):
         ranks = ["domain", "phylum", "class", "order", "family", "genus", "species"]
     # Sum samples
     sample_sums = (
-        df.drop(columns=["ID", "Seq", "lowest_taxon", "lowest_rank"] + ranks)
+        df.drop(
+            columns=["ID", "Seq", "lowest_taxon", "lowest_rank", "total_reads"] + ranks
+        )
         .sum(axis=1)
         .rename("Sum")
     )
