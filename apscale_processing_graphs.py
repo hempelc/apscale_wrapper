@@ -1695,11 +1695,13 @@ else:
     )
 time_print("Clustergram generated for OTUs.")
 
-# Maps
-if make_maps == "True":
-    time_print("Generating maps...")
+# Kronagraphs
+if (
+    add_taxonomy == "True"
+):  # Requirement as we need taxonomic information for Kronagraphs
+    time_print("Generating kronagraphs...")
 
-    # Importing files
+    time_print("Importing final ESV and OTU tables...")
     otu_final_file = os.path.join(
         project_dir,
         "9_lulu_filtering",
@@ -1716,141 +1718,7 @@ if make_maps == "True":
     otu_final_df = pd.read_csv(otu_final_file)
     time_print("1/2 final files imported...")
     esv_final_df = pd.read_csv(esv_final_file)
-    time_print("2/2 final files imported. Import done.")
-
-    time_print("Standardizing species names with GBIF...")
-    gbif_standardized_species_esvs = gbif_check_taxonomy(esv_final_df, "ESV")
-    gbif_standardized_species_otus = gbif_check_taxonomy(otu_final_df, "OTU")
-
-    (
-        species_maps_esvs,
-        continent_occurrence_plot_esvs,
-        realm_occurrence_plot_esvs,
-    ) = maps_and_continent_plot_generation(gbif_standardized_species_esvs, "ESV")
-    species_maps_otus, continent_occurrence_plot_otus, realm_occurrence_plot_otus = (
-        maps_and_continent_plot_generation(gbif_standardized_species_otus, "OTU")
-    )
-
-    ## Save
-    if continent_occurrence_plot_otus:
-        if graph_format == "html":
-            for species in species_maps_otus:
-                species_maps_otus[species].write_html(
-                    os.path.join(
-                        mapdir,
-                        f"{species}.{graph_format}",
-                    )
-                )
-            continent_occurrence_plot_otus.write_html(
-                os.path.join(
-                    outdir,
-                    f"{project_name}_20_continent_occurrence_plot_otus.{graph_format}",
-                )
-            )
-            realm_occurrence_plot_otus.write_html(
-                os.path.join(
-                    outdir,
-                    f"{project_name}_21_realm_occurrence_plot_otus.{graph_format}",
-                )
-            )
-        else:
-            for species in species_maps_otus:
-                species_maps_otus[species].write_image(
-                    os.path.join(
-                        mapdir,
-                        f"{species}.{graph_format}",
-                    )
-                )
-            continent_occurrence_plot_otus.write_image(
-                os.path.join(
-                    outdir,
-                    f"{project_name}_20_continent_occurrence_plot_otus.{graph_format}",
-                )
-            )
-            realm_occurrence_plot_otus.write_image(
-                os.path.join(
-                    outdir,
-                    f"{project_name}_21_realm_occurrence_plot_otus.{graph_format}",
-                )
-            )
-
-        time_print(
-            "GBIF maps, continent occurrence plot, and realm occurrence plot generated for OTUs."
-        )
-
-    if continent_occurrence_plot_esvs:
-        if graph_format == "html":
-            for species in species_maps_esvs:
-                species_maps_esvs[species].write_html(
-                    os.path.join(
-                        mapdir,
-                        f"{species}.{graph_format}",
-                    )
-                )
-            continent_occurrence_plot_esvs.write_html(
-                os.path.join(
-                    outdir,
-                    f"{project_name}_22_continent_occurrence_plot_esvs.{graph_format}",
-                )
-            )
-            realm_occurrence_plot_esvs.write_html(
-                os.path.join(
-                    outdir,
-                    f"{project_name}_23_realm_occurrence_plot_esvs.{graph_format}",
-                )
-            )
-
-        else:
-            for species in species_maps_esvs:
-                species_maps_esvs[species].write_image(
-                    os.path.join(
-                        mapdir,
-                        f"{species}.{graph_format}",
-                    )
-                )
-            continent_occurrence_plot_esvs.write_image(
-                os.path.join(
-                    outdir,
-                    f"{project_name}_22_continent_occurrence_plot_esvs.{graph_format}",
-                )
-            )
-            realm_occurrence_plot_esvs.write_image(
-                os.path.join(
-                    outdir,
-                    f"{project_name}_23_realm_occurrence_plot_esvs.{graph_format}",
-                )
-            )
-
-        time_print(
-            "GBIF maps, continent occurrence plot, and realm occurrence plot generated for ESVs."
-        )
-
-
-# Kronagraphs
-if (
-    add_taxonomy == "True"
-):  # Requirement as we need taxonomic information for Kronagraphs
-    time_print("Generating kronagraphs...")
-
-    if make_maps == "False":
-        time_print("Importing final ESV and OTU tables...")
-        otu_final_file = os.path.join(
-            project_dir,
-            "9_lulu_filtering",
-            "otu_clustering",
-            f"{project_name}_OTU_table_filtered{microdecon_suffix}_with_taxonomy.csv",
-        )
-        esv_final_file = os.path.join(
-            project_dir,
-            "9_lulu_filtering",
-            "denoising",
-            f"{project_name}_ESV_table_filtered{microdecon_suffix}_with_taxonomy.csv",
-        )
-
-        otu_final_df = pd.read_csv(otu_final_file)
-        time_print("1/2 final files imported...")
-        esv_final_df = pd.read_csv(esv_final_file)
-        time_print("2/2 final files imported. Import done. Generating kronagraphs...")
+    time_print("2/2 final files imported. Import done. Generating kronagraphs...")
 
     # Format dfs for Krona
     esv_krona_df = krona_formatting(esv_final_df)
@@ -1880,7 +1748,7 @@ if (
         [
             "ktImportText",
             "-o",
-            os.path.join(outdir, f"{project_name}_24_esv_krona.html"),
+            os.path.join(outdir, f"{project_name}_20_esv_krona.html"),
             os.path.join(outdir, f"{project_name}_ESVs_krona-formatted.csv"),
         ]
     )
@@ -1891,7 +1759,7 @@ if (
         [
             "ktImportText",
             "-o",
-            os.path.join(outdir, f"{project_name}_25_otu_krona.html"),
+            os.path.join(outdir, f"{project_name}_21_otu_krona.html"),
             os.path.join(outdir, f"{project_name}_OTUs_krona-formatted.csv"),
         ]
     )
@@ -1900,5 +1768,138 @@ if (
     # Remove formatted files
     os.remove(os.path.join(outdir, f"{project_name}_ESVs_krona-formatted.csv"))
     os.remove(os.path.join(outdir, f"{project_name}_OTUs_krona-formatted.csv"))
+
+
+# Maps
+if make_maps == "True":
+    time_print("Generating maps...")
+
+    if add_taxonomy == "False":
+        # Importing files
+        otu_final_file = os.path.join(
+            project_dir,
+            "9_lulu_filtering",
+            "otu_clustering",
+            f"{project_name}_OTU_table_filtered{microdecon_suffix}_with_taxonomy.csv",
+        )
+        esv_final_file = os.path.join(
+            project_dir,
+            "9_lulu_filtering",
+            "denoising",
+            f"{project_name}_ESV_table_filtered{microdecon_suffix}_with_taxonomy.csv",
+        )
+
+        otu_final_df = pd.read_csv(otu_final_file)
+        time_print("1/2 final files imported...")
+        esv_final_df = pd.read_csv(esv_final_file)
+        time_print("2/2 final files imported. Import done.")
+
+    time_print("Standardizing species names with GBIF...")
+    gbif_standardized_species_esvs = gbif_check_taxonomy(esv_final_df, "ESV")
+    gbif_standardized_species_otus = gbif_check_taxonomy(otu_final_df, "OTU")
+
+    (
+        species_maps_esvs,
+        continent_occurrence_plot_esvs,
+        realm_occurrence_plot_esvs,
+    ) = maps_and_continent_plot_generation(gbif_standardized_species_esvs, "ESV")
+    species_maps_otus, continent_occurrence_plot_otus, realm_occurrence_plot_otus = (
+        maps_and_continent_plot_generation(gbif_standardized_species_otus, "OTU")
+    )
+
+    ## Save
+    if continent_occurrence_plot_otus:
+        if graph_format == "html":
+            for species in species_maps_otus:
+                species_maps_otus[species].write_html(
+                    os.path.join(
+                        mapdir,
+                        f"{species}.{graph_format}",
+                    )
+                )
+            continent_occurrence_plot_otus.write_html(
+                os.path.join(
+                    outdir,
+                    f"{project_name}_22_continent_occurrence_plot_otus.{graph_format}",
+                )
+            )
+            realm_occurrence_plot_otus.write_html(
+                os.path.join(
+                    outdir,
+                    f"{project_name}_23_realm_occurrence_plot_otus.{graph_format}",
+                )
+            )
+        else:
+            for species in species_maps_otus:
+                species_maps_otus[species].write_image(
+                    os.path.join(
+                        mapdir,
+                        f"{species}.{graph_format}",
+                    )
+                )
+            continent_occurrence_plot_otus.write_image(
+                os.path.join(
+                    outdir,
+                    f"{project_name}_22_continent_occurrence_plot_otus.{graph_format}",
+                )
+            )
+            realm_occurrence_plot_otus.write_image(
+                os.path.join(
+                    outdir,
+                    f"{project_name}_23_realm_occurrence_plot_otus.{graph_format}",
+                )
+            )
+
+        time_print(
+            "GBIF maps, continent occurrence plot, and realm occurrence plot generated for OTUs."
+        )
+
+    if continent_occurrence_plot_esvs:
+        if graph_format == "html":
+            for species in species_maps_esvs:
+                species_maps_esvs[species].write_html(
+                    os.path.join(
+                        mapdir,
+                        f"{species}.{graph_format}",
+                    )
+                )
+            continent_occurrence_plot_esvs.write_html(
+                os.path.join(
+                    outdir,
+                    f"{project_name}_24_continent_occurrence_plot_esvs.{graph_format}",
+                )
+            )
+            realm_occurrence_plot_esvs.write_html(
+                os.path.join(
+                    outdir,
+                    f"{project_name}_25_realm_occurrence_plot_esvs.{graph_format}",
+                )
+            )
+
+        else:
+            for species in species_maps_esvs:
+                species_maps_esvs[species].write_image(
+                    os.path.join(
+                        mapdir,
+                        f"{species}.{graph_format}",
+                    )
+                )
+            continent_occurrence_plot_esvs.write_image(
+                os.path.join(
+                    outdir,
+                    f"{project_name}_24_continent_occurrence_plot_esvs.{graph_format}",
+                )
+            )
+            realm_occurrence_plot_esvs.write_image(
+                os.path.join(
+                    outdir,
+                    f"{project_name}_25_realm_occurrence_plot_esvs.{graph_format}",
+                )
+            )
+
+        time_print(
+            "GBIF maps, continent occurrence plot, and realm occurrence plot generated for ESVs."
+        )
+
 
 time_print("Finished graph generation.")
