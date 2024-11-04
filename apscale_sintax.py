@@ -200,12 +200,6 @@ parser.add_argument(
     metavar="OUTFILENAME.csv",
     help="Name of output file in .csv format.",
 )
-parser.add_argument(
-    "--cores",
-    metavar="N",
-    default="2",
-    help="Number of cores to use (default: 2).",
-)
 
 # Set arguments
 args = parser.parse_args()
@@ -234,8 +228,6 @@ subprocess.run(
         sintaxout,
         "--sintax_cutoff",
         args.sintax_confidence_cutoff,
-        "--threads",
-        args.cores,
         "--randseed",  # Required for reproducibility
         "1",
         "--threads",  # Required for reproducibility

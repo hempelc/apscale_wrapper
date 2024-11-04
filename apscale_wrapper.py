@@ -840,7 +840,6 @@ if args.add_taxonomy == "True":
             sintax_database=args.sintax_database,
             database_format=args.database_format,
             sintax_confidence_cutoff=args.sintax_confidence_cutoff,
-            cores=args.cores,
         )
         sintax(
             fastafile=fastafile_esvs,
@@ -848,7 +847,6 @@ if args.add_taxonomy == "True":
             sintax_database=args.sintax_database,
             database_format=args.database_format,
             sintax_confidence_cutoff=args.sintax_confidence_cutoff,
-            cores=args.cores,
         )
     time_print("Taxonomy generated. Merging taxonomy with OTU/ESV tables...")
     # Read in OTU and ESV tables
