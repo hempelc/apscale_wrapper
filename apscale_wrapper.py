@@ -207,8 +207,6 @@ def sintax(fastafile, outfile, **kwargs):
             args.sintax_confidence_cutoff,
             "--outfile",
             outfile,
-            "--cores",
-            args.cores,
         ],
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
