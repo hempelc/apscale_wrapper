@@ -28,6 +28,7 @@ import time
 import requests_html
 import aiohttp
 import asyncio
+from aiohttp_retry import RetryClient, ExponentialRetry
 from tqdm.asyncio import tqdm
 
 
@@ -182,18 +183,28 @@ def calculate_overlap(row1, row2):
 async def fetch_occurrences(session, taxon_name, country_code):
     request_name = "%20".join(taxon_name.split(" "))
     url = f"https://api.gbif.org/v1/occurrence/search?scientificName={request_name}&country={country_code}"
-    async with session.get(url) as response:
-        # Check if the response status is OK (200)
-        if response.status == 200:
-            try:
-                api_response_json = await response.json()
-                return api_response_json.get("count", 0)
-            except aiohttp.ContentTypeError:
-                time_print(f"Unexpected content type at URL: {url}")
-                return 0
-        else:
+
+    retry_options = ExponentialRetry(
+        attempts=3, wait_exponential_multiplier=10000, wait_exponential_max=60000
+    )
+    async with RetryClient(session, retry_options=retry_options) as retry_session:
+        try:
+            async with retry_session.get(url) as response:
+                if response.status == 200:
+                    try:
+                        api_response_json = await response.json()
+                        return api_response_json.get("count", 0)
+                    except aiohttp.ContentTypeError:
+                        time_print(f"Unexpected content type at URL: {url}")
+                        return 0
+                else:
+                    time_print(
+                        f"Error fetching data for {taxon_name} in {country_code}: HTTP {response.status}"
+                    )
+                    return 0
+        except aiohttp.client_exceptions.ServerDisconnectedError:
             time_print(
-                f"Error fetching data for {taxon_name} in {country_code}: HTTP {response.status}"
+                f"Error fetching data for {taxon_name} in {country_code}: GBIF server disconnected"
             )
             return 0
 
