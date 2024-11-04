@@ -236,6 +236,10 @@ subprocess.run(
         args.sintax_confidence_cutoff,
         "--threads",
         args.cores,
+        "--randseed",  # Required for reproducibility
+        "1",
+        "--threads",  # Required for reproducibility
+        "1",
     ]
 )
 
