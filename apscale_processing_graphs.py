@@ -184,9 +184,7 @@ async def fetch_occurrences(session, taxon_name, country_code):
     request_name = "%20".join(taxon_name.split(" "))
     url = f"https://api.gbif.org/v1/occurrence/search?scientificName={request_name}&country={country_code}"
 
-    retry_options = ExponentialRetry(
-        attempts=3, wait_exponential_multiplier=10000, wait_exponential_max=60000
-    )
+    retry_options = ExponentialRetry(attempts=5)
     async with RetryClient(session, retry_options=retry_options) as retry_session:
         try:
             async with retry_session.get(url) as response:
