@@ -190,7 +190,7 @@ class SSLConnectionError(Exception):
     pass
 
 
-timeout = aiohttp.ClientTimeout(total=60, connect=10, sock_connect=10, sock_read=20)
+timeout = aiohttp.ClientTimeout(total=120, connect=20, sock_connect=20, sock_read=40)
 retry_options = ExponentialRetry(
     attempts=5,
     exceptions={HTTP503Error, SSLConnectionError},  # Retry on 2 known error
