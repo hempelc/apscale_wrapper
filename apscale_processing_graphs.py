@@ -179,7 +179,7 @@ def calculate_overlap(row1, row2):
     return np.sum(row1 & row2)
 
 
-# Define functions to download GBID specimen locations asynchronously
+# Define functions to download GBIF specimen locations asynchronously
 timeout = aiohttp.ClientTimeout(total=60, connect=10, sock_connect=10, sock_read=20)
 retry_options = ExponentialRetry(attempts=5)
 
