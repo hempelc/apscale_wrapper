@@ -183,11 +183,18 @@ def calculate_overlap(row1, row2):
 async def fetch_occurrences(session, taxon_name, country_code):
     request_name = "%20".join(taxon_name.split(" "))
     url = f"https://api.gbif.org/v1/occurrence/search?scientificName={request_name}&country={country_code}"
-
+    # Define connection parameters
     retry_options = ExponentialRetry(attempts=5)
+    timeout = aiohttp.ClientTimeout(
+        total=60,  # total timeout for a request (in seconds)
+        connect=10,  # maximum time to wait for a connection to be established
+        sock_connect=10,  # maximum time to wait for the socket to connect
+        sock_read=20,  # maximum time to wait for a read operation
+    )
+
     async with RetryClient(session, retry_options=retry_options) as retry_session:
         try:
-            async with retry_session.get(url) as response:
+            async with retry_session.get(url, timeout=timeout) as response:
                 if response.status == 200:
                     try:
                         api_response_json = await response.json()
@@ -203,6 +210,11 @@ async def fetch_occurrences(session, taxon_name, country_code):
         except aiohttp.client_exceptions.ServerDisconnectedError:
             time_print(
                 f"Error fetching data for {taxon_name} in {country_code}: GBIF server disconnected"
+            )
+            return 0
+        except aiohttp.client_exceptions.ClientOSError:
+            time_print(
+                f"Error fetching data for {taxon_name} in {country_code}: GBIF SSL connection prematurely closed"
             )
             return 0
 
