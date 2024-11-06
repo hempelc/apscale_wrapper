@@ -213,25 +213,24 @@ async def fetch_occurrences(retry_session, taxon_name, country_code):
         return 0
 
 
-async def fetch_all_occurrences(taxon_name, country_codes):
-    async with aiohttp.ClientSession() as session:
-        async with RetryClient(session, retry_options=retry_options) as retry_session:
-            tasks = [
-                fetch_occurrences(retry_session, taxon_name, country_code)
-                for country_code in country_codes
-            ]
-            return await asyncio.gather(*tasks)
+async def fetch_all_occurrences(retry_session, taxon_name, country_codes):
+    tasks = [
+        fetch_occurrences(retry_session, taxon_name, country_code)
+        for country_code in country_codes
+    ]
+    return await asyncio.gather(*tasks)
 
 
 async def async_main(gbif_standardized_species, country_codes, occurrence_df):
     async with aiohttp.ClientSession() as session:
-        for taxon_name in tqdm(
-            gbif_standardized_species, desc="Downloading GBIF species location data"
-        ):
-            occurrence_list = await fetch_all_occurrences(
-                session, taxon_name, country_codes
-            )
-            occurrence_df[taxon_name] = occurrence_list
+        async with RetryClient(session, retry_options=retry_options) as retry_session:
+            for taxon_name in tqdm(
+                gbif_standardized_species, desc="Downloading GBIF species location data"
+            ):
+                occurrence_list = await fetch_all_occurrences(
+                    retry_session, taxon_name, country_codes
+                )
+                occurrence_df[taxon_name] = occurrence_list
     return occurrence_df
 
 
