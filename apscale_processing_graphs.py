@@ -180,8 +180,21 @@ def calculate_overlap(row1, row2):
 
 
 # Define functions to download GBIF specimen locations asynchronously
+## Custom exception for handling HTTP 503 errors
+class HTTP503Error(Exception):
+    pass
+
+
+## Custom exception for handling SSL errors
+class SSLConnectionError(Exception):
+    pass
+
+
 timeout = aiohttp.ClientTimeout(total=60, connect=10, sock_connect=10, sock_read=20)
-retry_options = ExponentialRetry(attempts=5)
+retry_options = ExponentialRetry(
+    attempts=5,
+    exceptions={HTTP503Error, SSLConnectionError},  # Retry on 2 known error
+)
 
 
 async def fetch_occurrences(retry_session, taxon_name, country_code):
@@ -196,6 +209,13 @@ async def fetch_occurrences(retry_session, taxon_name, country_code):
                 except aiohttp.ContentTypeError:
                     time_print(f"Unexpected content type at URL: {url}")
                     return 0
+            elif response.status == 503:
+                time_print(
+                    f"Service unavailable for {taxon_name} in {country_code}: HTTP 503"
+                )
+                raise HTTP503Error(
+                    f"Service unavailable for {taxon_name} in {country_code}"
+                )
             else:
                 time_print(
                     f"Error fetching data for {taxon_name} in {country_code}: HTTP {response.status}"
@@ -210,7 +230,9 @@ async def fetch_occurrences(retry_session, taxon_name, country_code):
         time_print(
             f"Error fetching data for {taxon_name} in {country_code}: GBIF SSL connection prematurely closed"
         )
-        return 0
+        raise SSLConnectionError(
+            f"SSL connection error for {taxon_name} in {country_code}"
+        )
 
 
 async def fetch_all_occurrences(retry_session, taxon_name, country_codes):
