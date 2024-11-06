@@ -190,10 +190,18 @@ class SSLConnectionError(Exception):
     pass
 
 
+class ServerDisconnectedError(Exception):
+    pass
+
+
 timeout = aiohttp.ClientTimeout(total=120, connect=20, sock_connect=20, sock_read=40)
 retry_options = ExponentialRetry(
     attempts=5,
-    exceptions={HTTP503Error, SSLConnectionError},  # Retry on 2 known error
+    exceptions={
+        HTTP503Error,
+        SSLConnectionError,
+        ServerDisconnectedError,
+    },  # Retry on 3 known error
 )
 
 
@@ -210,9 +218,6 @@ async def fetch_occurrences(retry_session, taxon_name, country_code):
                     time_print(f"Unexpected content type at URL: {url}")
                     return 0
             elif response.status == 503:
-                time_print(
-                    f"Service unavailable for {taxon_name} in {country_code}: HTTP 503"
-                )
                 raise HTTP503Error(
                     f"Service unavailable for {taxon_name} in {country_code}"
                 )
@@ -222,14 +227,10 @@ async def fetch_occurrences(retry_session, taxon_name, country_code):
                 )
                 return 0
     except aiohttp.client_exceptions.ServerDisconnectedError:
-        time_print(
-            f"Error fetching data for {taxon_name} in {country_code}: GBIF server disconnected"
+        raise ServerDisconnectedError(
+            f"Server connection error for {taxon_name} in {country_code}"
         )
-        return 0
     except aiohttp.client_exceptions.ClientOSError:
-        time_print(
-            f"Error fetching data for {taxon_name} in {country_code}: GBIF SSL connection prematurely closed"
-        )
         raise SSLConnectionError(
             f"SSL connection error for {taxon_name} in {country_code}"
         )
@@ -247,14 +248,19 @@ async def fetch_all_occurrences(retry_session, taxon_name, country_codes):
     for result, country_code in zip(results, country_codes):
         if isinstance(result, HTTP503Error):
             time_print(
-                f"Service unavailable for {taxon_name} in {country_code}. Moving to next."
+                f"Service unavailable for {taxon_name} in {country_code}. Setting counts to 0."
             )
             final_results.append(0)  # Default value for unavailable data
         elif isinstance(result, SSLConnectionError):
             time_print(
-                f"SSL connection error for {taxon_name} in {country_code}. Moving to next."
+                f"SSL connection error for {taxon_name} in {country_code}. Setting counts to 0."
             )
             final_results.append(0)  # Default value for SSL errors
+        elif isinstance(result, ServerDisconnectedError):
+            time_print(
+                f"Server disconnected for {taxon_name} in {country_code}. Setting counts to 0."
+            )
+            final_results.append(0)  # Default value for server disconnects
         else:
             final_results.append(result)
     return final_results
