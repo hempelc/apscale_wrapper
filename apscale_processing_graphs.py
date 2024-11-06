@@ -240,7 +240,24 @@ async def fetch_all_occurrences(retry_session, taxon_name, country_codes):
         fetch_occurrences(retry_session, taxon_name, country_code)
         for country_code in country_codes
     ]
-    return await asyncio.gather(*tasks)
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+
+    # Process each result to handle exceptions individually
+    final_results = []
+    for result, country_code in zip(results, country_codes):
+        if isinstance(result, HTTP503Error):
+            time_print(
+                f"Service unavailable for {taxon_name} in {country_code}. Moving to next."
+            )
+            final_results.append(0)  # Default value for unavailable data
+        elif isinstance(result, SSLConnectionError):
+            time_print(
+                f"SSL connection error for {taxon_name} in {country_code}. Moving to next."
+            )
+            final_results.append(0)  # Default value for SSL errors
+        else:
+            final_results.append(result)
+    return final_results
 
 
 async def async_main(gbif_standardized_species, country_codes, occurrence_df):
