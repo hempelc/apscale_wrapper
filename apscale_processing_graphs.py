@@ -180,51 +180,47 @@ def calculate_overlap(row1, row2):
 
 
 # Define functions to download GBID specimen locations asynchronously
-async def fetch_occurrences(session, taxon_name, country_code):
+timeout = aiohttp.ClientTimeout(total=60, connect=10, sock_connect=10, sock_read=20)
+retry_options = ExponentialRetry(attempts=5)
+
+
+async def fetch_occurrences(retry_session, taxon_name, country_code):
     request_name = "%20".join(taxon_name.split(" "))
     url = f"https://api.gbif.org/v1/occurrence/search?scientificName={request_name}&country={country_code}"
-    # Define connection parameters
-    retry_options = ExponentialRetry(attempts=5)
-    timeout = aiohttp.ClientTimeout(
-        total=60,  # total timeout for a request (in seconds)
-        connect=10,  # maximum time to wait for a connection to be established
-        sock_connect=10,  # maximum time to wait for the socket to connect
-        sock_read=20,  # maximum time to wait for a read operation
-    )
-
-    async with RetryClient(session, retry_options=retry_options) as retry_session:
-        try:
-            async with retry_session.get(url, timeout=timeout) as response:
-                if response.status == 200:
-                    try:
-                        api_response_json = await response.json()
-                        return api_response_json.get("count", 0)
-                    except aiohttp.ContentTypeError:
-                        time_print(f"Unexpected content type at URL: {url}")
-                        return 0
-                else:
-                    time_print(
-                        f"Error fetching data for {taxon_name} in {country_code}: HTTP {response.status}"
-                    )
+    try:
+        async with retry_session.get(url, timeout=timeout) as response:
+            if response.status == 200:
+                try:
+                    api_response_json = await response.json()
+                    return api_response_json.get("count", 0)
+                except aiohttp.ContentTypeError:
+                    time_print(f"Unexpected content type at URL: {url}")
                     return 0
-        except aiohttp.client_exceptions.ServerDisconnectedError:
-            time_print(
-                f"Error fetching data for {taxon_name} in {country_code}: GBIF server disconnected"
-            )
-            return 0
-        except aiohttp.client_exceptions.ClientOSError:
-            time_print(
-                f"Error fetching data for {taxon_name} in {country_code}: GBIF SSL connection prematurely closed"
-            )
-            return 0
+            else:
+                time_print(
+                    f"Error fetching data for {taxon_name} in {country_code}: HTTP {response.status}"
+                )
+                return 0
+    except aiohttp.client_exceptions.ServerDisconnectedError:
+        time_print(
+            f"Error fetching data for {taxon_name} in {country_code}: GBIF server disconnected"
+        )
+        return 0
+    except aiohttp.client_exceptions.ClientOSError:
+        time_print(
+            f"Error fetching data for {taxon_name} in {country_code}: GBIF SSL connection prematurely closed"
+        )
+        return 0
 
 
-async def fetch_all_occurrences(session, taxon_name, country_codes):
-    tasks = [
-        fetch_occurrences(session, taxon_name, country_code)
-        for country_code in country_codes
-    ]
-    return await asyncio.gather(*tasks)
+async def fetch_all_occurrences(taxon_name, country_codes):
+    async with aiohttp.ClientSession() as session:
+        async with RetryClient(session, retry_options=retry_options) as retry_session:
+            tasks = [
+                fetch_occurrences(retry_session, taxon_name, country_code)
+                for country_code in country_codes
+            ]
+            return await asyncio.gather(*tasks)
 
 
 async def async_main(gbif_standardized_species, country_codes, occurrence_df):
