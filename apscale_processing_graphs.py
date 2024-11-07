@@ -81,6 +81,7 @@ def krona_formatting(df):
             "Unknown in PR2 database": np.nan,
             "Unknown in BOLD database": np.nan,
             "Unknown in SILVA database": np.nan,
+            "Unknown in MIDORI2 database": np.nan,
         }
     ).replace("_", " ", regex=True)
     ## If entire taxonomy is NaN, replace with "Taxonomy unreliable"
