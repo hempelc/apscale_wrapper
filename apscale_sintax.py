@@ -128,6 +128,7 @@ def tax_formatting(df, tax_col, ranks):
             df["species"].str.endswith("_sp")
             | df["species"].str.contains("_sp\._", regex=True)
             | df["species"].str.contains("_cf\._", regex=True)
+            | df["species"].str.endswith("_sp\.", regex=True)
         )
         df.loc[mask, "species"] = "Unknown in BOLD database"
         # Replace taxa containing incertae_sedis
@@ -203,10 +204,7 @@ parser.add_argument(
 
 # Set arguments
 args = parser.parse_args()
-if args.database_format == "bold":
-    ranks = ["phylum", "class", "order", "family", "genus", "species"]
-else:
-    ranks = ["domain", "phylum", "class", "order", "family", "genus", "species"]
+ranks = ["domain", "phylum", "class", "order", "family", "genus", "species"]
 
 # Start of pipeline
 time_print(

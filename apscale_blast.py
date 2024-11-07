@@ -324,7 +324,6 @@ elif args.database_format == "midori2":
     df = df.drop(["sseqid", "taxonomy"], axis=1).fillna("NA")
 
 elif args.database_format == "bold":
-    ranks = ["phylum", "class", "order", "family", "genus", "species"]
     # Split the sseqid column by semicolon and expand into new columns
     df[ranks] = df["sseqid"].str.split(";", expand=True)
     # Replace species names containing " sp. "" or ending with "sp"
@@ -332,6 +331,7 @@ elif args.database_format == "bold":
         df["species"].str.endswith("_sp")
         | df["species"].str.contains("_sp\._", regex=True)
         | df["species"].str.contains("_cf\._", regex=True)
+        | df["species"].str.endswith("_sp\.", regex=True)
     )
     df.loc[mask, "species"] = "Unknown in BOLD database"
     # Replace taxa containing incertae_sedis

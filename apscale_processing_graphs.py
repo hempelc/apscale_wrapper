@@ -63,10 +63,7 @@ def replace_duplicates_with_nan(df):
 
 # Function to format a taxonomy df for krona
 def krona_formatting(df):
-    if database_format == "bold":
-        ranks = ["phylum", "class", "order", "family", "genus", "species"]
-    else:
-        ranks = ["domain", "phylum", "class", "order", "family", "genus", "species"]
+    ranks = ["domain", "phylum", "class", "order", "family", "genus", "species"]
     # Sum samples
     sample_sums = df.drop(
         columns=["ID", "Seq", "lowest_taxon", "lowest_rank", "total_reads"] + ranks
@@ -88,10 +85,7 @@ def krona_formatting(df):
     ).replace("_", " ", regex=True)
     ## If entire taxonomy is NaN, replace with "Taxonomy unreliable"
     for index, row in krona_df.iterrows():
-        if database_format == "bold":
-            if pd.isna(row["phylum"]):
-                krona_df.loc[index, "phylum":] = "Taxonomy unreliable"
-        elif pd.isna(row["domain"]):
+        if pd.isna(row["domain"]):
             krona_df.loc[index, "domain":] = "Taxonomy unreliable"
     ## Fill NaNs with last tax entry
     krona_df = krona_df.fillna(method="ffill", axis=1)
