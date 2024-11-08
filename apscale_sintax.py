@@ -28,7 +28,9 @@ def replace_pr2_tax(taxon_series):
     return taxon_series.apply(
         lambda taxon: (
             "Unknown in PR2 database"
-            if taxon.endswith("X") or taxon.endswith("sp.") or taxon.endswith("_sp")
+            if taxon.endswith("X")
+            or taxon.endswith("sp.")
+            or taxon.endswith("_sp")
             else taxon
         )
     )
@@ -64,7 +66,9 @@ def lowest_taxon_and_rank(row):
             lowest_rank = col
             break  # Break on the first valid entry found
 
-    return pd.Series([lowest_taxon, lowest_rank], index=["lowest_taxon", "lowest_rank"])
+    return pd.Series(
+        [lowest_taxon, lowest_rank], index=["lowest_taxon", "lowest_rank"]
+    )
 
 
 # Define function to process tax dfs
@@ -89,7 +93,9 @@ def tax_formatting(df, tax_col, ranks):
     # Taxonomy formatting
     if args.database_format == "silva":
         # Annotate entries with no DB match
-        df = df.fillna(",".join(["No match in database" for _ in range(len(ranks))]))
+        df = df.fillna(
+            ",".join(["No match in database" for _ in range(len(ranks))])
+        )
         # Split the tax_col column by comma and expand into new columns
         df[ranks] = df[tax_col].str.split(",", expand=True)
         # Only keep desired columns and ranks and fill missing values
@@ -97,11 +103,15 @@ def tax_formatting(df, tax_col, ranks):
             "Taxonomy unreliable - confidence threshold not met"
         )
         # Replace taxa containing Not_available
-        df[ranks] = df[ranks].replace("Not_available", "Unknown in SILVA database")
+        df[ranks] = df[ranks].replace(
+            "Not_available", "Unknown in SILVA database"
+        )
 
     elif args.database_format == "midori2":
         # Annotate entries with no DB match
-        df = df.fillna(",".join(["No match in database" for _ in range(len(ranks))]))
+        df = df.fillna(
+            ",".join(["No match in database" for _ in range(len(ranks))])
+        )
         # Split the tax_col column by comma and expand into new columns
         df[ranks] = df[tax_col].str.split(",", expand=True)
         # Fill missing values with threshold note
@@ -116,7 +126,9 @@ def tax_formatting(df, tax_col, ranks):
 
     elif args.database_format == "bold":
         # Annotate entries with no DB match
-        df = df.fillna(",".join(["No match in database" for _ in range(len(ranks))]))
+        df = df.fillna(
+            ",".join(["No match in database" for _ in range(len(ranks))])
+        )
         # Split the tax_col column by comma and expand into new columns
         df[ranks] = (
             df[tax_col]
@@ -128,12 +140,14 @@ def tax_formatting(df, tax_col, ranks):
             df["species"].str.endswith("_sp")
             | df["species"].str.contains("_sp\._", regex=True)
             | df["species"].str.contains("_cf\._", regex=True)
-            | df["species"].str.endswith("_sp\.", regex=True)
+            | df["species"].str.endswith("_sp.")
         )
         df.loc[mask, "species"] = "Unknown in BOLD database"
         # Replace taxa containing incertae_sedis
         df[ranks] = df[ranks].applymap(
-            lambda x: "Unknown in BOLD database" if "incertae_sedis" in x else x
+            lambda x: (
+                "Unknown in BOLD database" if "incertae_sedis" in x else x
+            )
         )
         # Replace 'Unknown_in_BOLD_database' by 'Unknown in BOLD database' in the entire DataFrame
         df = df.replace("Unknown_in_BOLD_database", "Unknown in BOLD database")
@@ -147,7 +161,9 @@ def tax_formatting(df, tax_col, ranks):
 
     elif args.database_format == "pr2":
         # Annotate entries with no DB match
-        df = df.fillna(",".join(["No match in database" for _ in range(len(ranks))]))
+        df = df.fillna(
+            ",".join(["No match in database" for _ in range(len(ranks))])
+        )
         # Split the taxonomy column by comma and expand into new columns
         df[ranks] = (
             df[tax_col]
@@ -193,7 +209,9 @@ parser.add_argument(
     "--sintax_confidence_cutoff",
     metavar="N.N",
     default="0.75",
-    help=("""Confidence value cutoff level, ranging from 0-1 (default=0.75)."""),
+    help=(
+        """Confidence value cutoff level, ranging from 0-1 (default=0.75)."""
+    ),
 )
 parser.add_argument(
     "--outfile",
@@ -256,7 +274,9 @@ df["tax_with_scores"] = (
 )
 
 # Sort by ID number
-df["OTU_ESV_number"] = df["ID"].str.extract(r"_(\d+)", expand=False).astype(int)
+df["OTU_ESV_number"] = (
+    df["ID"].str.extract(r"_(\d+)", expand=False).astype(int)
+)
 df = df.sort_values(by="OTU_ESV_number")
 df = df.drop(columns=["OTU_ESV_number"])
 

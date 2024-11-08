@@ -46,7 +46,9 @@ def replace_pr2_tax(taxon_series):
     return taxon_series.apply(
         lambda taxon: (
             "Unknown in PR2 database"
-            if taxon.endswith("X") or taxon.endswith("sp.") or taxon.endswith("_sp")
+            if taxon.endswith("X")
+            or taxon.endswith("sp.")
+            or taxon.endswith("_sp")
             else taxon
         )
     )
@@ -81,7 +83,9 @@ def lowest_taxon_and_rank(row):
             lowest_rank = col
             break  # Break on the first valid entry found
 
-    return pd.Series([lowest_taxon, lowest_rank], index=["lowest_taxon", "lowest_rank"])
+    return pd.Series(
+        [lowest_taxon, lowest_rank], index=["lowest_taxon", "lowest_rank"]
+    )
 
 
 # Define function to process tax dfs
@@ -93,7 +97,9 @@ def post_processing(df):
     lca_mask = df_tmp.groupby(["qseqid"]).transform(lambda x: len(set(x)) != 1)
 
     ## Replace ranks in df with "Taxonomy unreliable - multiple matching taxa" based on mask
-    df_tmp = df_tmp.mask(lca_mask, "Taxonomy unreliable - multiple matching taxa")
+    df_tmp = df_tmp.mask(
+        lca_mask, "Taxonomy unreliable - multiple matching taxa"
+    )
 
     # Add qseqid and pident info
     df_tmp["qseqid"] = df["qseqid"]
@@ -108,7 +114,9 @@ def post_processing(df):
         == df_processed["pident"]
     )
     df_processed = df_processed[idx_pident]
-    df_processed = df_processed.rename(columns={"pident": "percentage_similarity"})
+    df_processed = df_processed.rename(
+        columns={"pident": "percentage_similarity"}
+    )
 
     # Change column name, replace _ in species names, and save the df
     df_processed = df_processed.rename(columns={"qseqid": "ID"})
@@ -255,7 +263,9 @@ bitscore_percentage = args.blast_bitscore_percentage / 100
 ranks = ["domain", "phylum", "class", "order", "family", "genus", "species"]
 
 # Start of pipeline
-time_print(f"Running BLAST on {args.fastafile} with database {args.blast_database}...")
+time_print(
+    f"Running BLAST on {args.fastafile} with database {args.blast_database}..."
+)
 
 # Run BLAST on FASTA file
 blastout = os.path.join(
@@ -331,7 +341,7 @@ elif args.database_format == "bold":
         df["species"].str.endswith("_sp")
         | df["species"].str.contains("_sp\._", regex=True)
         | df["species"].str.contains("_cf\._", regex=True)
-        | df["species"].str.endswith("_sp\.", regex=True)
+        | df["species"].str.endswith("_sp.")
     )
     df.loc[mask, "species"] = "Unknown in BOLD database"
     # Replace taxa containing incertae_sedis
@@ -410,10 +420,10 @@ elif args.blast_filter_mode == "strict":
 
     time_print("Applying similarity cutoffs and LCA filter...")
     # Process the original df
-    cutoff_term = (
-        "Taxonomy unreliable - percentage similarity threshold for rank not met"
+    cutoff_term = "Taxonomy unreliable - percentage similarity threshold for rank not met"
+    df.loc[df["pident"] < args.blast_cutoff_pidents[0], "species"] = (
+        cutoff_term
     )
-    df.loc[df["pident"] < args.blast_cutoff_pidents[0], "species"] = cutoff_term
     df.loc[df["pident"] < args.blast_cutoff_pidents[1], "genus"] = cutoff_term
     df.loc[df["pident"] < args.blast_cutoff_pidents[2], "family"] = cutoff_term
     df.loc[df["pident"] < args.blast_cutoff_pidents[3], "order"] = cutoff_term
@@ -422,9 +432,9 @@ elif args.blast_filter_mode == "strict":
 
     # Process the copied df so that a column for cutoff ranks is used instead of the actual cutoff
     df_no_cutoffs = post_processing(df_no_cutoffs)
-    df_no_cutoffs["cutoff_rank"] = df_no_cutoffs["percentage_similarity"].apply(
-        determine_cutoff_rank
-    )
+    df_no_cutoffs["cutoff_rank"] = df_no_cutoffs[
+        "percentage_similarity"
+    ].apply(determine_cutoff_rank)
     # Save copied df
     df_no_cutoffs.to_csv(add_suffix(args.outfile), index=False)
 
