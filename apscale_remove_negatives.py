@@ -112,6 +112,9 @@ def remove_negs_from_df(df, unit, negative_controls):
     # Drop ESVs with 0 reads
     df_decon = df_decon[df_decon.drop(columns=["ID", "Seq"]).sum(axis=1) != 0]
 
+    # Update the "total reads" column since Neg samples were dropped
+    df_decon["total_reads"] = df_decon[true_samples].sum(axis=1)
+
     return df_decon
 
 
