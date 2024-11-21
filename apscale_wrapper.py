@@ -716,38 +716,38 @@ if args.add_taxonomy == "True":
     )
     classificationOutFile_otus = os.path.join(
         path_to_otu_clustering,
-        f"{apscale_dir}_OTUs_classified.csv",
+        f"{apscale_dir}-OTUs_classified.csv",
     )
     classificationOutFile_esvs = os.path.join(
         path_to_denoising,
-        f"{apscale_dir}_ESVs_classified.csv",
+        f"{apscale_dir}-ESVs_classified.csv",
     )
     otu_outfile = os.path.join(
         path_to_otu_clustering,
-        f"{apscale_dir}_OTU_table-with_filtered_taxonomy.csv",
+        f"{apscale_dir}-OTU_table-with_filtered_taxonomy.csv",
     )
     esv_outfile = os.path.join(
         path_to_denoising,
-        f"{apscale_dir}_ESV_table-with_filtered_taxonomy.csv",
+        f"{apscale_dir}-ESV_table-with_filtered_taxonomy.csv",
     )
     if args.taxonomy_classifier == "sintax" or (
         args.taxonomy_classifier == "blast" and args.blast_filter_mode == "strict"
     ):
         classificationOutFile_otus_noCutoff = os.path.join(
             path_to_otu_clustering,
-            f"{apscale_dir}_OTUs_classified-no_cutoff.csv",
+            f"{apscale_dir}-OTUs_classified-no_cutoff.csv",
         )
         classificationOutFile_esvs_noCutoff = os.path.join(
             path_to_denoising,
-            f"{apscale_dir}_ESVs_classified-no_cutoff.csv",
+            f"{apscale_dir}-ESVs_classified-no_cutoff.csv",
         )
         otu_outfile_noCutoff = os.path.join(
             path_to_otu_clustering,
-            f"{apscale_dir}_OTU_table-with_unfiltered_taxonomy.csv",
+            f"{apscale_dir}-OTU_table-with_unfiltered_taxonomy.csv",
         )
         esv_outfile_noCutoff = os.path.join(
             path_to_denoising,
-            f"{apscale_dir}_ESV_table-with_unfiltered_taxonomy.csv",
+            f"{apscale_dir}-ESV_table-with_unfiltered_taxonomy.csv",
         )
 
 # Classify sequences
@@ -945,20 +945,20 @@ os.remove(
 # Rename Apscale .xlsx results files
 os.rename(
     os.path.join(path_to_otu_clustering, f"{apscale_dir}_OTU_table_filtered.xlsx"),
-    os.path.join(path_to_otu_clustering, f"{apscale_dir}_OTU_table.xlsx"),
+    os.path.join(path_to_otu_clustering, f"{apscale_dir}-OTU_table.xlsx"),
 )
 os.rename(
     os.path.join(path_to_denoising, f"{apscale_dir}_ESV_table_filtered.xlsx"),
-    os.path.join(path_to_denoising, f"{apscale_dir}_ESV_table.xlsx"),
+    os.path.join(path_to_denoising, f"{apscale_dir}-ESV_table.xlsx"),
 )
 # Rename Apscale .fasta files
 os.rename(
     os.path.join(path_to_otu_clustering, f"{apscale_dir}_OTUs_filtered.fasta"),
-    os.path.join(path_to_otu_clustering, f"{apscale_dir}_OTU_sequences.fasta"),
+    os.path.join(path_to_otu_clustering, f"{apscale_dir}-OTU_sequences.fasta"),
 )
 os.rename(
     os.path.join(path_to_denoising, f"{apscale_dir}_ESVs_filtered.fasta"),
-    os.path.join(path_to_denoising, f"{apscale_dir}_ESV_sequences.fasta"),
+    os.path.join(path_to_denoising, f"{apscale_dir}-ESV_sequences.fasta"),
 )
 
 time_print("Apscale wrapper done.")

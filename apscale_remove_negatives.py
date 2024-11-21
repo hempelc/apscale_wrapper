@@ -153,11 +153,11 @@ path_to_denoising = os.path.join(project_name, "9_lulu_filtering", "denoising")
 # Path to ESV/OTU post-LULU files
 otu_postlulu_file = os.path.join(
     path_to_otu_clustering,
-    f"{project_name}_OTU_table-with_filtered_taxonomy.csv",
+    f"{project_name}-OTU_table-with_filtered_taxonomy.csv",
 )
 esv_postlulu_file = os.path.join(
     path_to_denoising,
-    f"{project_name}_ESV_table-with_filtered_taxonomy.csv",
+    f"{project_name}-ESV_table-with_filtered_taxonomy.csv",
 )
 
 esv_postlulu_df = pd.read_csv(esv_postlulu_file)
