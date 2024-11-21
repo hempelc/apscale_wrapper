@@ -68,7 +68,7 @@ def find_file_in_path(filename):
 # Function to generate an apscale Settings.xlsx file
 def generateSettings(**kwargs):
     with pd.ExcelWriter(
-        Path(f"{args.project_name}_apscale").joinpath("Settings.xlsx"),
+        Path(apscale_dir).joinpath("Settings.xlsx"),
         mode="w",
         engine="openpyxl",
     ) as writer:
@@ -216,6 +216,29 @@ def sintax(fastafile, outfile, **kwargs):
     for line in proc.stdout:
         sys.stdout.write(str(line))
         log.write(str(line))
+
+
+def run_classification(fastafile, outfile, method, **kwargs):
+    if method == "blast":
+        blasting(fastafile=fastafile, outfile=outfile, **kwargs)
+    elif method == "sintax":
+        sintax(fastafile=fastafile, outfile=outfile, **kwargs)
+
+
+def merge_and_add_total_and_save(table_file, classification_file, output_file):
+    table = pd.read_parquet(table_file, engine="fastparquet")
+    # Add a column with the total number of reads per OTU/ESV
+    table["total_reads"] = table.drop(columns=["ID", "Seq"]).sum(axis=1)
+    classification = pd.read_csv(classification_file)
+    merged_table = pd.merge(table, classification, on="ID", how="outer").fillna(
+        "No match in database"
+    )
+    merged_table.to_csv(output_file, index=False)
+
+
+def clean_up(*files):
+    for file in files:
+        os.remove(file)
 
 
 # Define arguments
@@ -463,6 +486,9 @@ args.func(args)
 if args.coi == "True":
     args.swarm_distance = 13
 
+# Specify apscale directory variable to shorten code
+apscale_dir = f"{args.project_name}_apscale"
+
 ######################### Save settings
 settings = pd.DataFrame.from_dict(
     vars(args), orient="index", columns=["Parameter"]
@@ -578,11 +604,11 @@ elif args.add_taxonomy == "False":
     )
 ## Export
 settings = settings.reset_index().rename(columns={"index": "Setting"})
-settings.to_csv(f"{args.project_name}_apscale_wrapper_settings.csv", index=False)
+settings.to_csv(f"{apscale_dir}_wrapper_settings.csv", index=False)
 
 # Create log
 # Open the log file in append mode
-log = open(f"{args.project_name}_apscale_wrapper_log.txt", "a")
+log = open(f"{apscale_dir}_wrapper_log.txt", "a")
 
 
 ############################### Start of pipeline
@@ -604,22 +630,18 @@ for line in proc.stdout:
 # Create an empty Project_report.xlsx file
 ## Create an ExcelWriter object using the openpyxl engine
 excel_writer = pd.ExcelWriter(
-    os.path.join(f"{args.project_name}_apscale", "Project_report.xlsx"),
+    os.path.join(apscale_dir, "Project_report.xlsx"),
     engine="openpyxl",
 )
 ## Write an empty DataFrame to the Excel file
 pd.DataFrame().to_excel(excel_writer, sheet_name="Sheet1", index=False)
 # Save the Excel file
-excel_writer.book.save(
-    os.path.join(f"{args.project_name}_apscale", "Project_report.xlsx")
-)
+excel_writer.book.save(os.path.join(apscale_dir, "Project_report.xlsx"))
 
 # Generate symlinks to demultiplexed reads
 time_print("Generating symlinks to demultiplexed reads...")
 # sequence_files = os.path.join(os.path.realpath(args.sequence_dir), "*")
-target_directory = os.path.join(
-    f"{args.project_name}_apscale", "2_demultiplexing", "data"
-)
+target_directory = os.path.join(apscale_dir, "2_demultiplexing", "data")
 # TO DO: involve os.path.join for sequence files to make it universal for systems
 # subprocess.run(
 #     ["ln", "-s", sequence_files, target_directory],
@@ -657,7 +679,7 @@ generateSettings(
 # Run apscale
 time_print("Starting apscale...")
 proc = subprocess.run(
-    ["apscale", "--run_apscale", f"{args.project_name}_apscale"],
+    ["apscale", "--run_apscale", apscale_dir],
     stdout=subprocess.PIPE,
     stderr=subprocess.STDOUT,
     text=True,
@@ -669,13 +691,127 @@ for line in proc.stdout:
 
 time_print("Apscale done.")
 
+# Define path name variables
+path_to_otu_clustering = os.path.join(apscale_dir, "9_lulu_filtering", "otu_clustering")
+path_to_denoising = os.path.join(apscale_dir, "9_lulu_filtering", "denoising")
+
+# Add taxonomy if specified
+if args.add_taxonomy == "True":
+    # Define file names
+    otu_table_file = os.path.join(
+        path_to_otu_clustering,
+        f"{apscale_dir}_OTU_table_filtered.parquet.snappy",
+    )
+    esv_table_file = os.path.join(
+        path_to_denoising,
+        f"{apscale_dir}_ESV_table_filtered.parquet.snappy",
+    )
+    fastafile_otus = os.path.join(
+        path_to_otu_clustering,
+        f"{apscale_dir}_OTUs_filtered.fasta",
+    )
+    fastafile_esvs = os.path.join(
+        path_to_denoising,
+        f"{apscale_dir}_ESVs_filtered.fasta",
+    )
+    classificationOutFile_otus = os.path.join(
+        path_to_otu_clustering,
+        f"{apscale_dir}_OTUs_classified.csv",
+    )
+    classificationOutFile_esvs = os.path.join(
+        path_to_denoising,
+        f"{apscale_dir}_ESVs_classified.csv",
+    )
+    otu_outfile = os.path.join(
+        path_to_otu_clustering,
+        f"{apscale_dir}_OTU_table-with_filtered_taxonomy.csv",
+    )
+    esv_outfile = os.path.join(
+        path_to_denoising,
+        f"{apscale_dir}_ESV_table-with_filtered_taxonomy.csv",
+    )
+    if args.taxonomy_classifier == "sintax" or (
+        args.taxonomy_classifier == "blast" and args.blast_filter_mode == "strict"
+    ):
+        classificationOutFile_otus_noCutoff = os.path.join(
+            path_to_otu_clustering,
+            f"{apscale_dir}_OTUs_classified-no_cutoff.csv",
+        )
+        classificationOutFile_esvs_noCutoff = os.path.join(
+            path_to_denoising,
+            f"{apscale_dir}_ESVs_classified-no_cutoff.csv",
+        )
+        otu_outfile_noCutoff = os.path.join(
+            path_to_otu_clustering,
+            f"{apscale_dir}_OTU_table-with_unfiltered_taxonomy.csv",
+        )
+        esv_outfile_noCutoff = os.path.join(
+            path_to_denoising,
+            f"{apscale_dir}_ESV_table-with_unfiltered_taxonomy.csv",
+        )
+
+# Classify sequences
+## Define classification parameters for both tax annotation tools
+classification_kwargs = {
+    "blast": {
+        "blast_database": args.blast_database,
+        "database_format": args.database_format,
+        "blast_evalue": args.blast_evalue,
+        "blast_filter_mode": args.blast_filter_mode,
+        "blast_bitscore_percentage": args.blast_bitscore_percentage,
+        "blast_alignment_length": args.blast_alignment_length,
+        "blast_bitscore_threshold": args.blast_bitscore_threshold,
+        "blast_cutoff_pidents": args.blast_cutoff_pidents,
+        "cores": args.cores,
+    },
+    "sintax": {
+        "sintax_database": args.sintax_database,
+        "database_format": args.database_format,
+        "sintax_confidence_cutoff": args.sintax_confidence_cutoff,
+    },
+}
+# Run classification
+run_classification(
+    fastafile_otus,
+    classificationOutFile_otus,
+    args.taxonomy_classifier,
+    **classification_kwargs[args.taxonomy_classifier],
+)
+run_classification(
+    fastafile_esvs,
+    classificationOutFile_esvs,
+    args.taxonomy_classifier,
+    **classification_kwargs[args.taxonomy_classifier],
+)
+
+time_print("Taxonomy generated. Merging taxonomy with OTU/ESV tables...")
+
+# Merging and saving taxonomy with tables
+merge_and_add_total_and_save(otu_table_file, classificationOutFile_otus, otu_outfile)
+merge_and_add_total_and_save(esv_table_file, classificationOutFile_esvs, esv_outfile)
+
+# Cleanup classification files
+clean_up(classificationOutFile_otus, classificationOutFile_esvs)
+
+# Save unfiltered tax files if required
+if args.taxonomy_classifier == "sintax" or (
+    args.taxonomy_classifier == "blast" and args.blast_filter_mode == "strict"
+):
+    merge_and_add_total_and_save(
+        otu_table_file, classificationOutFile_otus_noCutoff, otu_outfile_noCutoff
+    )
+    merge_and_add_total_and_save(
+        esv_table_file, classificationOutFile_esvs_noCutoff, esv_outfile_noCutoff
+    )
+    clean_up(classificationOutFile_otus_noCutoff, classificationOutFile_esvs_noCutoff)
+
+
 if args.remove_negative_controls == "True":
-    microdecon_suffix = "_microdecon-filtered"
     proc = subprocess.run(
         [
             "apscale_remove_negatives.py",
             "--project_dir",
-            f"{args.project_name}_apscale",
+            apscale_dir,
             "--negative_controls",
             f"{args.negative_controls}",
         ],
@@ -688,271 +824,53 @@ if args.remove_negative_controls == "True":
         sys.stdout.write(str(line))
         log.write(str(line))
 
-else:
-    microdecon_suffix = ""
+# Run coil through an R script if data is COI
+# NOTE: tests revealed that coil output is not repeatable, sometimes it drops 6 sequences while other times 112,
+# therefore its implementation is put on hold for now
+# if args.coi == "True":
+#     time_print("Removing NUMTs from OTUs with the R package coil...")
+#     path_to_rscript = find_file_in_path("apscale_coil.R")
+#     proc = subprocess.run(  # Rscript only works with the full path to the R script, so we fetch it with "which"
+#         ["Rscript", f"{path_to_rscript}", f"{otu_outfile}", "OTU"],
+#         stdout=subprocess.PIPE,
+#         stderr=subprocess.STDOUT,
+#         text=True,
+#         check=False,
+#     )
+#     for line in proc.stdout:
+#         sys.stdout.write(str(line))
+#         log.write(str(line))
 
-# Add a column with the total number of reads per OTU and ESV
-## Read in OTU and ESV tables
-if args.remove_negative_controls == "True":
-    otu_table_file = os.path.join(
-        f"{args.project_name}_apscale",
-        "9_lulu_filtering",
-        "otu_clustering",
-        f"{args.project_name}_apscale_OTU_table_filtered{microdecon_suffix}.csv",
-    )
-    esv_table_file = os.path.join(
-        f"{args.project_name}_apscale",
-        "9_lulu_filtering",
-        "denoising",
-        f"{args.project_name}_apscale_ESV_table_filtered{microdecon_suffix}.csv",
-    )
-else:
-    otu_table_file = os.path.join(
-        f"{args.project_name}_apscale",
-        "9_lulu_filtering",
-        "otu_clustering",
-        f"{args.project_name}_apscale_OTU_table_filtered{microdecon_suffix}.parquet.snappy",
-    )
-    esv_table_file = os.path.join(
-        f"{args.project_name}_apscale",
-        "9_lulu_filtering",
-        "denoising",
-        f"{args.project_name}_apscale_ESV_table_filtered{microdecon_suffix}.parquet.snappy",
-    )
-if args.remove_negative_controls == "True":
-    otu_table = pd.read_csv(otu_table_file)
-    esv_table = pd.read_csv(esv_table_file)
-else:
-    otu_table = pd.read_parquet(otu_table_file, engine="fastparquet")
-    esv_table = pd.read_parquet(esv_table_file, engine="fastparquet")
-## Add the column
-otu_table["total_reads"] = otu_table.drop(columns=["ID", "Seq"]).sum(axis=1)
-esv_table["total_reads"] = esv_table.drop(columns=["ID", "Seq"]).sum(axis=1)
-## Save
-if args.remove_negative_controls == "True":
-    otu_table.to_csv(otu_table_file, index=False)
-    esv_table.to_csv(esv_table_file, index=False)
-else:
-    otu_table.to_parquet(otu_table_file, engine="fastparquet", index=False)
-    esv_table.to_parquet(esv_table_file, engine="fastparquet", index=False)
-if args.add_taxonomy == "False":
-    ## Save
-    if args.remove_negative_controls == "True":
-        otu_table.to_csv(otu_table_file, index=False)
-        esv_table.to_csv(esv_table_file, index=False)
-    else:
-        otu_table.to_parquet(otu_table_file, engine="fastparquet", index=False)
-        esv_table.to_parquet(esv_table_file, engine="fastparquet", index=False)
-
-else:  # Add taxonomy if specified
-    # Define file names
-    fastafile_otus = os.path.join(
-        f"{args.project_name}_apscale",
-        "9_lulu_filtering",
-        "otu_clustering",
-        f"{args.project_name}_apscale_OTUs_filtered{microdecon_suffix}.fasta",
-    )
-    fastafile_esvs = os.path.join(
-        f"{args.project_name}_apscale",
-        "9_lulu_filtering",
-        "denoising",
-        f"{args.project_name}_apscale_ESVs_filtered{microdecon_suffix}.fasta",
-    )
-    classificationOutFile_otus = os.path.join(
-        f"{args.project_name}_apscale",
-        "9_lulu_filtering",
-        "otu_clustering",
-        f"{args.project_name}_apscale_OTUs{microdecon_suffix}_classified.csv",
-    )
-    classificationOutFile_esvs = os.path.join(
-        f"{args.project_name}_apscale",
-        "9_lulu_filtering",
-        "denoising",
-        f"{args.project_name}_apscale_ESVs{microdecon_suffix}_classified.csv",
-    )
-    otu_outfile = os.path.join(
-        f"{args.project_name}_apscale",
-        "9_lulu_filtering",
-        "otu_clustering",
-        f"{args.project_name}_apscale_OTU_table_filtered{microdecon_suffix}_with_taxonomy.csv",
-    )
-    esv_outfile = os.path.join(
-        f"{args.project_name}_apscale",
-        "9_lulu_filtering",
-        "denoising",
-        f"{args.project_name}_apscale_ESV_table_filtered{microdecon_suffix}_with_taxonomy.csv",
-    )
-    if args.taxonomy_classifier == "sintax" or (
-        args.taxonomy_classifier == "blast" and args.blast_filter_mode == "strict"
-    ):
-        classificationOutFile_otus_noCutoff = os.path.join(
-            f"{args.project_name}_apscale",
-            "9_lulu_filtering",
-            "otu_clustering",
-            f"{args.project_name}_apscale_OTUs{microdecon_suffix}_classified_no_cutoff.csv",
-        )
-        classificationOutFile_esvs_noCutoff = os.path.join(
-            f"{args.project_name}_apscale",
-            "9_lulu_filtering",
-            "denoising",
-            f"{args.project_name}_apscale_ESVs{microdecon_suffix}_classified_no_cutoff.csv",
-        )
-        otu_outfile_noCutoff = os.path.join(
-            f"{args.project_name}_apscale",
-            "9_lulu_filtering",
-            "otu_clustering",
-            f"{args.project_name}_apscale_OTU_table_filtered{microdecon_suffix}_with_taxonomy_no_cutoff.csv",
-        )
-        esv_outfile_noCutoff = os.path.join(
-            f"{args.project_name}_apscale",
-            "9_lulu_filtering",
-            "denoising",
-            f"{args.project_name}_apscale_ESV_table_filtered{microdecon_suffix}_with_taxonomy_no_cutoff.csv",
-        )
-    if args.taxonomy_classifier == "blast":
-        # Run BLAST command
-        blasting(
-            fastafile=fastafile_otus,
-            outfile=classificationOutFile_otus,
-            blast_database=args.blast_database,
-            database_format=args.database_format,
-            blast_evalue=args.blast_evalue,
-            blast_filter_mode=args.blast_filter_mode,
-            blast_bitscore_percentage=args.blast_bitscore_percentage,
-            blast_alignment_length=args.blast_alignment_length,
-            blast_bitscore_threshold=args.blast_bitscore_threshold,
-            blast_cutoff_pidents=args.blast_cutoff_pidents,
-            cores=args.cores,
-        )
-        blasting(
-            fastafile=fastafile_esvs,
-            outfile=classificationOutFile_esvs,
-            blast_database=args.blast_database,
-            database_format=args.database_format,
-            blast_evalue=args.blast_evalue,
-            blast_filter_mode=args.blast_filter_mode,
-            blast_bitscore_percentage=args.blast_bitscore_percentage,
-            blast_alignment_length=args.blast_alignment_length,
-            blast_bitscore_threshold=args.blast_bitscore_threshold,
-            blast_cutoff_pidents=args.blast_cutoff_pidents,
-            cores=args.cores,
-        )
-    elif args.taxonomy_classifier == "sintax":
-        # Run SINTAX command
-        sintax(
-            fastafile=fastafile_otus,
-            outfile=classificationOutFile_otus,
-            sintax_database=args.sintax_database,
-            database_format=args.database_format,
-            sintax_confidence_cutoff=args.sintax_confidence_cutoff,
-        )
-        sintax(
-            fastafile=fastafile_esvs,
-            outfile=classificationOutFile_esvs,
-            sintax_database=args.sintax_database,
-            database_format=args.database_format,
-            sintax_confidence_cutoff=args.sintax_confidence_cutoff,
-        )
-    time_print("Taxonomy generated. Merging taxonomy with OTU/ESV tables...")
-    # Read in classification results
-    classificationOut_otus = pd.read_csv(classificationOutFile_otus)
-    classificationOut_esvs = pd.read_csv(classificationOutFile_esvs)
-    # Clean up
-    os.remove(classificationOutFile_otus)
-    os.remove(classificationOutFile_esvs)
-    # Merge OTU and ESV tables with classification results
-    otu_table_with_tax = pd.merge(
-        otu_table,
-        classificationOut_otus,
-        on="ID",
-        how="outer",
-    ).fillna("No match in database")
-    esv_table_with_tax = pd.merge(
-        esv_table,
-        classificationOut_esvs,
-        on="ID",
-        how="outer",
-    ).fillna("No match in database")
-    # Save
-    otu_table_with_tax.to_csv(otu_outfile, index=False)
-    esv_table_with_tax.to_csv(esv_outfile, index=False)
-    if args.taxonomy_classifier == "sintax" or (
-        args.taxonomy_classifier == "blast" and args.blast_filter_mode == "strict"
-    ):
-        # Read in classification results with no cutoff
-        classificationOut_otus_noCutoff = pd.read_csv(
-            classificationOutFile_otus_noCutoff
-        )
-        classificationOut_esvs_noCutoff = pd.read_csv(
-            classificationOutFile_esvs_noCutoff
-        )
-        # Clean up
-        os.remove(classificationOutFile_otus_noCutoff)
-        os.remove(classificationOutFile_esvs_noCutoff)
-        # Merge tables
-        otu_table_with_tax_noCutoff = pd.merge(
-            otu_table,
-            classificationOut_otus_noCutoff,
-            on="ID",
-            how="outer",
-        ).fillna("No match in database")
-        esv_table_with_tax_noCutoff = pd.merge(
-            esv_table,
-            classificationOut_esvs_noCutoff,
-            on="ID",
-            how="outer",
-        ).fillna("No match in database")
-        # Save
-        otu_table_with_tax_noCutoff.to_csv(otu_outfile_noCutoff, index=False)
-        esv_table_with_tax_noCutoff.to_csv(esv_outfile_noCutoff, index=False)
-
-    # Run coil through an R script if data is COI
-    # NOTE: tests revealed that coil output is not repeatable, sometimes it drops 6 sequences while other times 112,
-    # therefore its implementation is put on hold for now
-    # if args.coi == "True":
-    #     time_print("Removing NUMTs from OTUs with the R package coil...")
-    #     path_to_rscript = find_file_in_path("apscale_coil.R")
-    #     proc = subprocess.run(  # Rscript only works with the full path to the R script, so we fetch it with "which"
-    #         ["Rscript", f"{path_to_rscript}", f"{otu_outfile}", "OTU"],
-    #         stdout=subprocess.PIPE,
-    #         stderr=subprocess.STDOUT,
-    #         text=True,
-    #         check=False,
-    #     )
-    #     for line in proc.stdout:
-    #         sys.stdout.write(str(line))
-    #         log.write(str(line))
-
-    #     time_print("Removing NUMTs from ESVs with the R package coil...")
-    #     proc = subprocess.run(  # Rscript only works with the full path to the R script, so we fetch it with "which"
-    #         ["Rscript", f"{path_to_rscript}", f"{esv_outfile}", "ESV"],
-    #         stdout=subprocess.PIPE,
-    #         stderr=subprocess.STDOUT,
-    #         text=True,
-    #         check=False,
-    #     )
-    #     for line in proc.stdout:
-    #         sys.stdout.write(str(line))
-    #         log.write(str(line))
-    #     if args.filter_mode == "strict":
-    #         # Drop the removed OTUs/ESvs from the no-cutoff dataframes
-    #         ## Load in coil fitlered dfs
-    #         otus_coil_filtered = pd.read_csv(otu_outfile)
-    #         esvs_coil_filtered = pd.read_csv(esv_outfile)
-    #         ## Merge dfs with inner on ID to drop IDs that were filtered out by coil
-    #         otus_coil_filtered_noCutoff = pd.merge(
-    #             otu_table_with_tax_noCutoff, otus_coil_filtered, on="ID", how="inner"
-    #         )
-    #         esvs_coil_filtered_noCutoff = pd.merge(
-    #             esv_table_with_tax_noCutoff, esvs_coil_filtered, on="ID", how="inner"
-    #         )
-    #         # Save
-    #         otus_coil_filtered_noCutoff.to_csv(
-    #             otu_outfile_noCutoff.replace(".csv", "_coil_filtered.csv"), index=False
-    #         )
-    #         esvs_coil_filtered_noCutoff.to_csv(
-    #             esv_outfile_noCutoff.replace(".csv", "_coil_filtered.csv"), index=False
-    #         )
+#     time_print("Removing NUMTs from ESVs with the R package coil...")
+#     proc = subprocess.run(  # Rscript only works with the full path to the R script, so we fetch it with "which"
+#         ["Rscript", f"{path_to_rscript}", f"{esv_outfile}", "ESV"],
+#         stdout=subprocess.PIPE,
+#         stderr=subprocess.STDOUT,
+#         text=True,
+#         check=False,
+#     )
+#     for line in proc.stdout:
+#         sys.stdout.write(str(line))
+#         log.write(str(line))
+#     if args.filter_mode == "strict":
+#         # Drop the removed OTUs/ESvs from the no-cutoff dataframes
+#         ## Load in coil fitlered dfs
+#         otus_coil_filtered = pd.read_csv(otu_outfile)
+#         esvs_coil_filtered = pd.read_csv(esv_outfile)
+#         ## Merge dfs with inner on ID to drop IDs that were filtered out by coil
+#         otus_coil_filtered_noCutoff = pd.merge(
+#             otu_table_with_tax_noCutoff, otus_coil_filtered, on="ID", how="inner"
+#         )
+#         esvs_coil_filtered_noCutoff = pd.merge(
+#             esv_table_with_tax_noCutoff, esvs_coil_filtered, on="ID", how="inner"
+#         )
+#         # Save
+#         otus_coil_filtered_noCutoff.to_csv(
+#             otu_outfile_noCutoff.replace(".csv", "_coil_filtered.csv"), index=False
+#         )
+#         esvs_coil_filtered_noCutoff.to_csv(
+#             esv_outfile_noCutoff.replace(".csv", "_coil_filtered.csv"), index=False
+#         )
 
 
 # Generate processing graphs using separate script
@@ -961,7 +879,7 @@ if args.database_format:
         [
             "apscale_processing_graphs.py",
             "--project_dir",
-            f"{args.project_name}_apscale",
+            apscale_dir,
             "--graph_format",
             f"{args.graph_format}",
             "--min_length",
@@ -989,7 +907,7 @@ else:
         [
             "apscale_processing_graphs.py",
             "--project_dir",
-            f"{args.project_name}_apscale",
+            apscale_dir,
             "--graph_format",
             f"{args.graph_format}",
             "--min_length",
@@ -1014,6 +932,35 @@ for line in proc.stdout:
     sys.stdout.write(str(line))
     log.write(str(line))
 
+# Tidy up aspcale folder structure
+# Remove non-required .parquet.snappy files
+os.remove(
+    os.path.join(
+        path_to_otu_clustering, f"{apscale_dir}_OTU_table_filtered.parquet.snappy"
+    )
+)
+os.remove(
+    os.path.join(path_to_denoising, f"{apscale_dir}_ESV_table_filtered.parquet.snappy")
+)
+# Rename Apscale .xlsx results files
+os.rename(
+    os.path.join(path_to_otu_clustering, f"{apscale_dir}_OTU_table_filtered.xlsx"),
+    os.path.join(path_to_otu_clustering, f"{apscale_dir}_OTU_table.xlsx"),
+)
+os.rename(
+    os.path.join(path_to_denoising, f"{apscale_dir}_ESV_table_filtered.xlsx"),
+    os.path.join(path_to_denoising, f"{apscale_dir}_ESV_table.xlsx"),
+)
+# Rename Apscale .fasta files
+os.rename(
+    os.path.join(path_to_otu_clustering, f"{apscale_dir}_OTUs_filtered.fasta"),
+    os.path.join(path_to_otu_clustering, f"{apscale_dir}_OTU_sequences.fasta"),
+)
+os.rename(
+    os.path.join(path_to_denoising, f"{apscale_dir}_ESVs_filtered.fasta"),
+    os.path.join(path_to_denoising, f"{apscale_dir}_ESV_sequences.fasta"),
+)
+
 time_print("Apscale wrapper done.")
 
 # Close the log file
@@ -1021,15 +968,13 @@ log.close()
 
 # Move settings and log files
 os.rename(
-    f"{args.project_name}_apscale_wrapper_settings.csv",
+    f"{apscale_dir}_wrapper_settings.csv",
     os.path.join(
-        f"{args.project_name}_apscale",
-        f"{args.project_name}_apscale_wrapper_settings.csv",
+        apscale_dir,
+        f"{apscale_dir}_wrapper_settings.csv",
     ),
 )
 os.rename(
-    f"{args.project_name}_apscale_wrapper_log.txt",
-    os.path.join(
-        f"{args.project_name}_apscale", f"{args.project_name}_apscale_wrapper_log.txt"
-    ),
+    f"{apscale_dir}_wrapper_log.txt",
+    os.path.join(apscale_dir, f"{apscale_dir}_wrapper_log.txt"),
 )
