@@ -735,16 +735,9 @@ if args.remove_negative_controls == "True":
 else:
     otu_table.to_parquet(otu_table_file, engine="fastparquet", index=False)
     esv_table.to_parquet(esv_table_file, engine="fastparquet", index=False)
-if args.add_taxonomy == "False":
-    ## Save
-    if args.remove_negative_controls == "True":
-        otu_table.to_csv(otu_table_file, index=False)
-        esv_table.to_csv(esv_table_file, index=False)
-    else:
-        otu_table.to_parquet(otu_table_file, engine="fastparquet", index=False)
-        esv_table.to_parquet(esv_table_file, engine="fastparquet", index=False)
 
-else:  # Add taxonomy if specified
+# Add taxonomy if specified
+if args.add_taxonomy == "True":
     # Define file names
     fastafile_otus = os.path.join(
         f"{args.project_name}_apscale",
@@ -854,13 +847,20 @@ else:  # Add taxonomy if specified
             sintax_confidence_cutoff=args.sintax_confidence_cutoff,
         )
     time_print("Taxonomy generated. Merging taxonomy with OTU/ESV tables...")
+    # Read in OTU and ESV tables
+    if args.remove_negative_controls == "True":
+        otu_table = pd.read_csv(otu_table_file)
+        esv_table = pd.read_csv(esv_table_file)
+    else:
+        otu_table = pd.read_parquet(otu_table_file, engine="fastparquet")
+        esv_table = pd.read_parquet(esv_table_file, engine="fastparquet")
     # Read in classification results
     classificationOut_otus = pd.read_csv(classificationOutFile_otus)
     classificationOut_esvs = pd.read_csv(classificationOutFile_esvs)
     # Clean up
     os.remove(classificationOutFile_otus)
     os.remove(classificationOutFile_esvs)
-    # Merge OTU and ESV tables with classification results
+    # Merge tables
     otu_table_with_tax = pd.merge(
         otu_table,
         classificationOut_otus,
