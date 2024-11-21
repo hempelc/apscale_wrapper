@@ -1787,13 +1787,13 @@ if (
         project_dir,
         "9_lulu_filtering",
         "otu_clustering",
-        f"{project_name}_OTU_table-with_filtered_taxonomy{negControlSuffix}.csv",
+        f"{project_name}-OTU_table-with_filtered_taxonomy{negControlSuffix}.csv",
     )
     esv_final_file = os.path.join(
         project_dir,
         "9_lulu_filtering",
         "denoising",
-        f"{project_name}_ESV_table-with_filtered_taxonomy{negControlSuffix}.csv",
+        f"{project_name}-ESV_table-with_filtered_taxonomy{negControlSuffix}.csv",
     )
 
     otu_final_df = pd.read_csv(otu_final_file)
@@ -1861,13 +1861,13 @@ if make_maps == "True":
             project_dir,
             "9_lulu_filtering",
             "otu_clustering",
-            f"{project_name}_OTU_table-with_filtered_taxonomy{negControlSuffix}.csv",
+            f"{project_name}-OTU_table-with_filtered_taxonomy{negControlSuffix}.csv",
         )
         esv_final_file = os.path.join(
             project_dir,
             "9_lulu_filtering",
             "denoising",
-            f"{project_name}_ESV_table-with_filtered_taxonomy{negControlSuffix}.csv",
+            f"{project_name}-ESV_table-with_filtered_taxonomy{negControlSuffix}.csv",
         )
 
         otu_final_df = pd.read_csv(otu_final_file)
