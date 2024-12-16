@@ -1024,7 +1024,7 @@ os.makedirs(intermediate_files_dir, exist_ok=True)
 for intermediate_result in intermediate_results:
     os.rename(
         os.path.join(apscale_dir, intermediate_result),
-        os.path.join(apscale_dir, intermediate_files_dir, intermediate_result),
+        os.path.join(intermediate_files_dir, intermediate_result),
     )
 ## Rename and move apscale core settings
 os.rename(
