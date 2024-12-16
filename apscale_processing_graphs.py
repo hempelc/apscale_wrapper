@@ -74,8 +74,7 @@ def krona_formatting(df):
     ]
     # Sum samples
     sample_sums = df.drop(
-        columns=["ID", "Seq", "lowest_taxon", "lowest_rank", "total_reads"]
-        + ranks
+        columns=["ID", "Seq", "lowest_taxon", "lowest_rank", "total_reads"] + ranks
     ).sum(axis=1)
     krona_df = pd.concat([sample_sums.rename("Sum"), df[ranks]], axis=1)
     # Fix taxonomy formatting
@@ -150,15 +149,11 @@ def gbif_check_taxonomy(df, unit):
         "Taxonomy unreliable - confidence threshold not met",
         "No match in database",
     ]
-    taxon_table_df = (
-        taxon_table_df.replace(exceptions, None).dropna().drop_duplicates()
-    )
+    taxon_table_df = taxon_table_df.replace(exceptions, None).dropna().drop_duplicates()
 
     # Check if the 'species' column only contains None values, and if it does, exit early
     if taxon_table_df["species"].isnull().all():
-        time_print(
-            f"No valid species found among {unit}s. Skipping map generation."
-        )
+        time_print(f"No valid species found among {unit}s. Skipping map generation.")
         return []
 
     checked_species = []
@@ -166,9 +161,7 @@ def gbif_check_taxonomy(df, unit):
     for _, row in taxon_table_df.iterrows():
         phylum_name = row["phylum"]
         species_name = row["species"]
-        if checked_species_name := gbif_parent_check(
-            phylum_name, species_name
-        ):
+        if checked_species_name := gbif_parent_check(phylum_name, species_name):
             checked_species.append(checked_species_name)
     # Dropcontamination species
     contamination_species = [
@@ -181,11 +174,7 @@ def gbif_check_taxonomy(df, unit):
         "Ovis aries",
         "Capra hircus",
     ]
-    return [
-        taxon
-        for taxon in checked_species
-        if taxon not in contamination_species
-    ]
+    return [taxon for taxon in checked_species if taxon not in contamination_species]
 
 
 # Function to calculate overlap between two rows (to sort the continent df)
@@ -208,9 +197,7 @@ class ServerDisconnectedError(Exception):
     pass
 
 
-timeout = aiohttp.ClientTimeout(
-    total=120, connect=20, sock_connect=20, sock_read=40
-)
+timeout = aiohttp.ClientTimeout(total=120, connect=20, sock_connect=20, sock_read=40)
 retry_options = ExponentialRetry(
     attempts=5,
     exceptions={
@@ -284,9 +271,7 @@ async def fetch_all_occurrences(retry_session, taxon_name, country_codes):
 
 async def async_main(gbif_standardized_species, country_codes, occurrence_df):
     async with aiohttp.ClientSession() as session:
-        async with RetryClient(
-            session, retry_options=retry_options
-        ) as retry_session:
+        async with RetryClient(session, retry_options=retry_options) as retry_session:
             for taxon_name in tqdm(
                 gbif_standardized_species,
                 desc="Downloading GBIF species location data",
@@ -592,9 +577,7 @@ def maps_and_continent_plot_generation(gbif_standardized_species_list, unit):
 
     # Run the asynchronous GBIF specimen location retrieval function
     asyncio.run(
-        async_main(
-            gbif_standardized_species_list, country_codes, occurrence_df
-        )
+        async_main(gbif_standardized_species_list, country_codes, occurrence_df)
     )
 
     num_viridis_colors = 10
@@ -648,9 +631,7 @@ def maps_and_continent_plot_generation(gbif_standardized_species_list, unit):
     ### Handle cases in which a country falls in 2 continents (make multiple rows)
     occurrence_df["Continent"] = occurrence_df["Continent"].str.split("/")
     occurrence_df = occurrence_df.explode("Continent")
-    continent_df = (
-        occurrence_df.drop("Country", axis=1).groupby("Continent").sum()
-    )
+    continent_df = occurrence_df.drop("Country", axis=1).groupby("Continent").sum()
     continent_df[continent_df > 0] = 1
 
     ## Sort the df to minimize gaps
@@ -671,9 +652,7 @@ def maps_and_continent_plot_generation(gbif_standardized_species_list, unit):
         next_row_idx = overlaps.idxmax()
         next_row = remaining_df.loc[next_row_idx]
         ### Append the selected row to the sorted DataFrame
-        sorted_continent_df = pd.concat(
-            [sorted_continent_df, next_row.to_frame().T]
-        )
+        sorted_continent_df = pd.concat([sorted_continent_df, next_row.to_frame().T])
         ### Remove the selected row from the remaining rows
         remaining_df = remaining_df.drop(next_row_idx)
 
@@ -868,9 +847,9 @@ if add_taxonomy == "True":
     database_format = args.database_format
 project_name = os.path.basename(project_dir)
 if args.remove_negative_controls == "True":
-    microdecon_suffix = "_microdecon-filtered"
+    negControlSuffix = "-without_NegControls"
 else:
-    microdecon_suffix = ""
+    negControlSuffix = ""
 
 ############################ Start of pipeline
 time_print("Generating apscale processing graphs...")
@@ -970,36 +949,22 @@ otu_prelulu_sums = otu_prelulu_sums.reset_index()
 # Stats table processing
 ## Gather stats
 samples = (
-    report_sheet_dict["3_PE merging"]["File"]
-    .str.replace("_PE.fastq.gz", "")
-    .tolist()
+    report_sheet_dict["3_PE merging"]["File"].str.replace("_PE.fastq.gz", "").tolist()
 )
-raw_reads = report_sheet_dict["3_PE merging"][
-    "processed reads"
-].values.tolist()
-merged_reads = report_sheet_dict["3_PE merging"][
-    "merged reads"
-].values.tolist()
-trimmed_reads = report_sheet_dict["4_primer_trimming"][
-    "trimmed reads"
-].values.tolist()
+raw_reads = report_sheet_dict["3_PE merging"]["processed reads"].values.tolist()
+merged_reads = report_sheet_dict["3_PE merging"]["merged reads"].values.tolist()
+trimmed_reads = report_sheet_dict["4_primer_trimming"]["trimmed reads"].values.tolist()
 filtered_reads = report_sheet_dict["5_quality_filtering"][
     "passed reads"
 ].values.tolist()
-mapped_reads_OTUs = [
-    sum(otu_postlulu_df[sample].values.tolist()) for sample in samples
-]
-mapped_reads_ESVs = [
-    sum(esv_postlulu_df[sample].values.tolist()) for sample in samples
-]
+mapped_reads_OTUs = [sum(otu_postlulu_df[sample].values.tolist()) for sample in samples]
+mapped_reads_ESVs = [sum(esv_postlulu_df[sample].values.tolist()) for sample in samples]
 ## Make stats df
 df_stats = pd.DataFrame()
 df_stats["Raw reads"] = raw_reads + calculate_read_stats(raw_reads)
 df_stats["Merged reads"] = merged_reads + calculate_read_stats(merged_reads)
 df_stats["Trimmed reads"] = trimmed_reads + calculate_read_stats(trimmed_reads)
-df_stats["Filtered reads"] = filtered_reads + calculate_read_stats(
-    filtered_reads
-)
+df_stats["Filtered reads"] = filtered_reads + calculate_read_stats(filtered_reads)
 df_stats["Mapped reads (OTUs)"] = mapped_reads_OTUs + calculate_read_stats(
     mapped_reads_OTUs
 )
@@ -1022,9 +987,7 @@ df_stats.to_excel(out_xlsx)
 
 # Graphs
 # Set graph width based on number of samples (note: doesn't work consistently)
-graph_width = (
-    400 + len(report_sheet_dict["3_PE merging"]) * 25 * scaling_factor
-)
+graph_width = 400 + len(report_sheet_dict["3_PE merging"]) * 25 * scaling_factor
 
 # PE merging
 perc_kept_pe = pd.DataFrame(
@@ -1134,8 +1097,7 @@ trimmed_seqs_dir = os.path.join(
 )
 # Make list of all samples
 trimmed_seqs_files = [
-    os.path.join(trimmed_seqs_dir, sample)
-    for sample in os.listdir(trimmed_seqs_dir)
+    os.path.join(trimmed_seqs_dir, sample) for sample in os.listdir(trimmed_seqs_dir)
 ]
 
 # Use the commandline to generate read length distribution file
@@ -1158,9 +1120,7 @@ readlength_result = subprocess.run(
 # Convert the stdout to a Pandas DataFrame
 readlength_result_lines = readlength_result.stdout.strip().split("\n")
 readlength_result_data = [line.split() for line in readlength_result_lines]
-readlength_df = pd.DataFrame(
-    readlength_result_data, columns=["ReadLength", "Count"]
-)
+readlength_df = pd.DataFrame(readlength_result_data, columns=["ReadLength", "Count"])
 readlength_df = readlength_df.astype(int)
 
 # Plot
@@ -1559,9 +1519,7 @@ time_print("Pre- vs. post-LULU comparison graph generated.")
 
 # Number of reads vs number of ESVs
 reads_esvs_graph = px.scatter(
-    pd.concat(
-        [num_reads_filtered, esv_postlulu_sums["count"]], axis=1
-    ).reset_index(),
+    pd.concat([num_reads_filtered, esv_postlulu_sums["count"]], axis=1).reset_index(),
     x="value",
     y="count",
     trendline="ols",
@@ -1594,9 +1552,7 @@ time_print("Number of reads vs. ESVs graph generated.")
 
 # Number of reads vs number of OTUs
 reads_otus_graph = px.scatter(
-    pd.concat(
-        [num_reads_filtered, otu_postlulu_sums["count"]], axis=1
-    ).reset_index(),
+    pd.concat([num_reads_filtered, otu_postlulu_sums["count"]], axis=1).reset_index(),
     x="value",
     y="count",
     trendline="ols",
@@ -1626,7 +1582,7 @@ else:
     )
 time_print("Number of reads vs. OTUs graph generated.")
 
-# Add Accumulation curves - ESVs, OTUs, ESVs species, OTUs species
+# TO DO: Add Accumulation curves - ESVs, OTUs, ESVs species, OTUs species
 
 
 # Lineplot ESVs
@@ -1831,21 +1787,19 @@ if (
         project_dir,
         "9_lulu_filtering",
         "otu_clustering",
-        f"{project_name}_OTU_table_filtered{microdecon_suffix}_with_taxonomy.csv",
+        f"{project_name}-OTU_table-with_filtered_taxonomy{negControlSuffix}.csv",
     )
     esv_final_file = os.path.join(
         project_dir,
         "9_lulu_filtering",
         "denoising",
-        f"{project_name}_ESV_table_filtered{microdecon_suffix}_with_taxonomy.csv",
+        f"{project_name}-ESV_table-with_filtered_taxonomy{negControlSuffix}.csv",
     )
 
     otu_final_df = pd.read_csv(otu_final_file)
     time_print("1/2 final files imported...")
     esv_final_df = pd.read_csv(esv_final_file)
-    time_print(
-        "2/2 final files imported. Import done. Generating kronagraphs..."
-    )
+    time_print("2/2 final files imported. Import done. Generating kronagraphs...")
 
     # Format dfs for Krona
     esv_krona_df = krona_formatting(esv_final_df)
@@ -1907,13 +1861,13 @@ if make_maps == "True":
             project_dir,
             "9_lulu_filtering",
             "otu_clustering",
-            f"{project_name}_OTU_table_filtered{microdecon_suffix}_with_taxonomy.csv",
+            f"{project_name}-OTU_table-with_filtered_taxonomy{negControlSuffix}.csv",
         )
         esv_final_file = os.path.join(
             project_dir,
             "9_lulu_filtering",
             "denoising",
-            f"{project_name}_ESV_table_filtered{microdecon_suffix}_with_taxonomy.csv",
+            f"{project_name}-ESV_table-with_filtered_taxonomy{negControlSuffix}.csv",
         )
 
         otu_final_df = pd.read_csv(otu_final_file)
@@ -1929,16 +1883,12 @@ if make_maps == "True":
         species_maps_esvs,
         continent_occurrence_plot_esvs,
         realm_occurrence_plot_esvs,
-    ) = maps_and_continent_plot_generation(
-        gbif_standardized_species_esvs, "ESV"
-    )
+    ) = maps_and_continent_plot_generation(gbif_standardized_species_esvs, "ESV")
     (
         species_maps_otus,
         continent_occurrence_plot_otus,
         realm_occurrence_plot_otus,
-    ) = maps_and_continent_plot_generation(
-        gbif_standardized_species_otus, "OTU"
-    )
+    ) = maps_and_continent_plot_generation(gbif_standardized_species_otus, "OTU")
 
     ## Save
     if continent_occurrence_plot_otus:

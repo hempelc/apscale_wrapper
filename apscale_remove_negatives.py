@@ -51,7 +51,15 @@ def remove_negs_from_df(df, unit, negative_controls):
         return df.drop(columns=negative_controls_drop)
 
     # Identify true samples and all samples
-    true_samples = list(df.columns.difference(negative_controls + ["ID", "Seq"]))
+    ranks = ["domain", "phylum", "class", "order", "family", "genus", "species"]
+    notSampleColumns = [
+        "ID",
+        "Seq",
+        "total_reads",
+        "lowest_rank",
+        "lowest_taxon",
+    ] + ranks
+    true_samples = list(df.columns.difference(negative_controls + notSampleColumns))
     samples = negative_controls_keep + true_samples
 
     # Generate sample df and format for microDecon
@@ -105,9 +113,11 @@ def remove_negs_from_df(df, unit, negative_controls):
     df_decon["NumericValues"] = df_decon["ID"].str.replace(f"{unit}_", "").astype(int)
     df_decon = df_decon.sort_values(by="NumericValues")
     df_decon = df_decon.drop(columns=["NumericValues"])
-
     # Drop ESVs with 0 reads
-    df_decon = df_decon[df_decon.drop(columns=["ID", "Seq"]).sum(axis=1) != 0]
+    df_decon = df_decon[df_decon.drop(columns=notSampleColumns).sum(axis=1) != 0]
+
+    # Update the "total reads" column since Neg samples were dropped
+    df_decon["total_reads"] = df_decon[true_samples].sum(axis=1)
 
     return df_decon
 
@@ -136,27 +146,29 @@ args = parser.parse_args()
 # Set project_name argument
 project_name = os.path.basename(args.project_dir)
 
-### Start of pipeline
+# Start of pipeline
 time_print(
     "Removing negative control reads from samples with the R package microDecon..."
 )
 
+# Define path name variables
+path_to_otu_clustering = os.path.join(
+    project_name, "9_lulu_filtering", "otu_clustering"
+)
+path_to_denoising = os.path.join(project_name, "9_lulu_filtering", "denoising")
+
 # Path to ESV/OTU post-LULU files
 otu_postlulu_file = os.path.join(
-    args.project_dir,
-    "9_lulu_filtering",
-    "otu_clustering",
-    f"{project_name}_OTU_table_filtered.parquet.snappy",
+    path_to_otu_clustering,
+    f"{project_name}-OTU_table-with_filtered_taxonomy.csv",
 )
 esv_postlulu_file = os.path.join(
-    args.project_dir,
-    "9_lulu_filtering",
-    "denoising",
-    f"{project_name}_ESV_table_filtered.parquet.snappy",
+    path_to_denoising,
+    f"{project_name}-ESV_table-with_filtered_taxonomy.csv",
 )
 
-esv_postlulu_df = pd.read_parquet(esv_postlulu_file, engine="fastparquet")
-otu_postlulu_df = pd.read_parquet(otu_postlulu_file, engine="fastparquet")
+esv_postlulu_df = pd.read_csv(esv_postlulu_file)
+otu_postlulu_df = pd.read_csv(otu_postlulu_file)
 
 # Test if microdecon is installed:
 if not rpackages.isinstalled("microDecon"):
@@ -195,26 +207,22 @@ esv_postlulu_df_microdeconFiltered = remove_negs_from_df(
 
 # Export dfs
 otu_postlulu_df_microdeconFiltered.to_csv(
-    otu_postlulu_file.replace(".parquet.snappy", "_microdecon-filtered.csv"),
+    otu_postlulu_file.replace(".csv", "-without_NegControls.csv"),
     index=False,
 )
 esv_postlulu_df_microdeconFiltered.to_csv(
-    esv_postlulu_file.replace(".parquet.snappy", "_microdecon-filtered.csv"),
+    esv_postlulu_file.replace(".csv", "-without_NegControls.csv"),
     index=False,
 )
 
 # Provide the desired filenames for the FASTA files
 fasta_filename_otus = os.path.join(
-    args.project_dir,
-    "9_lulu_filtering",
-    "otu_clustering",
-    f"{project_name}_OTUs_filtered_microdecon-filtered.fasta",
+    path_to_otu_clustering,
+    f"{project_name}-OTU_sequences-without_NegControls.fasta",
 )
 fasta_filename_esvs = os.path.join(
-    args.project_dir,
-    "9_lulu_filtering",
-    "denoising",
-    f"{project_name}_ESVs_filtered_microdecon-filtered.fasta",
+    path_to_denoising,
+    f"{project_name}-ESV_sequences-without_NegControls.fasta",
 )
 
 # Write the FASTA files
