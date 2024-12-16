@@ -855,7 +855,7 @@ else:
 time_print("Generating apscale processing graphs...")
 
 # Make outdir for project_dir if it doesn't already exist
-outdir = os.path.join(project_dir, "0_statistics_and_graphs")
+outdir = os.path.join(project_dir, "processing_graphs")
 os.makedirs(outdir, exist_ok=True)
 if make_maps == "True":
     mapdir = os.path.join(outdir, "GBIF_species_occurrence_maps")
@@ -980,8 +980,8 @@ df_stats.index = samples + [
 ]
 ## Save stats df
 out_xlsx = os.path.join(
-    outdir,
-    f"{project_name}_summary_stats.xlsx",
+    project_dir,
+    f"{project_name}_processing_summary.xlsx",
 )
 df_stats.to_excel(out_xlsx)
 
