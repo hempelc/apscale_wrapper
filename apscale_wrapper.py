@@ -17,6 +17,7 @@ import subprocess
 from pathlib import Path
 import os
 import sys
+import glob
 
 
 # Define that warnings are not printed to console
@@ -287,6 +288,13 @@ parser.add_argument(
     required=True,
 )
 parser.add_argument(
+    "--taxonomic_unit",
+    required=True,
+    choices=["OTU", "ESV"],
+    help="""Do you want to generate OTUs or ESVs? (Note: for now, both OTUs and ESVs are always generated
+    and this setting only affects the files that are stored in the "final_files" directory)""",
+)
+parser.add_argument(
     "--maxEE",
     metavar="N",
     default="2",
@@ -472,6 +480,12 @@ parser.add_argument(
     default="2",
     help="Number of cores to use (default: 2).",
 )
+parser.add_argument(
+    "--keep_intermediate_files",
+    default="False",
+    choices=["True", "False"],
+    help="Do you want to keep intermediate files on top of final results files?",
+)
 
 # Register the custom validation function to be called after parsing arguments
 parser.set_defaults(func=validate_args)
@@ -513,6 +527,7 @@ settings = settings.drop(
         "cores",
         "func",
         "make_maps",
+        "keep_intermediate_files",
     ]
 )
 ## Add manual setting descriptions where helpful (requires manual tweaking if more settings are added or the order is changed)
@@ -523,6 +538,7 @@ settings["Description"] = [
     "",
     "Minimum limit of expected amplicon length (used for length filtering)",
     "Maximum limit of expected amplicon length (used for length filtering)",
+    "Generated taxonomic unit"
     "maxEE (maximum estimated error) value used for quality filtering",
     "If coi=True, the pipeline invokes DnoisE instead of Unoise for the denoising step",
     "If prior_denoising=True, then the reads are denoised prior to clustering",
@@ -945,11 +961,11 @@ os.remove(
 # Rename Apscale .xlsx results files
 os.rename(
     os.path.join(path_to_otu_clustering, f"{apscale_dir}_OTU_table_filtered.xlsx"),
-    os.path.join(path_to_otu_clustering, f"{apscale_dir}-OTU_table.xlsx"),
+    os.path.join(path_to_otu_clustering, f"{apscale_dir}-OTU_table-raw.xlsx"),
 )
 os.rename(
     os.path.join(path_to_denoising, f"{apscale_dir}_ESV_table_filtered.xlsx"),
-    os.path.join(path_to_denoising, f"{apscale_dir}-ESV_table.xlsx"),
+    os.path.join(path_to_denoising, f"{apscale_dir}-ESV_table-raw.xlsx"),
 )
 # Rename Apscale .fasta files
 os.rename(
@@ -960,6 +976,71 @@ os.rename(
     os.path.join(path_to_denoising, f"{apscale_dir}_ESVs_filtered.fasta"),
     os.path.join(path_to_denoising, f"{apscale_dir}-ESV_sequences.fasta"),
 )
+# Remove report files
+os.remove(
+    os.path.join(
+        apscale_dir,
+        "Project_report.xlsx",
+    )
+)
+# Rename apscale settings
+os.rename(
+    os.path.join(
+        apscale_dir,
+        "Settings.xlsx",
+    ),
+    os.path.join(
+        apscale_dir,
+        f"{apscale_dir}_core_settings.xlsx",
+    ),
+)
+# Store final output in separate dir
+final_files_dir = os.path.join(args.project_name, "final_files")
+os.makedirs(final_files_dir, exist_ok=True)
+final_files_pattern = os.path.join(
+    apscale_dir, "9_lulu_filtering", "**", f"{apscale_dir}-{args.taxonomic_unit}_"
+)
+final_files_paths = glob.glob(final_files_pattern, recursive=True)
+for final_file_path in final_files_paths:
+    os.rename(
+        final_file_path,
+        os.path.join(final_files_dir, os.path.basename(final_file_path)),
+    )
+
+# Restructure intermediate dirs and files
+intermediate_results = [
+    "1_raw data",
+    "2_demultiplexing",
+    "3_PE_merging",
+    "4_primer_trimming",
+    "5_quality_filtering",
+    "6_dereplication_pooling",
+    "7_otu_clustering",
+    "8_denoising",
+    "9_lulu_filtering",
+]
+intermediate_files_dir = os.path.join(args.project_name, "intermediate_files")
+os.makedirs(intermediate_files_dir, exist_ok=True)
+for intermediate_result in intermediate_results:
+    os.rename(
+        os.path.join(apscale_dir, intermediate_result),
+        os.path.join(apscale_dir, intermediate_files_dir, intermediate_result),
+    )
+## Rename and move apscale core settings
+os.rename(
+    os.path.join(
+        apscale_dir,
+        "Settings.xlsx",
+    ),
+    os.path.join(
+        apscale_dir,
+        intermediate_files_dir,
+        f"{apscale_dir}_core_settings.xlsx",
+    ),
+)
+# Remove intermediate files if set
+if args.keep_intermediate_files == "False":
+    os.rmdir(intermediate_files_dir)
 
 time_print("Apscale wrapper done.")
 
