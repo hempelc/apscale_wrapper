@@ -538,7 +538,7 @@ settings["Description"] = [
     "",
     "Minimum limit of expected amplicon length (used for length filtering)",
     "Maximum limit of expected amplicon length (used for length filtering)",
-    "Generated taxonomic unit"
+    "Generated taxonomic unit",
     "maxEE (maximum estimated error) value used for quality filtering",
     "If coi=True, the pipeline invokes DnoisE instead of Unoise for the denoising step",
     "If prior_denoising=True, then the reads are denoised prior to clustering",
