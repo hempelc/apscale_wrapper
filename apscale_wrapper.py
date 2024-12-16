@@ -1033,7 +1033,6 @@ os.rename(
         "Settings.xlsx",
     ),
     os.path.join(
-        apscale_dir,
         intermediate_files_dir,
         f"{apscale_dir}_core_settings.xlsx",
     ),
