@@ -984,17 +984,6 @@ os.remove(
         "Project_report.xlsx",
     )
 )
-# Rename apscale settings
-os.rename(
-    os.path.join(
-        apscale_dir,
-        "Settings.xlsx",
-    ),
-    os.path.join(
-        apscale_dir,
-        f"{apscale_dir}_core_settings.xlsx",
-    ),
-)
 # Store final output in separate dir
 final_files_dir = os.path.join(apscale_dir, "final_files")
 os.makedirs(final_files_dir, exist_ok=True)
