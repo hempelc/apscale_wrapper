@@ -995,10 +995,10 @@ os.rename(
     ),
 )
 # Store final output in separate dir
-final_files_dir = os.path.join(args.project_name, "final_files")
+final_files_dir = os.path.join(apscale_dir, "final_files")
 os.makedirs(final_files_dir, exist_ok=True)
 final_files_pattern = os.path.join(
-    apscale_dir, "9_lulu_filtering", "**", f"{apscale_dir}-{args.taxonomic_unit}_"
+    apscale_dir, "9_lulu_filtering", "*", f"{apscale_dir}-{args.taxonomic_unit}_*"
 )
 final_files_paths = glob.glob(final_files_pattern, recursive=True)
 for final_file_path in final_files_paths:
@@ -1019,7 +1019,7 @@ intermediate_results = [
     "8_denoising",
     "9_lulu_filtering",
 ]
-intermediate_files_dir = os.path.join(args.project_name, "intermediate_files")
+intermediate_files_dir = os.path.join(apscale_dir, "intermediate_files")
 os.makedirs(intermediate_files_dir, exist_ok=True)
 for intermediate_result in intermediate_results:
     os.rename(
