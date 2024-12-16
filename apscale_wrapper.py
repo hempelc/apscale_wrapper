@@ -18,6 +18,7 @@ from pathlib import Path
 import os
 import sys
 import glob
+import shutil
 
 
 # Define that warnings are not printed to console
@@ -1039,7 +1040,8 @@ os.rename(
 )
 # Remove intermediate files if set
 if args.keep_intermediate_files == "False":
-    os.rmdir(intermediate_files_dir)
+    shutil.rmtree(intermediate_files_dir)
+
 
 time_print("Apscale wrapper done.")
 
