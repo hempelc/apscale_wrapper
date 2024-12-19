@@ -1002,7 +1002,7 @@ for final_file_path in final_files_paths:
 final_file_order = [
     "-raw.xlsx",
     "_unfiltered",
-    "filtered_taxonomy.csv",
+    "with_filtered_taxonomy.csv",
     "-without_NegControls.csv",
     "_sequences.fasta",
     "-without_NegControls.fasta",
