@@ -997,6 +997,35 @@ for final_file_path in final_files_paths:
         os.path.join(final_files_dir, os.path.basename(final_file_path)),
     )
 
+# Rename final files
+## Define the desired file order
+final_file_order = [
+    "-raw.xlsx",
+    "_unfiltered",
+    "filtered_taxonomy.csv",
+    "-without_NegControls.csv",
+    "_sequences.fasta",
+    "-without_NegControls.fasta",
+]
+## List all files in the final directory
+final_files = os.listdir(final_files_dir)
+## Initialize counter for enumeration
+counter = 1
+
+for pattern in final_file_order:
+    # Filter files matching the current pattern
+    matching_files = [file for file in final_files if pattern in file]
+    # If matching files exist, rename them in order
+    for file in matching_files:
+        # Construct new filename
+        new_name = file.replace("ESV", f"{counter}_ESV")
+        # Rename the file
+        os.rename(
+            os.path.join(final_files_dir, file), os.path.join(final_files_dir, new_name)
+        )
+        # Increment counter
+        counter += 1
+
 # Restructure intermediate dirs and files
 intermediate_results = [
     "1_raw data",
