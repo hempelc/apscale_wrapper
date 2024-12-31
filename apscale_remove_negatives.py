@@ -231,14 +231,24 @@ esv_postlulu_df_microdeconFiltered = remove_negs_from_df(
 )
 
 # Export dfs
-otu_postlulu_df_microdeconFiltered.to_csv(
-    otu_postlulu_file.replace(".csv", "-without_NegControls.csv"),
-    index=False,
-)
-esv_postlulu_df_microdeconFiltered.to_csv(
-    esv_postlulu_file.replace(".csv", "-without_NegControls.csv"),
-    index=False,
-)
+if args.add_taxonomy == "True":
+    otu_postlulu_df_microdeconFiltered.to_csv(
+        otu_postlulu_file.replace(".csv", "-without_NegControls.csv"),
+        index=False,
+    )
+    esv_postlulu_df_microdeconFiltered.to_csv(
+        esv_postlulu_file.replace(".csv", "-without_NegControls.csv"),
+        index=False,
+    )
+else:
+    otu_postlulu_df_microdeconFiltered.to_csv(
+        otu_postlulu_file.replace(".xlsx", "-without_NegControls.csv"),
+        index=False,
+    )
+    esv_postlulu_df_microdeconFiltered.to_csv(
+        esv_postlulu_file.replace(".xlsx", "-without_NegControls.csv"),
+        index=False,
+    )
 
 # Provide the desired filenames for the FASTA files
 fasta_filename_otus = os.path.join(
