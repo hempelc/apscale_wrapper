@@ -139,6 +139,13 @@ parser.add_argument(
     help="Directory containing apscale results.",
     required=True,
 )
+parser.add_argument(
+    "--add_taxonomy",
+    help="Did you taxonomically annotate ESVs and OTUs? (default: False)",
+    default="False",
+    choices=["True", "False"],
+)
+
 
 # Parse argument
 args = parser.parse_args()
@@ -158,17 +165,28 @@ path_to_otu_clustering = os.path.join(
 path_to_denoising = os.path.join(project_name, "9_lulu_filtering", "denoising")
 
 # Path to ESV/OTU post-LULU files
-otu_postlulu_file = os.path.join(
-    path_to_otu_clustering,
-    f"{project_name}-OTU_table-with_filtered_taxonomy.csv",
-)
-esv_postlulu_file = os.path.join(
-    path_to_denoising,
-    f"{project_name}-ESV_table-with_filtered_taxonomy.csv",
-)
+if args.add_taxonomy == "True":
+    otu_postlulu_file = os.path.join(
+        path_to_otu_clustering,
+        f"{project_name}-OTU_table-with_filtered_taxonomy.csv",
+    )
+    esv_postlulu_file = os.path.join(
+        path_to_denoising,
+        f"{project_name}-ESV_table-with_filtered_taxonomy.csv",
+    )
+    esv_postlulu_df = pd.read_csv(esv_postlulu_file)
+    otu_postlulu_df = pd.read_csv(otu_postlulu_file)
+else:
+    otu_postlulu_file = os.path.join(
+        path_to_otu_clustering, f"{project_name}_OTU_table_filtered.xlsx"
+    )
+    esv_postlulu_file = os.path.join(
+        path_to_denoising,
+        f"{project_name}_ESV_table_filtered.xlsx",
+    )
+    esv_postlulu_df = pd.read_excel(esv_postlulu_file)
+    otu_postlulu_df = pd.read_excel(otu_postlulu_file)
 
-esv_postlulu_df = pd.read_csv(esv_postlulu_file)
-otu_postlulu_df = pd.read_csv(otu_postlulu_file)
 
 # Test if microdecon is installed:
 if not rpackages.isinstalled("microDecon"):
