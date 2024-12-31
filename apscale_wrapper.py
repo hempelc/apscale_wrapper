@@ -986,16 +986,25 @@ os.rename(
     os.path.join(path_to_denoising, f"{apscale_dir}-ESV_sequences.fasta"),
 )
 if args.add_taxonomy == "False":
-# Rename raw table withput neg controls
-os.rename(
-    os.path.join(path_to_otu_clustering, f"{apscale_dir}_OTU_table_filtered-without_NegControls.csv"),
-    os.path.join(path_to_otu_clustering, f"{apscale_dir}-OTU_table-without_NegControls.csv"),
-)
-os.rename(
-    os.path.join(path_to_denoising, f"{apscale_dir}_ESV_table_filtered-without_NegControls.csv"),
-    os.path.join(path_to_denoising, f"{apscale_dir}-ESV_table-without_NegControls.csv"),
-)
-
+    # Rename raw table withput neg controls
+    os.rename(
+        os.path.join(
+            path_to_otu_clustering,
+            f"{apscale_dir}_OTU_table_filtered-without_NegControls.csv",
+        ),
+        os.path.join(
+            path_to_otu_clustering, f"{apscale_dir}-OTU_table-without_NegControls.csv"
+        ),
+    )
+    os.rename(
+        os.path.join(
+            path_to_denoising,
+            f"{apscale_dir}_ESV_table_filtered-without_NegControls.csv",
+        ),
+        os.path.join(
+            path_to_denoising, f"{apscale_dir}-ESV_table-without_NegControls.csv"
+        ),
+    )
 
 # Remove report files
 os.remove(
