@@ -51,14 +51,21 @@ def remove_negs_from_df(df, unit, negative_controls):
         return df.drop(columns=negative_controls_drop)
 
     # Identify true samples and all samples
-    ranks = ["domain", "phylum", "class", "order", "family", "genus", "species"]
     notSampleColumns = [
         "ID",
         "Seq",
-        "total_reads",
-        "lowest_rank",
-        "lowest_taxon",
-    ] + ranks
+    ]
+    if args.add_taxonomy == "True":
+        ranks = ["domain", "phylum", "class", "order", "family", "genus", "species"]
+        notSampleColumns = (
+            notSampleColumns
+            + [
+                "total_reads",
+                "lowest_rank",
+                "lowest_taxon",
+            ]
+            + ranks
+        )
     true_samples = list(df.columns.difference(negative_controls + notSampleColumns))
     samples = negative_controls_keep + true_samples
 
@@ -115,9 +122,9 @@ def remove_negs_from_df(df, unit, negative_controls):
     df_decon = df_decon.drop(columns=["NumericValues"])
     # Drop ESVs with 0 reads
     df_decon = df_decon[df_decon.drop(columns=notSampleColumns).sum(axis=1) != 0]
-
-    # Update the "total reads" column since Neg samples were dropped
-    df_decon["total_reads"] = df_decon[true_samples].sum(axis=1)
+    if args.add_taxonomy == "True":
+        # Update the "total reads" column since Neg samples were dropped
+        df_decon["total_reads"] = df_decon[true_samples].sum(axis=1)
 
     return df_decon
 
