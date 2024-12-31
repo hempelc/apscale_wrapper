@@ -767,60 +767,66 @@ if args.add_taxonomy == "True":
             f"{apscale_dir}-ESV_table-with_unfiltered_taxonomy.csv",
         )
 
-# Classify sequences
-## Define classification parameters for both tax annotation tools
-classification_kwargs = {
-    "blast": {
-        "blast_database": args.blast_database,
-        "database_format": args.database_format,
-        "blast_evalue": args.blast_evalue,
-        "blast_filter_mode": args.blast_filter_mode,
-        "blast_bitscore_percentage": args.blast_bitscore_percentage,
-        "blast_alignment_length": args.blast_alignment_length,
-        "blast_bitscore_threshold": args.blast_bitscore_threshold,
-        "blast_cutoff_pidents": args.blast_cutoff_pidents,
-        "cores": args.cores,
-    },
-    "sintax": {
-        "sintax_database": args.sintax_database,
-        "database_format": args.database_format,
-        "sintax_confidence_cutoff": args.sintax_confidence_cutoff,
-    },
-}
-# Run classification
-run_classification(
-    fastafile_otus,
-    classificationOutFile_otus,
-    args.taxonomy_classifier,
-    **classification_kwargs[args.taxonomy_classifier],
-)
-run_classification(
-    fastafile_esvs,
-    classificationOutFile_esvs,
-    args.taxonomy_classifier,
-    **classification_kwargs[args.taxonomy_classifier],
-)
+    # Classify sequences
+    ## Define classification parameters for both tax annotation tools
+    classification_kwargs = {
+        "blast": {
+            "blast_database": args.blast_database,
+            "database_format": args.database_format,
+            "blast_evalue": args.blast_evalue,
+            "blast_filter_mode": args.blast_filter_mode,
+            "blast_bitscore_percentage": args.blast_bitscore_percentage,
+            "blast_alignment_length": args.blast_alignment_length,
+            "blast_bitscore_threshold": args.blast_bitscore_threshold,
+            "blast_cutoff_pidents": args.blast_cutoff_pidents,
+            "cores": args.cores,
+        },
+        "sintax": {
+            "sintax_database": args.sintax_database,
+            "database_format": args.database_format,
+            "sintax_confidence_cutoff": args.sintax_confidence_cutoff,
+        },
+    }
+    ## Run classification
+    run_classification(
+        fastafile_otus,
+        classificationOutFile_otus,
+        args.taxonomy_classifier,
+        **classification_kwargs[args.taxonomy_classifier],
+    )
+    run_classification(
+        fastafile_esvs,
+        classificationOutFile_esvs,
+        args.taxonomy_classifier,
+        **classification_kwargs[args.taxonomy_classifier],
+    )
 
-time_print("Taxonomy generated. Merging taxonomy with OTU/ESV tables...")
+    time_print("Taxonomy generated. Merging taxonomy with OTU/ESV tables...")
 
-# Merging and saving taxonomy with tables
-merge_and_add_total_and_save(otu_table_file, classificationOutFile_otus, otu_outfile)
-merge_and_add_total_and_save(esv_table_file, classificationOutFile_esvs, esv_outfile)
-
-# Cleanup classification files
-clean_up(classificationOutFile_otus, classificationOutFile_esvs)
-
-# Save unfiltered tax files if required
-if args.taxonomy_classifier == "sintax" or (
-    args.taxonomy_classifier == "blast" and args.blast_filter_mode == "strict"
-):
+    # Merging and saving taxonomy with tables
     merge_and_add_total_and_save(
-        otu_table_file, classificationOutFile_otus_noCutoff, otu_outfile_noCutoff
+        otu_table_file, classificationOutFile_otus, otu_outfile
     )
     merge_and_add_total_and_save(
-        esv_table_file, classificationOutFile_esvs_noCutoff, esv_outfile_noCutoff
+        esv_table_file, classificationOutFile_esvs, esv_outfile
     )
-    clean_up(classificationOutFile_otus_noCutoff, classificationOutFile_esvs_noCutoff)
+
+    # Cleanup classification files
+    clean_up(classificationOutFile_otus, classificationOutFile_esvs)
+
+    # Save unfiltered tax files if required
+    if args.taxonomy_classifier == "sintax" or (
+        args.taxonomy_classifier == "blast" and args.blast_filter_mode == "strict"
+    ):
+        merge_and_add_total_and_save(
+            otu_table_file, classificationOutFile_otus_noCutoff, otu_outfile_noCutoff
+        )
+        merge_and_add_total_and_save(
+            esv_table_file, classificationOutFile_esvs_noCutoff, esv_outfile_noCutoff
+        )
+        clean_up(
+            classificationOutFile_otus_noCutoff, classificationOutFile_esvs_noCutoff
+        )
 
 
 if args.remove_negative_controls == "True":
