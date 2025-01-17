@@ -106,7 +106,9 @@ def generateSettings(**kwargs):
         df_5.to_excel(writer, sheet_name="5_quality_filtering", index=False)
 
         ## write the 6_dereplication_pooling sheet
-        df_6 = pd.DataFrame([[args.minsize_to_pool]], columns=["min size to pool"])
+        df_6 = pd.DataFrame(
+            [[args.minsize_derep_pooling]], columns=["minsize_derep_pooling"]
+        )
 
         df_6.to_excel(writer, sheet_name="6_dereplication_pooling", index=False)
 
@@ -137,7 +139,7 @@ def generateSettings(**kwargs):
         ## write the 8_denoising sheet
         df_8 = pd.DataFrame(
             [[2, args.minsize_denoising, args.coi, "True"]],
-            columns=["alpha", "minsize", "coi", "to excel"],
+            columns=["alpha", "minsize_denoising", "coi", "to excel"],
         )
 
         df_8.to_excel(writer, sheet_name="8_denoising", index=False)
@@ -316,11 +318,11 @@ parser.add_argument(
     help="Set to True if you want to denoise reads prior to OTU clustering (default: False).",
 )
 parser.add_argument(
-    "--minsize_to_pool",
+    "--minsize_derep_pooling",
     metavar="N",
     default="4",
     help="""Filtering criterion during the dereplication and pooling step. Sequences with lower abundance
-    than the defined threshold are filtered out during pooling (default: 4).""",
+    than the defined threshold are filtered out during dereplication and pooling (default: 4).""",
 )
 parser.add_argument(
     "--clusteringtool",
