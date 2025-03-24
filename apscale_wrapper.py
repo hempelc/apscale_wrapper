@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 
 """
-A wrapper to run apscale on forward and reverse reads and to generate 
+A wrapper to run apscale on forward and reverse reads and to generate
 processing QC graphs.
 
 Requires the submodules apscale_processing_graphs.py, apscale_blast.py, and apscale_remove_negatives.py in PATH.
 
 By Chris Hempel (christopher.hempel@kaust.edu.sa) on 15 Aug 2023
 """
+
+__apscale_version__ = "1.6.3"
+__apscale_wrapper_version__ = "0.1.0"
 
 import datetime
 import pandas as pd
@@ -623,6 +626,15 @@ elif args.add_taxonomy == "False":
     )
 ## Export
 settings = settings.reset_index().rename(columns={"index": "Setting"})
+version_settings = pd.DataFrame(
+    {
+        "Setting": ["apscale_version", "apscale_wrapper_version"],
+        "Parameter": [__apscale_version__, __apscale_wrapper_version__],
+        "Description": ["", ""],
+    }
+)
+# Append the new rows using pd.concat()
+settings = pd.concat([settings, version_settings], ignore_index=True)
 settings.to_csv(f"{apscale_dir}_wrapper_settings.csv", index=False)
 
 # Create log
