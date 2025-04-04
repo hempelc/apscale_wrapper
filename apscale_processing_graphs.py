@@ -983,7 +983,7 @@ out_csv = os.path.join(
     project_dir,
     f"{project_name}_processing_summary.csv",
 )
-df_stats.to_csv(out_csv, index=False)
+df_stats.to_csv(out_csv)
 
 # Graphs
 # Set graph width based on number of samples (note: doesn't work consistently)
