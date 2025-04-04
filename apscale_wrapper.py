@@ -10,7 +10,7 @@ By Chris Hempel (christopher.hempel@kaust.edu.sa) on 15 Aug 2023
 """
 
 __apscale_version__ = "1.6.3"
-__apscale_wrapper_version__ = "0.1.0"
+__apscale_wrapper_version__ = "0.1.1"
 
 import datetime
 import pandas as pd
