@@ -1097,8 +1097,8 @@ os.rename(
         "Settings.xlsx",
     ),
     os.path.join(
-        final_files_dir,
-        f"{apscale_dir}_core_settings.xlsx",
+        apscale_dir,
+        f"{apscale_dir}_settings.xlsx",
     ),
 )
 # Remove intermediate files if set
