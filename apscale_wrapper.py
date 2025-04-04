@@ -1028,7 +1028,7 @@ os.remove(
     )
 )
 # Store final output in separate dir
-final_files_dir = os.path.join(apscale_dir, "final_files")
+final_files_dir = os.path.join(apscale_dir, f"{apscale_dir}-final_files")
 os.makedirs(final_files_dir, exist_ok=True)
 final_files_pattern = os.path.join(
     apscale_dir, "9_lulu_filtering", "*", f"{apscale_dir}-{args.taxonomic_unit}_*"
@@ -1037,9 +1037,11 @@ final_files_paths = glob.glob(final_files_pattern, recursive=True)
 for final_file_path in final_files_paths:
     os.rename(
         final_file_path,
-        os.path.join(final_files_dir, os.path.basename(final_file_path)),
+        os.path.join(
+            final_files_dir,
+            os.path.basename(final_file_path).replace(f"{apscale_dir}-", ""),
+        ),
     )
-
 # Rename final files
 ## Define the desired file order
 final_file_order = [
@@ -1081,7 +1083,7 @@ intermediate_results = [
     "8_denoising",
     "9_lulu_filtering",
 ]
-intermediate_files_dir = os.path.join(apscale_dir, "intermediate_files")
+intermediate_files_dir = os.path.join(apscale_dir, f"{apscale_dir}-intermediate_files")
 os.makedirs(intermediate_files_dir, exist_ok=True)
 for intermediate_result in intermediate_results:
     os.rename(
@@ -1095,7 +1097,7 @@ os.rename(
         "Settings.xlsx",
     ),
     os.path.join(
-        intermediate_files_dir,
+        final_files_dir,
         f"{apscale_dir}_core_settings.xlsx",
     ),
 )

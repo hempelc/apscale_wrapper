@@ -979,11 +979,11 @@ df_stats.index = samples + [
     "_deviation",
 ]
 ## Save stats df
-out_xlsx = os.path.join(
+out_csv = os.path.join(
     project_dir,
-    f"{project_name}_processing_summary.xlsx",
+    f"{project_name}_processing_summary.csv",
 )
-df_stats.to_excel(out_xlsx)
+df_stats.to_csv(out_csv, index=False)
 
 # Graphs
 # Set graph width based on number of samples (note: doesn't work consistently)
@@ -1026,14 +1026,14 @@ if graph_format == "html":
     pe_graph.write_html(
         os.path.join(
             outdir,
-            f"{project_name}_1_pe_merging.{graph_format}",
+            f"1_pe_merging.{graph_format}",
         )
     )
 else:
     pe_graph.write_image(
         os.path.join(
             outdir,
-            f"{project_name}_1_pe_merging.{graph_format}",
+            f"1_pe_merging.{graph_format}",
         )
     )
 time_print("PE graph generated.")
@@ -1074,14 +1074,14 @@ if graph_format == "html":
     trim_graph.write_html(
         os.path.join(
             outdir,
-            f"{project_name}_2_trimming.{graph_format}",
+            f"2_trimming.{graph_format}",
         )
     )
 else:
     trim_graph.write_image(
         os.path.join(
             outdir,
-            f"{project_name}_2_trimming.{graph_format}",
+            f"2_trimming.{graph_format}",
         )
     )
 time_print("Trimming graph generated.")
@@ -1147,14 +1147,14 @@ if graph_format == "html":
     length_graph.write_html(
         os.path.join(
             outdir,
-            f"{project_name}_3_read_lengths.{graph_format}",
+            f"3_read_lengths.{graph_format}",
         )
     )
 else:
     length_graph.write_image(
         os.path.join(
             outdir,
-            f"{project_name}_3_read_lengths.{graph_format}",
+            f"3_read_lengths.{graph_format}",
         )
     )
 time_print("Read lengths graph generated.")
@@ -1196,14 +1196,14 @@ if graph_format == "html":
     qf_graph.write_html(
         os.path.join(
             outdir,
-            f"{project_name}_4_qualityFiltering.{graph_format}",
+            f"4_qualityFiltering.{graph_format}",
         )
     )
 else:
     qf_graph.write_image(
         os.path.join(
             outdir,
-            f"{project_name}_4_qualityFiltering.{graph_format}",
+            f"4_qualityFiltering.{graph_format}",
         )
     )
 time_print("Quality filtering graph generated.")
@@ -1246,14 +1246,14 @@ if graph_format == "html":
     derep_graph.write_html(
         os.path.join(
             outdir,
-            f"{project_name}_5_dereplication.{graph_format}",
+            f"5_dereplication.{graph_format}",
         )
     )
 else:
     derep_graph.write_image(
         os.path.join(
             outdir,
-            f"{project_name}_5_dereplication.{graph_format}",
+            f"5_dereplication.{graph_format}",
         )
     )
 time_print("Dereplication graph generated.")
@@ -1289,14 +1289,14 @@ if graph_format == "html":
     rawreads_graph.write_html(
         os.path.join(
             outdir,
-            f"{project_name}_6_numberRawreads.{graph_format}",
+            f"6_numberRawreads.{graph_format}",
         )
     )
 else:
     rawreads_graph.write_image(
         os.path.join(
             outdir,
-            f"{project_name}_6_numberRawreads.{graph_format}",
+            f"6_numberRawreads.{graph_format}",
         )
     )
 time_print("Raw reads graph generated.")
@@ -1333,14 +1333,14 @@ if graph_format == "html":
     filteredreads_graph.write_html(
         os.path.join(
             outdir,
-            f"{project_name}_7_numberFilteredreads.{graph_format}",
+            f"7_numberFilteredreads.{graph_format}",
         )
     )
 else:
     filteredreads_graph.write_image(
         os.path.join(
             outdir,
-            f"{project_name}_7_numberFilteredreads.{graph_format}",
+            f"7_numberFilteredreads.{graph_format}",
         )
     )
 time_print("Filtered reads graph generated.")
@@ -1368,14 +1368,14 @@ if graph_format == "html":
     prelulu_graph_esvs.write_html(
         os.path.join(
             outdir,
-            f"{project_name}_8_prelulu_esvs.{graph_format}",
+            f"8_prelulu_esvs.{graph_format}",
         )
     )
 else:
     prelulu_graph_esvs.write_image(
         os.path.join(
             outdir,
-            f"{project_name}_8_prelulu_esvs.{graph_format}",
+            f"8_prelulu_esvs.{graph_format}",
         )
     )
 time_print("Number of ESVs before LULU graph generated.")
@@ -1402,14 +1402,14 @@ if graph_format == "html":
     postlulu_graph_esvs.write_html(
         os.path.join(
             outdir,
-            f"{project_name}_9_postlulu_esvs.{graph_format}",
+            f"9_postlulu_esvs.{graph_format}",
         )
     )
 else:
     postlulu_graph_esvs.write_image(
         os.path.join(
             outdir,
-            f"{project_name}_9_postlulu_esvs.{graph_format}",
+            f"9_postlulu_esvs.{graph_format}",
         )
     )
 time_print("Number of ESVs after LULU graph generated.")
@@ -1437,14 +1437,14 @@ if graph_format == "html":
     prelulu_graph_otus.write_html(
         os.path.join(
             outdir,
-            f"{project_name}_10_prelulu_otus.{graph_format}",
+            f"10_prelulu_otus.{graph_format}",
         )
     )
 else:
     prelulu_graph_otus.write_image(
         os.path.join(
             outdir,
-            f"{project_name}_10_prelulu_otus.{graph_format}",
+            f"10_prelulu_otus.{graph_format}",
         )
     )
 time_print("Number of OTUs before LULU graph generated.")
@@ -1471,14 +1471,14 @@ if graph_format == "html":
     postlulu_graph_otus.write_html(
         os.path.join(
             outdir,
-            f"{project_name}_11_postlulu_otus.{graph_format}",
+            f"11_postlulu_otus.{graph_format}",
         )
     )
 else:
     postlulu_graph_otus.write_image(
         os.path.join(
             outdir,
-            f"{project_name}_11_postlulu_otus.{graph_format}",
+            f"11_postlulu_otus.{graph_format}",
         )
     )
 time_print("Number of OTUs after LULU graph generated.")
@@ -1505,14 +1505,14 @@ if graph_format == "html":
     lulu_pre_post_graph.write_html(
         os.path.join(
             outdir,
-            f"{project_name}_12_lulu_filtering_stats.{graph_format}",
+            f"12_lulu_filtering_stats.{graph_format}",
         )
     )
 else:
     lulu_pre_post_graph.write_image(
         os.path.join(
             outdir,
-            f"{project_name}_12_lulu_filtering_stats.{graph_format}",
+            f"12_lulu_filtering_stats.{graph_format}",
         )
     )
 time_print("Pre- vs. post-LULU comparison graph generated.")
@@ -1537,14 +1537,14 @@ if graph_format == "html":
     reads_esvs_graph.write_html(
         os.path.join(
             outdir,
-            f"{project_name}_13_reads_vs_esvs.{graph_format}",
+            f"13_reads_vs_esvs.{graph_format}",
         )
     )
 else:
     reads_esvs_graph.write_image(
         os.path.join(
             outdir,
-            f"{project_name}_13_reads_vs_esvs.{graph_format}",
+            f"13_reads_vs_esvs.{graph_format}",
         )
     )
 time_print("Number of reads vs. ESVs graph generated.")
@@ -1570,14 +1570,14 @@ if graph_format == "html":
     reads_otus_graph.write_html(
         os.path.join(
             outdir,
-            f"{project_name}_14_reads_vs_otus.{graph_format}",
+            f"14_reads_vs_otus.{graph_format}",
         )
     )
 else:
     reads_otus_graph.write_image(
         os.path.join(
             outdir,
-            f"{project_name}_14_reads_vs_otus.{graph_format}",
+            f"14_reads_vs_otus.{graph_format}",
         )
     )
 time_print("Number of reads vs. OTUs graph generated.")
@@ -1606,14 +1606,14 @@ if graph_format == "html":
     esv_linegraph.write_html(
         os.path.join(
             outdir,
-            f"{project_name}_15_linegraph_esvs.{graph_format}",
+            f"15_linegraph_esvs.{graph_format}",
         )
     )
 else:
     esv_linegraph.write_image(
         os.path.join(
             outdir,
-            f"{project_name}_15_linegraph_esvs.{graph_format}",
+            f"15_linegraph_esvs.{graph_format}",
         )
     )
 time_print("Lineplot ESVs graph generated.")
@@ -1637,14 +1637,14 @@ if graph_format == "html":
     otu_linegraph.write_html(
         os.path.join(
             outdir,
-            f"{project_name}_16_linegraph_otus.{graph_format}",
+            f"16_linegraph_otus.{graph_format}",
         )
     )
 else:
     otu_linegraph.write_image(
         os.path.join(
             outdir,
-            f"{project_name}_16_linegraph_otus.{graph_format}",
+            f"16_linegraph_otus.{graph_format}",
         )
     )
 time_print("Lineplot OTUs graph generated.")
@@ -1666,14 +1666,14 @@ if graph_format == "html":
     boxplot.write_html(
         os.path.join(
             outdir,
-            f"{project_name}_17_boxplot_read_summary.{graph_format}",
+            f"17_boxplot_read_summary.{graph_format}",
         )
     )
 else:
     boxplot.write_image(
         os.path.join(
             outdir,
-            f"{project_name}_17_boxplot_read_summary.{graph_format}",
+            f"17_boxplot_read_summary.{graph_format}",
         )
     )
 time_print("Boxplot generated.")
@@ -1715,14 +1715,14 @@ if graph_format == "html":
     esv_clustergram.write_html(
         os.path.join(
             outdir,
-            f"{project_name}_18_esv_clustergram.{graph_format}",
+            f"18_esv_clustergram.{graph_format}",
         )
     )
 else:
     esv_clustergram.write_image(
         os.path.join(
             outdir,
-            f"{project_name}_18_esv_clustergram.{graph_format}",
+            f"18_esv_clustergram.{graph_format}",
         )
     )
 time_print("Clustergram generated for ESVs.")
@@ -1764,14 +1764,14 @@ if graph_format == "html":
     otu_clustergram.write_html(
         os.path.join(
             outdir,
-            f"{project_name}_19_otu_clustergram.{graph_format}",
+            f"19_otu_clustergram.{graph_format}",
         )
     )
 else:
     otu_clustergram.write_image(
         os.path.join(
             outdir,
-            f"{project_name}_19_otu_clustergram.{graph_format}",
+            f"19_otu_clustergram.{graph_format}",
         )
     )
 time_print("Clustergram generated for OTUs.")
@@ -1829,7 +1829,7 @@ if (
         [
             "ktImportText",
             "-o",
-            os.path.join(outdir, f"{project_name}_20_esv_krona.html"),
+            os.path.join(outdir, f"20_esv_krona.html"),
             os.path.join(outdir, f"{project_name}_ESVs_krona-formatted.csv"),
         ]
     )
@@ -1840,7 +1840,7 @@ if (
         [
             "ktImportText",
             "-o",
-            os.path.join(outdir, f"{project_name}_21_otu_krona.html"),
+            os.path.join(outdir, f"21_otu_krona.html"),
             os.path.join(outdir, f"{project_name}_OTUs_krona-formatted.csv"),
         ]
     )
@@ -1903,13 +1903,13 @@ if make_maps == "True":
             continent_occurrence_plot_otus.write_html(
                 os.path.join(
                     outdir,
-                    f"{project_name}_22_continent_occurrence_plot_otus.{graph_format}",
+                    f"22_continent_occurrence_plot_otus.{graph_format}",
                 )
             )
             realm_occurrence_plot_otus.write_html(
                 os.path.join(
                     outdir,
-                    f"{project_name}_23_realm_occurrence_plot_otus.{graph_format}",
+                    f"23_realm_occurrence_plot_otus.{graph_format}",
                 )
             )
         else:
@@ -1923,13 +1923,13 @@ if make_maps == "True":
             continent_occurrence_plot_otus.write_image(
                 os.path.join(
                     outdir,
-                    f"{project_name}_22_continent_occurrence_plot_otus.{graph_format}",
+                    f"22_continent_occurrence_plot_otus.{graph_format}",
                 )
             )
             realm_occurrence_plot_otus.write_image(
                 os.path.join(
                     outdir,
-                    f"{project_name}_23_realm_occurrence_plot_otus.{graph_format}",
+                    f"23_realm_occurrence_plot_otus.{graph_format}",
                 )
             )
 
@@ -1949,13 +1949,13 @@ if make_maps == "True":
             continent_occurrence_plot_esvs.write_html(
                 os.path.join(
                     outdir,
-                    f"{project_name}_24_continent_occurrence_plot_esvs.{graph_format}",
+                    f"24_continent_occurrence_plot_esvs.{graph_format}",
                 )
             )
             realm_occurrence_plot_esvs.write_html(
                 os.path.join(
                     outdir,
-                    f"{project_name}_25_realm_occurrence_plot_esvs.{graph_format}",
+                    f"25_realm_occurrence_plot_esvs.{graph_format}",
                 )
             )
 
@@ -1970,13 +1970,13 @@ if make_maps == "True":
             continent_occurrence_plot_esvs.write_image(
                 os.path.join(
                     outdir,
-                    f"{project_name}_24_continent_occurrence_plot_esvs.{graph_format}",
+                    f"24_continent_occurrence_plot_esvs.{graph_format}",
                 )
             )
             realm_occurrence_plot_esvs.write_image(
                 os.path.join(
                     outdir,
-                    f"{project_name}_25_realm_occurrence_plot_esvs.{graph_format}",
+                    f"25_realm_occurrence_plot_esvs.{graph_format}",
                 )
             )
 
