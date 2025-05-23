@@ -19,6 +19,7 @@ import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 import plotly.colors as pc
+import geopandas as gpd
 import argparse
 import warnings
 import dash_bio
@@ -101,6 +102,69 @@ def krona_formatting(df):
     return replace_duplicates_with_nan(krona_df_agg[krona_df_agg["Sum"] > 0])
 
 
+def get_neighboring_countries(country_iso2_code):
+    world = gpd.read_file(
+        "https://naturalearth.s3.amazonaws.com/110m_cultural/ne_110m_admin_0_countries.zip"
+    )
+    exceptions = {
+        "Norway": "NO",
+        "France": "FR",
+        "N. Cyprus": "CY",
+        "Somaliland": "SO",
+        "Kosovo": "XK",
+    }
+    country_iso2_code = country_iso2_code.upper()
+    target = world[world["ISO_A2"] == country_iso2_code]
+    if target.empty:
+        raise ValueError(f"Country with ISO2 code '{country_iso2_code}' not found.")
+    neighbors = world[world.touches(target.geometry.iloc[0])]
+    return [
+        exceptions.get(row["NAME"], row["ISO_A2"]) for _, row in neighbors.iterrows()
+    ]
+
+
+def get_confidence_level(final_df, occurrence_df, target_country_iso2):
+    neighboring_countries = get_neighboring_countries(target_country_iso2)
+    species_cache = {}
+
+    def determine_confidence(species):
+        if species in species_cache:
+            return species_cache[species]
+
+        if species not in occurrence_df.columns:
+            confidence = ""
+        else:
+            try:
+                if (
+                    occurrence_df.loc[
+                        occurrence_df["Country_iso2_code"] == target_country_iso2,
+                        species,
+                    ].values[0]
+                    > 0
+                ):
+                    confidence = "High confidence - GBIF records for target country"
+                else:
+                    is_in_neighboring_countries = any(
+                        neighbor_code in occurrence_df["Country_iso2_code"].values
+                        and occurrence_df.loc[
+                            occurrence_df["Country_iso2_code"] == neighbor_code, species
+                        ].values[0]
+                        > 0
+                        for neighbor_code in neighboring_countries
+                    )
+                    if is_in_neighboring_countries:
+                        confidence = "Moderate confidence - no GBIF records for target country but for surrounding countries"
+                    else:
+                        confidence = "Low confidence - no GBIF records for target country or surrounding countries"
+            except IndexError:
+                confidence = "Low confidence - no GBIF records for target country or surrounding countries"
+
+        species_cache[species] = confidence
+        return confidence
+
+    return final_df["species"].apply(determine_confidence)
+
+
 # Function to calculate overlap between two rows (to sort the continent and realm df)
 def calculate_overlap(row1, row2):
     return np.sum(row1 & row2)
@@ -134,7 +198,9 @@ def maps_and_continent_plot_generation(occurrence_df, unit):
     # Generate a map per species
     species_maps = {}
     all_species = list(
-        occurrence_df.drop(["Country", "Continent", "Realm"], axis=1).columns
+        occurrence_df.drop(
+            ["Country", "Country_iso2_code", "Continent", "Realm"], axis=1
+        ).columns
     )
     for species in all_species:
         # Create the map for specimen counts
@@ -170,7 +236,9 @@ def maps_and_continent_plot_generation(occurrence_df, unit):
     occurrence_df["Continent"] = occurrence_df["Continent"].str.split("/")
     occurrence_df = occurrence_df.explode("Continent")
     continent_df = (
-        occurrence_df.drop(["Country", "Realm"], axis=1).groupby("Continent").sum()
+        occurrence_df.drop(["Country", "Country_iso2_code", "Realm"], axis=1)
+        .groupby("Continent")
+        .sum()
     )
     continent_df[continent_df > 0] = 1
 
@@ -232,7 +300,9 @@ def maps_and_continent_plot_generation(occurrence_df, unit):
     occurrence_df["Realm"] = occurrence_df["Realm"].str.split("/")
     occurrence_df = occurrence_df.explode("Realm")
     realm_df = (
-        occurrence_df.drop(["Country", "Continent"], axis=1).groupby("Realm").sum()
+        occurrence_df.drop(["Country", "Country_iso2_code", "Continent"], axis=1)
+        .groupby("Realm")
+        .sum()
     )
     realm_df[realm_df > 0] = 1
 
@@ -380,6 +450,7 @@ add_taxonomy = args.add_taxonomy
 make_maps = args.make_maps
 if add_taxonomy == "True":
     database_format = args.database_format
+    target_country_iso2 = args.target_country_iso2
 project_name = os.path.basename(project_dir)
 if args.remove_negative_controls == "True":
     negControlSuffix = "-without_NegControls"
@@ -1373,7 +1444,7 @@ if add_taxonomy == "True":
         [
             "ktImportText",
             "-o",
-            os.path.join(outdir, f"21_otu_krona.html"),
+            os.path.join(outdir, "21_otu_krona.html"),
             os.path.join(outdir, f"{project_name}_OTUs_krona-formatted.csv"),
         ]
     )
@@ -1383,128 +1454,129 @@ if add_taxonomy == "True":
     os.remove(os.path.join(outdir, f"{project_name}_ESVs_krona-formatted.csv"))
     os.remove(os.path.join(outdir, f"{project_name}_OTUs_krona-formatted.csv"))
 
-    # Add reliability column
+    # Add confidence column
     time_print("Downloading species occurrence data from GBIF for ESVs...")
     occurrence_df_esvs = download_gbif_species_data(esv_final_df)
     time_print("Downloading species occurrence data from GBIF for OTUs...")
     occurrence_df_otus = download_gbif_species_data(otu_final_df)
 
-    # esv_final_df = pd.read_csv("/Users/simplexdna/Desktop/4_ESV_table-with_filtered_taxonomy-without_NegControls.csv")
-    # occurrence_df_esvs = pd.read_csv(
-    #     "/Users/simplexdna/Desktop/occurrence_df.csv"
-    # )
+    time_print("Adding species confidence levels...")
+    esv_final_df["species_confidence"] = get_confidence_level(
+        esv_final_df, occurrence_df_esvs, target_country_iso2
+    )
+    otu_final_df["species_confidence"] = get_confidence_level(
+        otu_final_df, occurrence_df_otus, target_country_iso2
+    )
+    esv_final_df.to_csv(esv_final_file, index=False)
+    otu_final_file.to_csv(otu_final_file, index=False)
 
-    # def get_reliability(df, occurrence_df, target_country)
+    # Maps
+    if make_maps == "True":
+        time_print("Generating maps...")
+        (
+            species_maps_esvs,
+            continent_occurrence_plot_esvs,
+            realm_occurrence_plot_esvs,
+        ) = maps_and_continent_plot_generation(occurrence_df_esvs, "ESV")
+        (
+            species_maps_otus,
+            continent_occurrence_plot_otus,
+            realm_occurrence_plot_otus,
+        ) = maps_and_continent_plot_generation(occurrence_df_otus, "OTU")
 
-    # esv_final_df["reliability"] = get_reliability(esv_final_df, occurrence_df_esvs, target_country)
-
-# Maps
-if make_maps == "True":
-    time_print("Generating maps...")
-    (
-        species_maps_esvs,
-        continent_occurrence_plot_esvs,
-        realm_occurrence_plot_esvs,
-    ) = maps_and_continent_plot_generation(occurrence_df_esvs, "ESV")
-    (
-        species_maps_otus,
-        continent_occurrence_plot_otus,
-        realm_occurrence_plot_otus,
-    ) = maps_and_continent_plot_generation(occurrence_df_otus, "OTU")
-
-    ## Save
-    if continent_occurrence_plot_otus:
-        if graph_format == "html":
-            for species in species_maps_otus:
-                species_maps_otus[species].write_html(
+        ## Save
+        if continent_occurrence_plot_otus:
+            if graph_format == "html":
+                for species in species_maps_otus:
+                    species_maps_otus[species].write_html(
+                        os.path.join(
+                            mapdir,
+                            f"{species}.{graph_format}",
+                        )
+                    )
+                continent_occurrence_plot_otus.write_html(
                     os.path.join(
-                        mapdir,
-                        f"{species}.{graph_format}",
+                        outdir,
+                        f"22_continent_occurrence_plot_otus.{graph_format}",
                     )
                 )
-            continent_occurrence_plot_otus.write_html(
-                os.path.join(
-                    outdir,
-                    f"22_continent_occurrence_plot_otus.{graph_format}",
-                )
-            )
-            realm_occurrence_plot_otus.write_html(
-                os.path.join(
-                    outdir,
-                    f"23_realm_occurrence_plot_otus.{graph_format}",
-                )
-            )
-        else:
-            for species in species_maps_otus:
-                species_maps_otus[species].write_image(
+                realm_occurrence_plot_otus.write_html(
                     os.path.join(
-                        mapdir,
-                        f"{species}.{graph_format}",
+                        outdir,
+                        f"23_realm_occurrence_plot_otus.{graph_format}",
                     )
                 )
-            continent_occurrence_plot_otus.write_image(
-                os.path.join(
-                    outdir,
-                    f"22_continent_occurrence_plot_otus.{graph_format}",
-                )
-            )
-            realm_occurrence_plot_otus.write_image(
-                os.path.join(
-                    outdir,
-                    f"23_realm_occurrence_plot_otus.{graph_format}",
-                )
-            )
-
-        time_print(
-            "GBIF maps, continent occurrence plot, and realm occurrence plot generated for OTUs."
-        )
-
-    if continent_occurrence_plot_esvs:
-        if graph_format == "html":
-            for species in species_maps_esvs:
-                species_maps_esvs[species].write_html(
+            else:
+                for species in species_maps_otus:
+                    species_maps_otus[species].write_image(
+                        os.path.join(
+                            mapdir,
+                            f"{species}.{graph_format}",
+                        )
+                    )
+                continent_occurrence_plot_otus.write_image(
                     os.path.join(
-                        mapdir,
-                        f"{species}.{graph_format}",
+                        outdir,
+                        f"22_continent_occurrence_plot_otus.{graph_format}",
                     )
                 )
-            continent_occurrence_plot_esvs.write_html(
-                os.path.join(
-                    outdir,
-                    f"24_continent_occurrence_plot_esvs.{graph_format}",
-                )
-            )
-            realm_occurrence_plot_esvs.write_html(
-                os.path.join(
-                    outdir,
-                    f"25_realm_occurrence_plot_esvs.{graph_format}",
-                )
-            )
-
-        else:
-            for species in species_maps_esvs:
-                species_maps_esvs[species].write_image(
+                realm_occurrence_plot_otus.write_image(
                     os.path.join(
-                        mapdir,
-                        f"{species}.{graph_format}",
+                        outdir,
+                        f"23_realm_occurrence_plot_otus.{graph_format}",
                     )
                 )
-            continent_occurrence_plot_esvs.write_image(
-                os.path.join(
-                    outdir,
-                    f"24_continent_occurrence_plot_esvs.{graph_format}",
-                )
-            )
-            realm_occurrence_plot_esvs.write_image(
-                os.path.join(
-                    outdir,
-                    f"25_realm_occurrence_plot_esvs.{graph_format}",
-                )
+
+            time_print(
+                "GBIF maps, continent occurrence plot, and realm occurrence plot generated for OTUs."
             )
 
-        time_print(
-            "GBIF maps, continent occurrence plot, and realm occurrence plot generated for ESVs."
-        )
+        if continent_occurrence_plot_esvs:
+            if graph_format == "html":
+                for species in species_maps_esvs:
+                    species_maps_esvs[species].write_html(
+                        os.path.join(
+                            mapdir,
+                            f"{species}.{graph_format}",
+                        )
+                    )
+                continent_occurrence_plot_esvs.write_html(
+                    os.path.join(
+                        outdir,
+                        f"24_continent_occurrence_plot_esvs.{graph_format}",
+                    )
+                )
+                realm_occurrence_plot_esvs.write_html(
+                    os.path.join(
+                        outdir,
+                        f"25_realm_occurrence_plot_esvs.{graph_format}",
+                    )
+                )
+
+            else:
+                for species in species_maps_esvs:
+                    species_maps_esvs[species].write_image(
+                        os.path.join(
+                            mapdir,
+                            f"{species}.{graph_format}",
+                        )
+                    )
+                continent_occurrence_plot_esvs.write_image(
+                    os.path.join(
+                        outdir,
+                        f"24_continent_occurrence_plot_esvs.{graph_format}",
+                    )
+                )
+                realm_occurrence_plot_esvs.write_image(
+                    os.path.join(
+                        outdir,
+                        f"25_realm_occurrence_plot_esvs.{graph_format}",
+                    )
+                )
+
+            time_print(
+                "GBIF maps, continent occurrence plot, and realm occurrence plot generated for ESVs."
+            )
 
 
 time_print("Finished graph generation.")
