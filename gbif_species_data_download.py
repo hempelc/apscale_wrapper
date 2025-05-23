@@ -13,8 +13,14 @@ import time
 import requests_html
 import aiohttp
 import asyncio
+import datetime
 from aiohttp_retry import RetryClient, ExponentialRetry
 from tqdm.asyncio import tqdm
+
+
+# Funtion to print datetime and text
+def time_print(text):
+    print(datetime.datetime.now().strftime("%H:%M:%S"), ": ", text, sep="")
 
 
 # Function to standardize species names based on GBIF taxonomy
@@ -60,6 +66,12 @@ def gbif_check_taxonomy(df):
         "No match in database",
     ]
     taxon_table_df = taxon_table_df.replace(exceptions, None).dropna().drop_duplicates()
+
+    # Check if the 'species' column only contains None values, and if it does, exit early
+    if taxon_table_df["species"].isnull().all():
+        time_print("No valid species found. Skipping map generation.")
+        return []
+
     checked_species = []
     # Standardize names
     for _, row in taxon_table_df.iterrows():
@@ -481,6 +493,6 @@ def gbif_species_data_per_country(gbif_standardized_species_list):
 
 
 def download_gbif_species_data(apscale_result_df):
-    print("Standardizing species names based on GBIF...")
+    time_print("Standardizing species names based on GBIF...")
     gbif_standardized_species_list = gbif_check_taxonomy(apscale_result_df)
     return gbif_species_data_per_country(gbif_standardized_species_list)
