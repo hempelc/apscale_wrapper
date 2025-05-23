@@ -75,6 +75,8 @@ def gbif_check_taxonomy(df):
         "Gallus gallus",
         "Canis lupus",
         "Felis catus",
+        "Ovis aries",
+        "Capra hircus",
     ]
     return [taxon for taxon in checked_species if taxon not in contamination_species]
 
@@ -185,7 +187,7 @@ def gbif_species_data_per_country(gbif_standardized_species_list):
 
     # Return empty dictionary and None for the plots if the species list is empty, effectively skipping this step
     if not gbif_standardized_species_list:
-        return {}, None
+        return None
 
     # Define a dictionary with all countries and codes on Earth
     country_codes_dict = {
