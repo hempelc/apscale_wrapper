@@ -479,7 +479,12 @@ def gbif_species_data_per_country(gbif_standardized_species_list):
     # Make a df template
     occurrence_df = pd.DataFrame(
         [
-            {"Country": country, "Continent": values[1], "Realm": values[2]}
+            {
+                "Country": country,
+                "Country_iso2_code": values[0],
+                "Continent": values[1],
+                "Realm": values[2],
+            }
             for country, values in country_codes_dict.items()
         ]
     )
