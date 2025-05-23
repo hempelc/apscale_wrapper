@@ -295,6 +295,8 @@ def maps_and_continent_plot_generation(occurrence_df, unit):
 def validate_args(args):
     if args.add_taxonomy == "True" and not args.database_format:
         parser.error("--database_format is required when --add_taxonomy=True.")
+    if args.target_country_iso2 and args.add_taxonomy == "False":
+        parser.error("--add_taxonomy is required when setting --target_country_iso2.")
 
 
 # Define arguments
@@ -336,6 +338,11 @@ parser.add_argument(
     help="Should GBIF-based maps be generated to infer species distribution?",
     default="True",
     choices=["True", "False"],
+)
+parser.add_argument(
+    "--target_country_iso2",
+    help="Required if --add_taxonomy=True. ISO alpha-2 code of the target country that was sampled. Used to determine reliability of species.",
+    metavar="XX",
 )
 parser.add_argument(
     "--database_format",
@@ -1304,10 +1311,8 @@ else:
     )
 time_print("Clustergram generated for OTUs.")
 
-# Kronagraphs
-if (
-    add_taxonomy == "True"
-):  # Requirement as we need taxonomic information for Kronagraphs
+if add_taxonomy == "True":
+    # Kronagraphs
     time_print("Generating kronagraphs...")
 
     time_print("Importing final ESV and OTU tables...")
@@ -1378,36 +1383,24 @@ if (
     os.remove(os.path.join(outdir, f"{project_name}_ESVs_krona-formatted.csv"))
     os.remove(os.path.join(outdir, f"{project_name}_OTUs_krona-formatted.csv"))
 
-
-# Maps
-if make_maps == "True":
-    time_print("Generating maps...")
-
-    if add_taxonomy == "False":
-        # Importing files
-        otu_final_file = os.path.join(
-            project_dir,
-            "9_lulu_filtering",
-            "otu_clustering",
-            f"{project_name}-OTU_table-with_filtered_taxonomy{negControlSuffix}.csv",
-        )
-        esv_final_file = os.path.join(
-            project_dir,
-            "9_lulu_filtering",
-            "denoising",
-            f"{project_name}-ESV_table-with_filtered_taxonomy{negControlSuffix}.csv",
-        )
-
-        otu_final_df = pd.read_csv(otu_final_file)
-        time_print("1/2 final files imported...")
-        esv_final_df = pd.read_csv(esv_final_file)
-        time_print("2/2 final files imported. Import done.")
-
+    # Add reliability column
     time_print("Downloading species occurrence data from GBIF for ESVs...")
     occurrence_df_esvs = download_gbif_species_data(esv_final_df)
     time_print("Downloading species occurrence data from GBIF for OTUs...")
     occurrence_df_otus = download_gbif_species_data(otu_final_df)
 
+    # esv_final_df = pd.read_csv("/Users/simplexdna/Desktop/4_ESV_table-with_filtered_taxonomy-without_NegControls.csv")
+    # occurrence_df_esvs = pd.read_csv(
+    #     "/Users/simplexdna/Desktop/occurrence_df.csv"
+    # )
+
+    # def get_reliability(df, occurrence_df, target_country)
+
+    # esv_final_df["reliability"] = get_reliability(esv_final_df, occurrence_df_esvs, target_country)
+
+# Maps
+if make_maps == "True":
+    time_print("Generating maps...")
     (
         species_maps_esvs,
         continent_occurrence_plot_esvs,
