@@ -52,6 +52,8 @@ def validate_args(args):
         parser.error("--blast_database is required when --taxonomy_classifier=blast.")
     if args.taxonomy_classifier == "sintax" and not args.sintax_database:
         parser.error("--sintax_database is required when --taxonomy_classifier=sintax.")
+    if args.target_country_iso2 and args.add_taxonomy == "False":
+        parser.error("--add_taxonomy is required when setting --target_country_iso2.")
 
 
 # Function to search for a file in the directories listed in the PATH environment variable.
@@ -472,6 +474,11 @@ parser.add_argument(
     help="Should GBIF-based maps be generated to infer species distribution? (default: False)",
     default="False",
     choices=["True", "False"],
+)
+parser.add_argument(
+    "--target_country_iso2",
+    help="Required if --add_taxonomy=True. ISO alpha-2 code of the target country that was sampled. Used to determine reliability of species.",
+    metavar="XX",
 )
 parser.add_argument(
     "--scaling_factor",
@@ -913,60 +920,41 @@ if args.remove_negative_controls == "True":
 
 
 # Generate processing graphs using separate script
+# Base command
+cmd = [
+    "apscale_processing_graphs.py",
+    "--project_dir",
+    apscale_dir,
+    "--graph_format",
+    args.graph_format,
+    "--min_length",
+    args.min_length,
+    "--max_length",
+    args.max_length,
+    "--scaling_factor",
+    args.scaling_factor,
+    "--add_taxonomy",
+    args.add_taxonomy,
+    "--remove_negative_controls",
+    args.remove_negative_controls,
+    "--make_maps",
+    args.make_maps,
+]
+
+# Conditionally add optional arguments
 if args.database_format:
-    proc = subprocess.run(
-        [
-            "apscale_processing_graphs.py",
-            "--project_dir",
-            apscale_dir,
-            "--graph_format",
-            f"{args.graph_format}",
-            "--min_length",
-            f"{args.min_length}",
-            "--max_length",
-            f"{args.max_length}",
-            "--scaling_factor",
-            f"{args.scaling_factor}",
-            "--add_taxonomy",
-            f"{args.add_taxonomy}",
-            "--database_format",
-            f"{args.database_format}",
-            "--remove_negative_controls",
-            f"{args.remove_negative_controls}",
-            "--make_maps",
-            f"{args.make_maps}",
-        ],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True,
-        check=False,
-    )
-else:
-    proc = subprocess.run(
-        [
-            "apscale_processing_graphs.py",
-            "--project_dir",
-            apscale_dir,
-            "--graph_format",
-            f"{args.graph_format}",
-            "--min_length",
-            f"{args.min_length}",
-            "--max_length",
-            f"{args.max_length}",
-            "--scaling_factor",
-            f"{args.scaling_factor}",
-            "--add_taxonomy",
-            f"{args.add_taxonomy}",
-            "--remove_negative_controls",
-            f"{args.remove_negative_controls}",
-            "--make_maps",
-            f"{args.make_maps}",
-        ],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.STDOUT,
-        text=True,
-        check=False,
-    )
+    cmd += ["--database_format", args.database_format]
+if args.target_country_iso2:
+    cmd += ["--target_country_iso2", args.target_country_iso2]
+
+# Run the command
+proc = subprocess.run(
+    cmd,
+    stdout=subprocess.PIPE,
+    stderr=subprocess.STDOUT,
+    text=True,
+    check=False,
+)
 for line in proc.stdout:
     sys.stdout.write(str(line))
     log.write(str(line))
