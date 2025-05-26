@@ -284,14 +284,12 @@ parser.add_argument(
 parser.add_argument(
     "--min_length",
     metavar="NNN",
-    type=str,
     help="Minimum limit of expected amplicon length (used for length filtering).",
     required=True,
 )
 parser.add_argument(
     "--max_length",
     metavar="NNN",
-    type=str,
     help="Maximum limit of expected amplicon length (used for length filtering).",
     required=True,
 )
@@ -306,7 +304,6 @@ parser.add_argument(
     "--maxEE",
     metavar="N",
     default="2",
-    type=int,
     help="maxEE (maximum estimated error) value used for quality filtering (default: 2).",
 )
 parser.add_argument(
@@ -339,21 +336,18 @@ parser.add_argument(
     "--otu_perc",
     metavar="NN",
     default=97,
-    type=int,
     help="Used if --clusteringtool=vsearch. OTU identify treshold for clustering with vsearch (default=97).",
 )
 parser.add_argument(
     "--swarm_distance",
     default="1",
     metavar="N",
-    type=int,
     help="Used if --clusteringtool=swarm.  Distance used for swarm. Overwritten to 13 if --coi=True (default: 1).",
 )
 parser.add_argument(
     "--minsize_denoising",
     default="8",
     metavar="N",
-    type=int,
     help="""Filtering criterion during the denoising step. ESVs with lower abundance
     than the defined threshold are filtered out during denoising (default: 8).""",
 )
@@ -485,7 +479,6 @@ parser.add_argument(
     help="Scaling factor for graph width. Manual trial and error in 0.2 increments might be required (default: 1.0).",
     default=1.0,
     metavar="N.N",
-    type=float,
 )
 parser.add_argument(
     "--cores",
@@ -517,9 +510,7 @@ if args.coi == "True":
 apscale_dir = f"{args.project_name}_apscale"
 
 ######################### Save settings
-settings = pd.DataFrame.from_dict(
-    vars(args), orient="index", columns=["Parameter"]
-).astype({"Parameter": str})
+settings = pd.DataFrame.from_dict(vars(args), orient="index", columns=["Parameter"])
 ## Format database string
 if args.taxonomy_classifier == "blast":
     settings.at["blast_database", "Parameter"] = os.path.basename(
@@ -922,8 +913,6 @@ if args.remove_negative_controls == "True":
 
 # Generate processing graphs using separate script
 # Base command
-print(args.min_length)
-
 cmd = [
     "apscale_processing_graphs.py",
     "--project_dir",
@@ -949,8 +938,6 @@ if args.database_format:
     cmd += ["--database_format", args.database_format]
 if args.target_country_iso2:
     cmd += ["--target_country_iso2", args.target_country_iso2]
-
-print(f"XXXXX {cmd}")
 
 # Run the command
 proc = subprocess.run(
