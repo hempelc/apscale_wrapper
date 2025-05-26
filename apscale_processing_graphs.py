@@ -126,13 +126,26 @@ def get_neighboring_countries(country_iso2_code):
 def get_confidence_level(final_df, occurrence_df, target_country_iso2):
     neighboring_countries = get_neighboring_countries(target_country_iso2)
     species_cache = {}
+    contamination_species = [
+        "Sus scrofa",
+        "Bos taurus",
+        "Gallus gallus",
+        "Canis lupus",
+        "Felis catus",
+        "Ovis aries",
+        "Capra hircus",
+    ]
 
     def determine_confidence(species):
         if species in species_cache:
             return species_cache[species]
 
-        if species not in occurrence_df.columns:
-            confidence = ""
+        if species in contamination_species:
+            confidence = "Skipped - domesticated species"
+        elif species == "Homo sapiens":
+            confidence = "Skipped - human"
+        elif species not in occurrence_df.columns:
+            confidence = "Skipped - no GBIF data available"
         else:
             try:
                 if (
