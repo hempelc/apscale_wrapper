@@ -541,6 +541,7 @@ settings = settings.drop(
         "func",
         "make_maps",
         "keep_intermediate_files",
+        "target_country_iso2",
     ]
 )
 ## Add manual setting descriptions where helpful (requires manual tweaking if more settings are added or the order is changed)
