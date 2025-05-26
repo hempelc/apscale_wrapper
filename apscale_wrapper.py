@@ -335,7 +335,7 @@ parser.add_argument(
 parser.add_argument(
     "--otu_perc",
     metavar="NN",
-    default=97,
+    default="97",
     help="Used if --clusteringtool=vsearch. OTU identify treshold for clustering with vsearch (default=97).",
 )
 parser.add_argument(
@@ -477,7 +477,7 @@ parser.add_argument(
 parser.add_argument(
     "--scaling_factor",
     help="Scaling factor for graph width. Manual trial and error in 0.2 increments might be required (default: 1.0).",
-    default=1.0,
+    default="1.0",
     metavar="N.N",
 )
 parser.add_argument(
