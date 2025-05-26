@@ -948,6 +948,8 @@ if args.database_format:
 if args.target_country_iso2:
     cmd += ["--target_country_iso2", args.target_country_iso2]
 
+print(f"XXXXX {cmd}")
+
 # Run the command
 proc = subprocess.run(
     cmd,
