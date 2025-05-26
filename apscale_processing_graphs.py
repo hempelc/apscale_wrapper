@@ -1468,7 +1468,7 @@ if add_taxonomy == "True":
         otu_final_df, occurrence_df_otus, target_country_iso2
     )
     esv_final_df.to_csv(esv_final_file, index=False)
-    otu_final_file.to_csv(otu_final_file, index=False)
+    otu_final_df.to_csv(otu_final_file, index=False)
 
     # Maps
     if make_maps == "True":
