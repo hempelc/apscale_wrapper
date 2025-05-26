@@ -922,6 +922,8 @@ if args.remove_negative_controls == "True":
 
 # Generate processing graphs using separate script
 # Base command
+print(args.min_length)
+
 cmd = [
     "apscale_processing_graphs.py",
     "--project_dir",
