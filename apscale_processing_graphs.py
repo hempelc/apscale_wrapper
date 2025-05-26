@@ -25,7 +25,7 @@ import warnings
 import dash_bio
 import subprocess
 from statistics import mean, median, stdev
-from gbif_species_data_download import download_gbif_species_data
+from gbif_taxa_data_download import download_gbif_taxa_data
 
 # Define that warnings are not printed to console
 warnings.filterwarnings("ignore")
@@ -125,7 +125,7 @@ def get_neighboring_countries(country_iso2_code):
 
 def get_confidence_level(final_df, occurrence_df, target_country_iso2):
     neighboring_countries = get_neighboring_countries(target_country_iso2)
-    species_cache = {}
+    taxa_cache = {}
     contamination_species = [
         "Sus scrofa",
         "Bos taurus",
@@ -136,22 +136,24 @@ def get_confidence_level(final_df, occurrence_df, target_country_iso2):
         "Capra hircus",
     ]
 
-    def determine_confidence(species):
-        if species in species_cache:
-            return species_cache[species]
+    def determine_confidence(taxon):
+        if taxon in taxa_cache:
+            return taxa_cache[taxon]
 
-        if species in contamination_species:
+        if taxon in contamination_species:
             confidence = "Skipped - domesticated species"
-        elif species == "Homo sapiens":
+        elif taxon == "Homo sapiens":
             confidence = "Skipped - human"
-        elif species not in occurrence_df.columns:
-            confidence = "Skipped - no GBIF data available"
+        elif taxon not in occurrence_df.columns:
+            confidence = (
+                "Skipped - taxonomic resolution too low or no GBIF data available"
+            )
         else:
             try:
                 if (
                     occurrence_df.loc[
                         occurrence_df["Country_iso2_code"] == target_country_iso2,
-                        species,
+                        taxon,
                     ].values[0]
                     > 0
                 ):
@@ -160,7 +162,7 @@ def get_confidence_level(final_df, occurrence_df, target_country_iso2):
                     is_in_neighboring_countries = any(
                         neighbor_code in occurrence_df["Country_iso2_code"].values
                         and occurrence_df.loc[
-                            occurrence_df["Country_iso2_code"] == neighbor_code, species
+                            occurrence_df["Country_iso2_code"] == neighbor_code, taxon
                         ].values[0]
                         > 0
                         for neighbor_code in neighboring_countries
@@ -172,10 +174,10 @@ def get_confidence_level(final_df, occurrence_df, target_country_iso2):
             except IndexError:
                 confidence = "Low confidence - no GBIF records for target country or surrounding countries"
 
-        species_cache[species] = confidence
+        taxa_cache[taxon] = confidence
         return confidence
 
-    return final_df["species"].apply(determine_confidence)
+    return final_df["lowest_taxon"].apply(determine_confidence)
 
 
 # Function to calculate overlap between two rows (to sort the continent and realm df)
@@ -188,6 +190,15 @@ def maps_and_continent_plot_generation(occurrence_df, unit):
     Returns:
         species_maps, continent_occurrence_plot, realm_occurrence_lot
     """
+
+    # Only keep species in occurrence df
+    keep_columns = ["Country", "Country_iso2_code", "Continent", "Realm"]
+    filtered_columns = [
+        col
+        for col in occurrence_df.columns
+        if col in keep_columns or len(col.split() == 2)
+    ]
+    occurrence_df = occurrence_df[filtered_columns]
 
     # Return empty dictionary and None for the plots if the occurrence df is empty, effectively skipping this step
     if occurrence_df is None:
@@ -1468,16 +1479,16 @@ if add_taxonomy == "True":
     os.remove(os.path.join(outdir, f"{project_name}_OTUs_krona-formatted.csv"))
 
     # Add confidence column
-    time_print("Downloading species occurrence data from GBIF for ESVs...")
-    occurrence_df_esvs = download_gbif_species_data(esv_final_df)
-    time_print("Downloading species occurrence data from GBIF for OTUs...")
-    occurrence_df_otus = download_gbif_species_data(otu_final_df)
+    time_print("Downloading taxa occurrence data from GBIF for ESVs...")
+    occurrence_df_esvs = download_gbif_taxa_data(esv_final_df)
+    time_print("Downloading taxa occurrence data from GBIF for OTUs...")
+    occurrence_df_otus = download_gbif_taxa_data(otu_final_df)
 
-    time_print("Adding species confidence levels...")
-    esv_final_df["species_confidence"] = get_confidence_level(
+    time_print("Adding taxa confidence levels...")
+    esv_final_df["taxon_confidence"] = get_confidence_level(
         esv_final_df, occurrence_df_esvs, target_country_iso2
     )
-    otu_final_df["species_confidence"] = get_confidence_level(
+    otu_final_df["taxon_confidence"] = get_confidence_level(
         otu_final_df, occurrence_df_otus, target_country_iso2
     )
     esv_final_df.to_csv(esv_final_file, index=False)

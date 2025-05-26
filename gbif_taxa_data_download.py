@@ -24,7 +24,7 @@ def time_print(text):
 
 
 # Function to standardize species names based on GBIF taxonomy
-def gbif_parent_check(phylum_name, species_name):
+def gbif_parent_check(phylum_name, taxon_name, rank):
     """
     Standardizes species against the GBIF API (when in doubt based on phylum).
 
@@ -33,7 +33,7 @@ def gbif_parent_check(phylum_name, species_name):
     """
     time.sleep(0.1)
     with requests_html.HTMLSession() as session:
-        request_name = "%20".join(species_name.split(" "))
+        request_name = "%20".join(taxon_name.split(" "))
         response = session.get(
             f"https://api.gbif.org/v1/species/match?verbose=true&name={request_name}&limit=1"
         )
@@ -45,13 +45,13 @@ def gbif_parent_check(phylum_name, species_name):
         ):
             for match in api_response_json.get("alternatives", []):
                 if phylum_name == match.get("phylum", None):
-                    return match.get("species", None)
-        return api_response_json.get("species", None)
+                    return match.get(rank, None)
+        return api_response_json.get(rank, None)
 
 
 # Wrapper function for the standardization of species names based on GBIF taxonomy
 def gbif_check_taxonomy(df):
-    taxon_table_df = df[["phylum", "species"]]
+    taxon_table_df = df[["phylum", "lowest_taxon", "lowest_rank"]]
     # Define excpetions that are no real taxon names and drop them in the df. Also only keep unique species
     exceptions = [
         "Taxonomy unreliable - multiple matching taxa",
@@ -63,22 +63,23 @@ def gbif_check_taxonomy(df):
         "Unknown in SILVA database",
         "Unknown in MIDORI2 database",
         "Taxonomy unreliable - confidence threshold not met",
-        "No match in database",
     ]
     taxon_table_df = taxon_table_df.replace(exceptions, None).dropna().drop_duplicates()
 
-    # Check if the 'species' column only contains None values, and if it does, exit early
-    if taxon_table_df["species"].isnull().all():
-        time_print("No valid species found. Skipping map generation.")
+    # Check if the lowest_taxon column only contains None values, and if it does, exit early
+    if taxon_table_df["lowest_taxon"].isnull().all():
+        time_print("No valid lowest taxa found. Skipping taxonomy check.")
         return []
 
-    checked_species = []
+    checked_taxa = []
     # Standardize names
     for _, row in taxon_table_df.iterrows():
-        phylum_name = row["phylum"]
-        species_name = row["species"]
-        if checked_species_name := gbif_parent_check(phylum_name, species_name):
-            checked_species.append(checked_species_name)
+        rank = row["lowest_rank"]
+        if rank not in [None, "domain", "phylum"]:
+            phylum_name = row["phylum"]
+            taxon_name = row["lowest_taxon"]
+            if checked_taxon_name := gbif_parent_check(phylum_name, taxon_name, rank):
+                checked_taxa.append(checked_taxon_name)
     # Drop contamination species
     contamination_species = [
         "Sus scrofa",
@@ -90,7 +91,7 @@ def gbif_check_taxonomy(df):
         "Ovis aries",
         "Capra hircus",
     ]
-    return [taxon for taxon in checked_species if taxon not in contamination_species]
+    return [taxon for taxon in checked_taxa if taxon not in contamination_species]
 
 
 # Functions to download GBID specimen locations asynchronously
@@ -180,12 +181,12 @@ async def fetch_all_occurrences(retry_session, taxon_name, country_codes):
     return final_results
 
 
-async def async_main(gbif_standardized_species, country_codes, occurrence_df):
+async def async_main(gbif_standardized_taxa_list, country_codes, occurrence_df):
     async with aiohttp.ClientSession() as session:
         async with RetryClient(session, retry_options=retry_options) as retry_session:
             for taxon_name in tqdm(
-                gbif_standardized_species,
-                desc="Downloading GBIF species location data",
+                gbif_standardized_taxa_list,
+                desc="Downloading GBIF taxon location data",
             ):
                 occurrence_list = await fetch_all_occurrences(
                     retry_session, taxon_name, country_codes
@@ -195,10 +196,10 @@ async def async_main(gbif_standardized_species, country_codes, occurrence_df):
 
 
 # Function to get species occurrence data per country
-def gbif_species_data_per_country(gbif_standardized_species_list):
+def gbif_species_data_per_country(gbif_standardized_taxa_list):
 
     # Return empty dictionary and None for the plots if the species list is empty, effectively skipping this step
-    if not gbif_standardized_species_list:
+    if not gbif_standardized_taxa_list:
         return None
 
     # Define a dictionary with all countries and codes on Earth
@@ -490,14 +491,20 @@ def gbif_species_data_per_country(gbif_standardized_species_list):
     )
 
     # Run the asynchronous GBIF specimen location retrieval function
-    asyncio.run(
-        async_main(gbif_standardized_species_list, country_codes, occurrence_df)
-    )
+    asyncio.run(async_main(gbif_standardized_taxa_list, country_codes, occurrence_df))
 
     return occurrence_df
 
 
-def download_gbif_species_data(apscale_result_df):
-    time_print("Standardizing species names based on GBIF...")
-    gbif_standardized_species_list = gbif_check_taxonomy(apscale_result_df)
-    return gbif_species_data_per_country(gbif_standardized_species_list)
+def download_gbif_taxa_data(apscale_result_df):
+    time_print("Standardizing taxon names based on GBIF...")
+    gbif_standardized_taxa_list = gbif_check_taxonomy(apscale_result_df)
+    return gbif_species_data_per_country(gbif_standardized_taxa_list)
+
+
+df = pd.read_csv(
+    "/Users/simplexdna/Desktop/4_ESV_table-with_filtered_taxonomy-without_NegControls.csv"
+)
+df2 = download_gbif_taxa_data(df)
+
+df2.to_csv("/Users/simplexdna/Desktop/occurrence_df.csv", index=False)
