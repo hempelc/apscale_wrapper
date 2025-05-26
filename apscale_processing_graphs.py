@@ -177,7 +177,7 @@ def maps_and_continent_plot_generation(occurrence_df, unit):
     """
 
     # Return empty dictionary and None for the plots if the occurrence df is empty, effectively skipping this step
-    if not occurrence_df:
+    if occurrence_df is None:
         return {}, None
 
     time_print(
