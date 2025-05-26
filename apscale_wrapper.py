@@ -284,14 +284,14 @@ parser.add_argument(
 parser.add_argument(
     "--min_length",
     metavar="NNN",
-    type=int,
+    type=str,
     help="Minimum limit of expected amplicon length (used for length filtering).",
     required=True,
 )
 parser.add_argument(
     "--max_length",
     metavar="NNN",
-    type=int,
+    type=str,
     help="Maximum limit of expected amplicon length (used for length filtering).",
     required=True,
 )
