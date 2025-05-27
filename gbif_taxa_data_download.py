@@ -500,11 +500,3 @@ def download_gbif_taxa_data(apscale_result_df):
     time_print("Standardizing taxon names based on GBIF...")
     gbif_standardized_taxa_list = gbif_check_taxonomy(apscale_result_df)
     return gbif_species_data_per_country(gbif_standardized_taxa_list)
-
-
-df = pd.read_csv(
-    "/Users/simplexdna/Desktop/4_ESV_table-with_filtered_taxonomy-without_NegControls.csv"
-)
-df2 = download_gbif_taxa_data(df)
-
-df2.to_csv("/Users/simplexdna/Desktop/occurrence_df.csv", index=False)
