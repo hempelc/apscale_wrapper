@@ -196,7 +196,7 @@ def maps_and_continent_plot_generation(occurrence_df, unit):
     filtered_columns = [
         col
         for col in occurrence_df.columns
-        if col in keep_columns or len(col.split() == 2)
+        if col in keep_columns or len(col.split()) == 2
     ]
     occurrence_df = occurrence_df[filtered_columns]
 
