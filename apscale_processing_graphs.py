@@ -57,7 +57,7 @@ def replace_duplicates_with_nan(df):
 
 
 # Function to format a taxonomy df for krona
-def krona_formatting(df):
+def krona_formatting(df, taxonomy_classifier):
     ranks = [
         "domain",
         "phylum",
@@ -68,9 +68,19 @@ def krona_formatting(df):
         "species",
     ]
     # Sum samples
-    sample_sums = df.drop(
-        columns=["ID", "Seq", "lowest_taxon", "lowest_rank", "total_reads"] + ranks
-    ).sum(axis=1)
+    if taxonomy_classifier == "sintax":
+        extra_columns = ["ID", "Seq", "total_reads", "lowest_rank", "lowest_taxon"]
+    else:
+        extra_columns = [
+            "ID",
+            "Seq",
+            "total_reads",
+            "lowest_rank",
+            "lowest_taxon",
+            "percentage_similarity",
+        ]
+
+    sample_sums = df.drop(columns=extra_columns + ranks).sum(axis=1)
     krona_df = pd.concat([sample_sums.rename("Sum"), df[ranks]], axis=1)
     # Fix taxonomy formatting
     ## Turn all non-taxa names into NaN
@@ -389,6 +399,8 @@ def maps_and_continent_plot_generation(occurrence_df, unit):
 def validate_args(args):
     if args.add_taxonomy == "True" and not args.database_format:
         parser.error("--database_format is required when --add_taxonomy=True.")
+    if args.add_taxonomy == "True" and not args.taxonomy_classifier:
+        parser.error("--taxonomy_classifier is required when --add_taxonomy is 'True'")
     if args.target_country_iso2 and args.add_taxonomy == "False":
         parser.error("--add_taxonomy is required when setting --target_country_iso2.")
 
@@ -426,6 +438,11 @@ parser.add_argument(
     "--add_taxonomy",
     help="Has taxonomy been added to the OTU and ESV tables? Information required for krona graphs.",
     choices=["True", "False"],
+)
+parser.add_argument(
+    "--taxonomy_classifier",
+    help="Specify the taxonomic classification tool used",
+    choices=["sintax", "blast"],
 )
 parser.add_argument(
     "--make_maps",
@@ -473,6 +490,7 @@ scaling_factor = args.scaling_factor
 add_taxonomy = args.add_taxonomy
 make_maps = args.make_maps
 if add_taxonomy == "True":
+    taxonomy_classifier = args.taxonomy_classifier
     database_format = args.database_format
     target_country_iso2 = args.target_country_iso2
 project_name = os.path.basename(project_dir)
@@ -1430,8 +1448,8 @@ if add_taxonomy == "True":
     time_print("2/2 final files imported. Import done. Generating kronagraphs...")
 
     # Format dfs for Krona
-    esv_krona_df = krona_formatting(esv_final_df)
-    otu_krona_df = krona_formatting(otu_final_df)
+    esv_krona_df = krona_formatting(esv_final_df, taxonomy_classifier)
+    otu_krona_df = krona_formatting(otu_final_df, taxonomy_classifier)
     # Save so that krona can be run in command line
     esv_krona_df.to_csv(
         os.path.join(

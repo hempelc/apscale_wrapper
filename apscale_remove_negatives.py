@@ -39,7 +39,7 @@ def write_fasta(df, filename):
 
 
 # Define function to process dfs
-def remove_negs_from_df(df, unit, negative_controls):
+def remove_negs_from_df(df, unit, negative_controls, taxonomy_classifier):
     # Identify negative controls that do and don't contain 0 reads (microDecon gives an error if used with negative controls with 0 reads)
     negative_controls_keep = [neg for neg in negative_controls if df[neg].sum() > 0]
     negative_controls_drop = [
@@ -57,15 +57,16 @@ def remove_negs_from_df(df, unit, negative_controls):
     ]
     if args.add_taxonomy == "True":
         ranks = ["domain", "phylum", "class", "order", "family", "genus", "species"]
-        notSampleColumns = (
-            notSampleColumns
-            + [
+        if taxonomy_classifier == "sintax":
+            extra_columns = ["total_reads", "lowest_rank", "lowest_taxon"]
+        else:
+            extra_columns = [
                 "total_reads",
                 "lowest_rank",
                 "lowest_taxon",
+                "percentage_similarity",
             ]
-            + ranks
-        )
+        notSampleColumns = notSampleColumns + extra_columns + ranks
     true_samples = list(df.columns.difference(negative_controls + notSampleColumns))
     samples = negative_controls_keep + true_samples
 
@@ -152,10 +153,18 @@ parser.add_argument(
     default="False",
     choices=["True", "False"],
 )
-
+parser.add_argument(
+    "--taxonomy_classifier",
+    help="Specify the taxonomic classification tool used",
+    choices=["sintax", "blast"],
+)
 
 # Parse argument
 args = parser.parse_args()
+
+# Argument validation
+if args.add_taxonomy == "True" and not args.taxonomy_classifier:
+    parser.error("--taxonomy_classifier is required when --add_taxonomy is 'True'")
 
 # Set project_name argument
 project_name = os.path.basename(args.project_dir)
@@ -224,10 +233,10 @@ pandas2ri.activate()
 
 # Process dfs
 otu_postlulu_df_microdeconFiltered = remove_negs_from_df(
-    otu_postlulu_df, "OTU", args.negative_controls
+    otu_postlulu_df, "OTU", args.negative_controls, args.taxonomy_classifier
 )
 esv_postlulu_df_microdeconFiltered = remove_negs_from_df(
-    esv_postlulu_df, "ESV", args.negative_controls
+    esv_postlulu_df, "ESV", args.negative_controls, args.taxonomy_classifier
 )
 
 # Export dfs
