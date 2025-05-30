@@ -236,6 +236,8 @@ microDecon = robjects.r["decon"]
 # Activate that pandas can be converted to R
 pandas2ri.activate()
 
+print(list(otu_postlulu_df.columns))
+
 # Process dfs
 otu_postlulu_df_microdeconFiltered = remove_negs_from_df(
     otu_postlulu_df, "OTU", args.negative_controls, args.taxonomy_classifier
