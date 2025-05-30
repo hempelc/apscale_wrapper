@@ -126,7 +126,6 @@ def remove_negs_from_df(df, unit, negative_controls, taxonomy_classifier):
     df_decon = df_decon.sort_values(by="NumericValues")
     df_decon = df_decon.drop(columns=["NumericValues"])
     # Drop ESVs with 0 reads
-    print(list(df_decon.columns))
     df_decon = df_decon[df_decon.drop(columns=notSampleColumns).sum(axis=1) != 0]
     if args.add_taxonomy == "True":
         # Update the "total reads" column since Neg samples were dropped
@@ -235,8 +234,6 @@ robjects.r('library("microDecon")')
 microDecon = robjects.r["decon"]
 # Activate that pandas can be converted to R
 pandas2ri.activate()
-
-print(list(otu_postlulu_df.columns))
 
 # Process dfs
 otu_postlulu_df_microdeconFiltered = remove_negs_from_df(
