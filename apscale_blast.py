@@ -430,7 +430,6 @@ elif args.blast_filter_mode == "strict":
 
 # Process and save df
 df = post_processing(df)
-print(list(df.columns))
 df.to_csv(args.outfile, index=False)
 
 time_print("BLAST filtering done.")
