@@ -864,54 +864,6 @@ if args.remove_negative_controls == "True":
         sys.stdout.write(str(line))
         log.write(str(line))
 
-# Run coil through an R script if data is COI
-# NOTE: tests revealed that coil output is not repeatable, sometimes it drops 6 sequences while other times 112,
-# therefore its implementation is put on hold for now
-# if args.coi == "True":
-#     time_print("Removing NUMTs from OTUs with the R package coil...")
-#     path_to_rscript = find_file_in_path("apscale_coil.R")
-#     proc = subprocess.run(  # Rscript only works with the full path to the R script, so we fetch it with "which"
-#         ["Rscript", f"{path_to_rscript}", f"{otu_outfile}", "OTU"],
-#         stdout=subprocess.PIPE,
-#         stderr=subprocess.STDOUT,
-#         text=True,
-#         check=False,
-#     )
-#     for line in proc.stdout:
-#         sys.stdout.write(str(line))
-#         log.write(str(line))
-
-#     time_print("Removing NUMTs from ESVs with the R package coil...")
-#     proc = subprocess.run(  # Rscript only works with the full path to the R script, so we fetch it with "which"
-#         ["Rscript", f"{path_to_rscript}", f"{esv_outfile}", "ESV"],
-#         stdout=subprocess.PIPE,
-#         stderr=subprocess.STDOUT,
-#         text=True,
-#         check=False,
-#     )
-#     for line in proc.stdout:
-#         sys.stdout.write(str(line))
-#         log.write(str(line))
-#     if args.filter_mode == "strict":
-#         # Drop the removed OTUs/ESvs from the no-cutoff dataframes
-#         ## Load in coil fitlered dfs
-#         otus_coil_filtered = pd.read_csv(otu_outfile)
-#         esvs_coil_filtered = pd.read_csv(esv_outfile)
-#         ## Merge dfs with inner on ID to drop IDs that were filtered out by coil
-#         otus_coil_filtered_noCutoff = pd.merge(
-#             otu_table_with_tax_noCutoff, otus_coil_filtered, on="ID", how="inner"
-#         )
-#         esvs_coil_filtered_noCutoff = pd.merge(
-#             esv_table_with_tax_noCutoff, esvs_coil_filtered, on="ID", how="inner"
-#         )
-#         # Save
-#         otus_coil_filtered_noCutoff.to_csv(
-#             otu_outfile_noCutoff.replace(".csv", "_coil_filtered.csv"), index=False
-#         )
-#         esvs_coil_filtered_noCutoff.to_csv(
-#             esv_outfile_noCutoff.replace(".csv", "_coil_filtered.csv"), index=False
-#         )
-
 
 # Generate processing graphs using separate script
 # Base command
