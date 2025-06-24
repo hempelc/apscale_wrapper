@@ -97,6 +97,8 @@ def krona_formatting(df, taxonomy_classifier):
             "Unknown in MIDORI2 database": np.nan,
         }
     ).replace("_", " ", regex=True)
+    ## Replace all "No match in database" with NA for all ranks but domain
+    krona_df[ranks[1:]] = krona_df[ranks[1:]].replace("No match in database", np.nan)
     ## If entire taxonomy is NaN, replace with "Taxonomy unreliable"
     for index, row in krona_df.iterrows():
         if pd.isna(row["domain"]):
