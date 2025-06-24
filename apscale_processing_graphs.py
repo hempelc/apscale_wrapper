@@ -117,19 +117,23 @@ def get_neighboring_countries(country_iso2_code):
         "https://naturalearth.s3.amazonaws.com/110m_cultural/ne_110m_admin_0_countries.zip"
     )
     exceptions = {
-        "Norway": "NO",
-        "France": "FR",
-        "N. Cyprus": "CY",
-        "Somaliland": "SO",
-        "Kosovo": "XK",
+        "NO": "Norway",
+        "FR": "France",
+        "CY": "N. Cyprus",
+        "SO": "Somaliland",
+        "XK": "Kosovo",
     }
     country_iso2_code = country_iso2_code.upper()
-    target = world[world["ISO_A2"] == country_iso2_code]
+    if country_iso2_code in exceptions:
+        target = world[world["NAME"] == exceptions[country_iso2_code]]
+    else:
+        target = world[world["ISO_A2"] == country_iso2_code]
     if target.empty:
         raise ValueError(f"Country with ISO2 code '{country_iso2_code}' not found.")
     neighbors = world[world.touches(target.geometry.iloc[0])]
+    name_to_iso2 = {v: k for k, v in exceptions.items()}
     return [
-        exceptions.get(row["NAME"], row["ISO_A2"]) for _, row in neighbors.iterrows()
+        name_to_iso2.get(row["NAME"], row["ISO_A2"]) for _, row in neighbors.iterrows()
     ]
 
 
